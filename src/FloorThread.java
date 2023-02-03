@@ -65,6 +65,9 @@ public class FloorThread extends Thread {
         for (int i = 0; i < floorEventList.size(); i++) {
             FloorEvent currentFloorEvent = floorEventList.get(i);
             floorEventBuffer.putFloorEvent(currentFloorEvent);
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {}
         }
     }
 
