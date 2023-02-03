@@ -10,10 +10,10 @@ public class FloorEvent {
     private String time; // time of elevator request (hh:mm:ss.mmm)
     private int floorNumber; // the floor number elevator request is made from
     private FloorButton floorButton; // the up/down direction button
-    private int elevatorButton; // destination floor button pressed inside the elevator
+    private int carButton; // destination floor button pressed inside the elevator
 
 
-
+    private boolean isProcessed; // Whether the call request has been run
     private int elevatorNum; // which elevator is being used
 
 
@@ -25,11 +25,13 @@ public class FloorEvent {
      * @param floorButton the up/down direction button
      * @param elevatorButton destination floor button pressed inside the elevator
      */
-    public FloorEvent(String time, int floorNumber, FloorButton floorButton, int elevatorButton) {
+    public FloorEvent(String time, int floorNumber, FloorButton floorButton, int elevatorButton, int elevatorNum) {
         this.time = time;
         this.floorNumber = floorNumber;
         this.floorButton = floorButton;
-        this.elevatorButton = elevatorButton;
+        this.carButton = elevatorButton;
+        this.elevatorNum = elevatorNum;
+        isProcessed = false;
     }
 
 
@@ -39,13 +41,13 @@ public class FloorEvent {
      */
     public String toString() {
         return "[Time: " + time + ", Floor #: " + floorNumber +
-                ", Floor Button: " + floorButton + ", Elevator Button: " + elevatorButton + "]";
+                ", Floor Button: " + floorButton + ", Elevator Button: " + carButton + "]";
     }
 
     /**
      * Getters for data
      * @author Josh Fuller
-     * @return time/floorNumber/floorButton/elevatorButton/elevatorNum
+     * @return time/floorNumber/floorButton/elevatorButton/elevatorNum/isProcessed
      */
     public String getTime() {
         return time;
@@ -59,12 +61,20 @@ public class FloorEvent {
         return floorButton;
     }
 
-    public int getElevatorButton() {
-        return elevatorButton;
+    public int getCarButton() {
+        return carButton;
     }
 
     public int getElevatorNum() {
         return elevatorNum;
+    }
+
+    public boolean isProcessed() {
+        return isProcessed;
+    }
+
+    public void setProcessed() {
+        isProcessed = !isProcessed;
     }
 
 

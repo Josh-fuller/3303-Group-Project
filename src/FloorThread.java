@@ -43,17 +43,17 @@ public class FloorThread extends Thread {
     private FloorEvent createFloorEvent(String inputLine) {
         // Split the line into words separated by spaces.
         String[] words = inputLine.split("\\s");
-        String timeInput, floorNumberInput, floorButtonInput, carButtonInput;
+        String timeInput, floorNumberInput, floorButtonInput, carButtonInput, elevatorNumInput;
 
         // Set each input string to its corresponding value based on the order specified in project specs:
         // Time Floor_Number Floor_Button Elevator_Button (hh:mm:ss.mmm n Up/Down n)
-        timeInput = words[0]; floorNumberInput = words[1]; floorButtonInput = words[2]; carButtonInput = words[3];
+        timeInput = words[0]; floorNumberInput = words[1]; floorButtonInput = words[2]; carButtonInput = words[3]; elevatorNumInput = words[4];
 
         // Cast each string input to the corresponding parameter type of FloorEvent. Create an object of FloorEvent.
         FloorEvent event = new FloorEvent(timeInput,
                 Integer.parseInt(floorNumberInput),
                 FloorEvent.FloorButton.valueOf(floorButtonInput),
-                Integer.parseInt(carButtonInput));
+                Integer.parseInt(carButtonInput), Integer.parseInt(elevatorNumInput));
         //System.out.println(event);
 
         return event;

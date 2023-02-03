@@ -59,7 +59,7 @@ public class ElevatorThread extends Thread{
                 // Retrieves the floor the elevator must go to and sends the info back to the buffer.
                 if(isRightElevator){
                     FloorEvent destination =  elevatorBuffer.take(i);
-                    System.out.println("Elevator" + ElevatorNum + "is going to floor" + destination.getElevatorButton());
+                    System.out.println("Elevator" + ElevatorNum + "is going to floor" + destination.getCarButton());
                     elevatorBuffer.put(destination);
                 }
 
