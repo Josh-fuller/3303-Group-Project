@@ -8,7 +8,7 @@ import java.util.ArrayList;
  */
 public class FloorThread extends Thread {
 
-    private FloorEventBuffer floorEventBuffer; // buffer for holding floorEvent data
+    private FloorBuffer floorEventBuffer; // buffer for holding floorEvent data
     private ArrayList<FloorEvent> floorEventList; // list of FloorEvent objects read from input file
 
     /**
@@ -16,7 +16,7 @@ public class FloorThread extends Thread {
      * @param floorEventBuffer buffer for communicating floor events between the floor and the scheduler.
      * @throws IOException floor data input is read from an input text file: "src/Floor_Input.txt"
      */
-    public FloorThread(FloorEventBuffer floorEventBuffer) throws IOException {
+    public FloorThread(FloorBuffer floorEventBuffer) throws IOException {
         super("FLOOR");
         this.floorEventBuffer = floorEventBuffer;
         this.floorEventList = new ArrayList<>();
@@ -65,10 +65,15 @@ public class FloorThread extends Thread {
         for (int i = 0; i < floorEventList.size(); i++) {
             FloorEvent currentFloorEvent = floorEventList.get(i);
             floorEventBuffer.putFloorEvent(currentFloorEvent);
+
+            FloorEvent finishedFloorEvent = floorEventBuffer.getFloorEvent();
+
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {}
         }
+
+
     }
 
 }

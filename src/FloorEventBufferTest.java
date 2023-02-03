@@ -12,9 +12,9 @@ class FloorEventBufferTest {
         // floor thread (producer) and scheduler thread (consumer) represent corresponding subsystems in the elevator system
         Thread floor, scheduler;
         // the buffer used to communicate data between floor and scheduler threads
-        FloorEventBuffer buffer;
+        FloorBuffer buffer;
 
-        buffer = new FloorEventBuffer();
+        buffer = new FloorBuffer();
         scheduler = new SchedulerThread(buffer);
         floor = new FloorThread(buffer);
         floor.start();

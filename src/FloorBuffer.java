@@ -3,7 +3,7 @@
  *
  * @author Mahtab Ameli
  */
-public class FloorEventBuffer {
+public class FloorBuffer {
 
     private static FloorEvent floorEvent = null; // elevator request data input from floor
     private boolean empty = true; // true if buffer is empty
@@ -35,7 +35,7 @@ public class FloorEventBuffer {
     /**
      * Gets floorEvent data placed by the floor, from the buffer.
      */
-    public synchronized Object getFloorEvent() {
+    public synchronized FloorEvent getFloorEvent() {
         while (empty || (floorEvent == null)) {
             try {
                 wait();
