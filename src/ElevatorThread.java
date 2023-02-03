@@ -36,30 +36,32 @@ public class ElevatorThread extends Thread{
 
         while(true){
 
-            System.out.println("Elevator" + ElevatorNum + " is checking if any floor button has been pressed.");
+            System.out.println("Elevator " + ElevatorNum + " is checking if any floor button has been pressed.");
 
             // Check if there is anything in the buffer
             if(elevatorBuffer.getContentsOfBuffer().size() > 0 ){
-                System.out.println("Elevator" + ElevatorNum + " has found work.");
+                System.out.println("Elevator " + ElevatorNum + " has found work.");
             }else{
-                System.out.println("Elevator" + ElevatorNum + "has found no work.");
+                System.out.println("Elevator " + ElevatorNum + " has found no work.");
             }
 
             // Check if the work is meant for this specific elevator.
             for(int i = 0; i > elevatorBuffer.getContentsOfBuffer().size(); i++){
                 if(elevatorBuffer.getContentsOfBuffer().size() > 0 &&
                         elevatorBuffer.getContentsOfBuffer().get(i).getFloorNumber() == ElevatorNum){
-                    System.out.println("Elevator" + ElevatorNum + "has found work on floor" + elevatorBuffer.getContentsOfBuffer().get(i).getElevatorNum());
+                    System.out.println("Elevator " + ElevatorNum + " has found work on floor " + elevatorBuffer.getContentsOfBuffer().get(i).getElevatorNum());
                     isRightElevator = true;
                 }else{
-                    System.out.println("Scheduler is not looking for Elevator" + ElevatorNum);
+                    System.out.println("Scheduler is not looking for Elevator " + ElevatorNum);
                     isRightElevator = false;
                 }
 
                 // Retrieves the floor the elevator must go to and sends the info back to the buffer.
                 if(isRightElevator){
-                    FloorEvent destination =  elevatorBuffer.take(i);
-                    System.out.println("Elevator" + ElevatorNum + "is going to floor" + destination.getCarButton());
+                    FloorEvent destination =  elevatorBuffer.take();
+                    System.out.println("Elevator " + ElevatorNum + " is going to floor " + destination.getCarButton());
+                    destination.setProcessed();
+                    System.out.println("Elevator " + ElevatorNum + " has reached floor " + destination.getCarButton());
                     elevatorBuffer.put(destination);
                 }
 

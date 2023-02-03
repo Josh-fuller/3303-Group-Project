@@ -8,17 +8,20 @@ import java.util.ArrayList;
  */
 public class FloorThread extends Thread {
 
-    private FloorBuffer floorEventBuffer; // buffer for holding floorEvent data
+    //private FloorBuffer floorEventBuffer; // buffer for holding floorEvent data
+
+    private ElevatorBuffer elevatorBuffer;
+
     private ArrayList<FloorEvent> floorEventList; // list of FloorEvent objects read from input file
 
     /**
      * Constructor for the class.
-     * @param floorEventBuffer buffer for communicating floor events between the floor and the scheduler.
+     * @param elevatorBuffer buffer for communicating floor events between the floor and the scheduler.
      * @throws IOException floor data input is read from an input text file: "src/Floor_Input.txt"
      */
-    public FloorThread(FloorBuffer floorEventBuffer) throws IOException {
+    public FloorThread(ElevatorBuffer elevatorBuffer) throws IOException {
         super("FLOOR");
-        this.floorEventBuffer = floorEventBuffer;
+        this.elevatorBuffer = elevatorBuffer;
         this.floorEventList = new ArrayList<>();
         this.populateFloorEventList(); // populate list of floor events from input text file
     }
@@ -64,9 +67,12 @@ public class FloorThread extends Thread {
     public void run () {
         for (int i = 0; i < floorEventList.size(); i++) {
             FloorEvent currentFloorEvent = floorEventList.get(i);
-            floorEventBuffer.putFloorEvent(currentFloorEvent);
 
-            FloorEvent finishedFloorEvent = floorEventBuffer.getFloorEvent();
+            System.out.println("Requesting Elevator Use #" + i);
+            elevatorBuffer.put(currentFloorEvent);
+
+            FloorEvent finishedFloorEvent = elevatorBuffer.take();
+            System.out.println("Finished Processing Use #" + i);
 
             try {
                 Thread.sleep(500);
@@ -74,6 +80,14 @@ public class FloorThread extends Thread {
         }
 
 
+    }
+
+    /**
+     * Getter for floor event list.
+     * @return floorEventList
+     */
+    public ArrayList<FloorEvent> getFloorEventList() {
+        return floorEventList;
     }
 
 }

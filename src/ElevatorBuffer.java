@@ -54,7 +54,7 @@ public class ElevatorBuffer {
      *
      * @return items A list of the two ingredients taken
      */
-    public synchronized FloorEvent take(int i)
+    public synchronized FloorEvent take()
     {
         while (!readable) {
             try {
@@ -64,8 +64,8 @@ public class ElevatorBuffer {
             }
         }
 
-        FloorEvent specificEvent = contents.get(i);
-        contents.remove(i);
+        FloorEvent specificEvent = contents.get(0);
+        contents.remove(0);
 
         writeable = true;
 

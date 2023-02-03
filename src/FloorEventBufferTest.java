@@ -5,7 +5,7 @@ import java.io.IOException;
  * and the scheduler thread (consumer) by creating instances of each.
  *
  * @author Mahtab Ameli
- */
+
 class FloorEventBufferTest {
 
     public static void main(String[] args) throws IOException {
@@ -22,3 +22,4 @@ class FloorEventBufferTest {
     }
 
 }
+ */
