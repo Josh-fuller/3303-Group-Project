@@ -15,7 +15,7 @@ class FloorEventBufferTest {
         FloorEventBuffer buffer;
 
         buffer = new FloorEventBuffer();
-        scheduler = new TempSchedulerThread(buffer);
+        scheduler = new SchedulerThread(buffer);
         floor = new FloorThread(buffer);
         floor.start();
         scheduler.start();

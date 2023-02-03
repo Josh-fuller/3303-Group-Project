@@ -51,4 +51,12 @@ public class FloorEventBuffer {
         return floorEvent;
     }
 
+    /**
+     * Return true if buffer is empty.
+     * @return
+     */
+    public boolean isEmpty() {
+        return empty;
+    }
+
 }
