@@ -11,7 +11,7 @@ public class TempMain {
         FloorEventBuffer floorEventBuffer = new FloorEventBuffer();
 
         Thread scheduler = new TempSchedulerThread(floorEventBuffer);
-        FloorThread floor = new FloorThread(floorEventBuffer);
+        Thread floor = new FloorThread(floorEventBuffer);
 
         floor.start();
         scheduler.start();
