@@ -1,5 +1,3 @@
-package src;
-
 /**
  * The Elevator class simulates an elevator which has buttons and lamps inside of the elevator used to select floors and
  * indicate the floors selected, and to indicate the location of the elevator itself.
@@ -9,7 +7,7 @@ package src;
  * @version Iteration 1
  * @since   2023-02-03
  */
-public class Elevator extends Thread{
+public class ElevatorThread extends Thread{
 
     private ElevatorBuffer elevatorBuffer;  // buffer for the scheduler and elevator data
 
@@ -20,10 +18,10 @@ public class Elevator extends Thread{
     /**
      * Constructor for the Elevator class
      *
-     * @param ElevatorBuffer buffer for the scheduler and elevator to communicate the floor events
+     * @param elevatorBuffer buffer for the scheduler and elevator to communicate the floor events
      * @param ElevatorNum the current elevators number
      */
-    public Elevator(ElevatorBuffer elevatorBuffer, int ElevatorNum){
+    public ElevatorThread(ElevatorBuffer elevatorBuffer, int ElevatorNum){
         super("Elevator");
         this.elevatorBuffer = elevatorBuffer;
         this.ElevatorNum = ElevatorNum;
@@ -41,17 +39,17 @@ public class Elevator extends Thread{
             System.out.println("Elevator" + ElevatorNum + " is checking if any floor button has been pressed.");
 
             // Check if there is anything in the buffer
-            if(elevatorBuffer.getContentsOfBuffer().size > 0 ){
+            if(elevatorBuffer.getContentsOfBuffer().size() > 0 ){
                 System.out.println("Elevator" + ElevatorNum + " has found work.");
             }else{
                 System.out.println("Elevator" + ElevatorNum + "has found no work.");
             }
 
             // Check if the work is meant for this specific elevator.
-            for(int i = 0; i > elevatorBuffer.getContentsOfBuffer().size; i++){
-                if(elevatorBuffer.getContentsOfBuffer().size > 0 &&
-                        elevatorBuffer.getContentsOfBuffer().get(i).getFloor() == ElevatorNum){
-                    System.out.println("Elevator" + ElevatorNum + "has found work on floor" + elevatorBuffer.get(i).getFloor());
+            for(int i = 0; i > elevatorBuffer.getContentsOfBuffer().size(); i++){
+                if(elevatorBuffer.getContentsOfBuffer().size() > 0 &&
+                        elevatorBuffer.getContentsOfBuffer().get(i).getFloorNumber() == ElevatorNum){
+                    System.out.println("Elevator" + ElevatorNum + "has found work on floor" + elevatorBuffer.getContentsOfBuffer().get(i).getElevatorNum());
                     isRightElevator = true;
                 }else{
                     System.out.println("Scheduler is not looking for Elevator" + ElevatorNum);
@@ -60,9 +58,9 @@ public class Elevator extends Thread{
 
                 // Retrieves the floor the elevator must go to and sends the info back to the buffer.
                 if(isRightElevator){
-                    FloorEvent destination =  elevatorBuffer.takeWork();
-                    System.out.println("Elevator" + ElevatorNum + "is going to floor" + elevatorBuffer.destination.getFloor());
-                    elevatorBuffer.informScheduler(destination);
+                    FloorEvent destination =  elevatorBuffer.take(i);
+                    System.out.println("Elevator" + ElevatorNum + "is going to floor" + destination.getElevatorButton());
+                    elevatorBuffer.put(destination);
                 }
 
                 try{
