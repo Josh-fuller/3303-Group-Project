@@ -18,7 +18,7 @@ public class Elevator extends Thread{
     private int ElevatorNum;    // holds which elevator this currently is
 
     /**
-     * Constructer for the Elevator class
+     * Constructor for the Elevator class
      *
      * @param ElevatorBuffer buffer for the scheduler and elevator to communicate the floor events
      * @param ElevatorNum the current elevators number
