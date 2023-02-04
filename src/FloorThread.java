@@ -10,18 +10,20 @@ public class FloorThread extends Thread {
 
     //private FloorBuffer floorEventBuffer; // buffer for holding floorEvent data
 
-    private ElevatorBuffer elevatorBuffer;
+    private ElevatorBuffer elevatorPutBuffer;
+    private ElevatorBuffer elevatorTakeBuffer;
 
     private ArrayList<FloorEvent> floorEventList; // list of FloorEvent objects read from input file
 
     /**
      * Constructor for the class.
-     * @param elevatorBuffer buffer for communicating floor events between the floor and the scheduler.
+     * @param elevatorPutBuffer,elevatorTakeBuffer buffer for communicating floor events between the floor and the scheduler.
      * @throws IOException floor data input is read from an input text file: "src/Floor_Input.txt"
      */
-    public FloorThread(ElevatorBuffer elevatorBuffer) throws IOException {
+    public FloorThread(ElevatorBuffer elevatorPutBuffer, ElevatorBuffer elevatorTakeBuffer) throws IOException {
         super("FLOOR");
-        this.elevatorBuffer = elevatorBuffer;
+        this.elevatorPutBuffer = elevatorPutBuffer;
+        this.elevatorTakeBuffer = elevatorTakeBuffer;
         this.floorEventList = new ArrayList<>();
         this.populateFloorEventList(); // populate list of floor events from input text file
     }
@@ -66,12 +68,15 @@ public class FloorThread extends Thread {
     // Put each event from floorEventList in the floorEventBuffer for communication to the scheduler.
     public void run () {
         for (int i = 0; i < floorEventList.size(); i++) {
+
             FloorEvent currentFloorEvent = floorEventList.get(i);
 
-            System.out.println("Requesting Elevator Use #" + i);
-            elevatorBuffer.put(currentFloorEvent);
+            System.out.println("STEP 1 #" + i);
+            elevatorPutBuffer.put(currentFloorEvent);
 
-            FloorEvent finishedFloorEvent = elevatorBuffer.take();
+
+            FloorEvent finishedFloorEvent = elevatorTakeBuffer.take();
+            System.out.println("STEP 8");
             System.out.println("Finished Processing Use #" + i);
 
             try {

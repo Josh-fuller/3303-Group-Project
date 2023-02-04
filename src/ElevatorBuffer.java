@@ -34,15 +34,12 @@ public class ElevatorBuffer {
         }
         //Add to plate
         contents.add(event);
+        System.out.println("Event with specifications: " + event.toString() + " placed by " + Thread.currentThread().getName());
 
-        if(contents.size() > 0){
-            readable = true;
-        }
+        readable = true;
         //System.out.println("");
         //System.out.println("");
-        if(contents.size() > 19){
-            writeable = false;
-        }
+        writeable = false;
 
         //System.out.println(""); //for debug
         notifyAll();
@@ -65,13 +62,12 @@ public class ElevatorBuffer {
         }
 
         FloorEvent specificEvent = contents.get(0);
+        System.out.println("Event with specifications: " + specificEvent.toString() + " taken by " + Thread.currentThread().getName());
         contents.remove(0);
 
-        writeable = true;
+        writeable = true; //for this iteration only 1 command will be processed at a time, so r/w are simply toggled
 
-        if (contents.size() < 1){
-            readable = false;
-        }
+        readable = false;
 
         notifyAll();
         return specificEvent;
