@@ -20,6 +20,11 @@ public class SchedulerThread implements Runnable{
     }
 
 
+    /** *
+     * The runnable portion of scheduler, responsible for acting as the translator from floor/elevator and back
+     *
+     * @author Josh Fuller
+     */
     @Override
     public void run() {
         while(true){
@@ -54,6 +59,8 @@ public class SchedulerThread implements Runnable{
 
     public static void main(String[] args) throws IOException {
 
+        //declare and initialise everything
+
         ElevatorBuffer ePutBuffer,eTakeBuffer,fPutBuffer,fTakeBuffer;
 
         Thread elevator, floor, scheduler;
@@ -64,7 +71,7 @@ public class SchedulerThread implements Runnable{
         fTakeBuffer = new ElevatorBuffer();
 
 
-        // Create the producer and consumer threads,
+        // Create the floor,scheduler and elevator threads,
         // passing each thread a reference to the
         // shared BoundedBuffer object.
 
