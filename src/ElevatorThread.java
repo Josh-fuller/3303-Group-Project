@@ -54,7 +54,7 @@ public class ElevatorThread extends Thread{
             for(int i = 0; i < elevatorTakeBuffer.getContentsOfBuffer().size(); i++){
                 if(elevatorTakeBuffer.getContentsOfBuffer().size() > 0 &&
                         elevatorTakeBuffer.getContentsOfBuffer().get(i).getElevatorNum() == ElevatorNum){
-                    System.out.println("Elevator " + ElevatorNum + " has found work on floor " + elevatorTakeBuffer.getContentsOfBuffer().get(i).getElevatorNum());
+                    System.out.println("Elevator " + ElevatorNum + " has found work on floor " + elevatorTakeBuffer.getContentsOfBuffer().get(i).getFloorNumber());
                     isRightElevator = true;
                 }else{
                     System.out.println("Scheduler is not looking for Elevator " + ElevatorNum);
