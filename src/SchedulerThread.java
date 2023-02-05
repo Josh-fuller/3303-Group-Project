@@ -32,7 +32,7 @@ public class SchedulerThread implements Runnable{
             //take from floor
             eventTransferOne = fPutBuffer.take();
             System.out.println("Scheduling event from floor: " + eventTransferOne.getFloorNumber() + " to floor: "
-                    + eventTransferOne.getCarButton() + "(STEP 2)");
+                    + eventTransferOne.getElevatorButton() + "(STEP 2)");
 
             //put in elevator
             eTakeBuffer.put(eventTransferOne);
@@ -43,7 +43,7 @@ public class SchedulerThread implements Runnable{
             System.out.println("(STEP 6)");
 
             System.out.println("Scheduler processed event from floor: " + eventTransferTwo.getFloorNumber() + " to floor: "
-                    + eventTransferTwo.getCarButton());
+                    + eventTransferTwo.getElevatorButton());
 
             //put back in floor
             System.out.println("STEP 7");

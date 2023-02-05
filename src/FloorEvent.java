@@ -10,7 +10,7 @@ public class FloorEvent {
     private String time; // time of elevator request (hh:mm:ss.mmm)
     private int floorNumber; // the floor number elevator request is made from
     private FloorButton floorButton; // the up/down direction button
-    private int carButton; // destination floor button pressed inside the elevator
+    private int elevatorButton; // destination floor button pressed inside the elevator
 
 
     private boolean isProcessed; // Whether the call request has been run
@@ -29,7 +29,7 @@ public class FloorEvent {
         this.time = time;
         this.floorNumber = floorNumber;
         this.floorButton = floorButton;
-        this.carButton = elevatorButton;
+        this.elevatorButton = elevatorButton;
         this.elevatorNum = elevatorNum;
         isProcessed = false;
     }
@@ -41,7 +41,7 @@ public class FloorEvent {
      */
     public String toString() {
         return "[Time: " + time + ", Floor #: " + floorNumber +
-                ", Floor Button: " + floorButton + ", Elevator Button: " + carButton + "]";
+                ", Floor Button: " + floorButton + ", Elevator Button: " + elevatorButton + "]";
     }
 
     /**
@@ -61,8 +61,8 @@ public class FloorEvent {
         return floorButton;
     }
 
-    public int getCarButton() {
-        return carButton;
+    public int getElevatorButton() {
+        return elevatorButton;
     }
 
     public int getElevatorNum() {

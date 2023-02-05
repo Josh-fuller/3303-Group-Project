@@ -12,7 +12,7 @@ public class ElevatorThread extends Thread{
     private ElevatorBuffer elevatorPutBuffer;  // buffer for the scheduler and elevator data
     private ElevatorBuffer elevatorTakeBuffer;
 
-    private boolean isRightElevator;   // holds if the buffer has work for the current elevator
+    public boolean isRightElevator;   // holds if the buffer has work for the current elevator
 
     private int ElevatorNum;    // holds which elevator this currently is
 
@@ -54,8 +54,11 @@ public class ElevatorThread extends Thread{
             for(int i = 0; i < elevatorTakeBuffer.getContentsOfBuffer().size(); i++){
                 if(elevatorTakeBuffer.getContentsOfBuffer().size() > 0 &&
                         elevatorTakeBuffer.getContentsOfBuffer().get(i).getElevatorNum() == ElevatorNum){
+
                     System.out.println("Elevator " + ElevatorNum + " has found work on floor " + elevatorTakeBuffer.getContentsOfBuffer().get(i).getFloorNumber());
                     isRightElevator = true;
+
+
                 }else{
                     System.out.println("Scheduler is not looking for Elevator " + ElevatorNum);
                     isRightElevator = false;
@@ -65,9 +68,9 @@ public class ElevatorThread extends Thread{
                 if(isRightElevator){
                     FloorEvent destination =  elevatorTakeBuffer.take();
                     System.out.println("STEP 4");
-                    System.out.println("Elevator " + ElevatorNum + " is going to floor " + destination.getCarButton());
+                    System.out.println("Elevator " + ElevatorNum + " is going to floor " + destination.getElevatorButton());
                     destination.setProcessed();
-                    System.out.println("Elevator " + ElevatorNum + " has reached floor " + destination.getCarButton());
+                    System.out.println("Elevator " + ElevatorNum + " has reached floor " + destination.getElevatorButton());
                     System.out.println("STEP 5");
                     elevatorPutBuffer.put(destination);
                 }
