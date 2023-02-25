@@ -17,9 +17,12 @@ public class SchedulerThread implements Runnable{
 
     public enum SchedulerState {
         IDLE,
-        PROCESSING,
-        DISPATCHING
+        PROCESSING_FLOOR_EVENT,
+        DISPATCHING_TO_ELEVATOR,
+        PROCESSING_ELEVATOR_EVENT,
+        DISPATCHING_TO_FLOOR
     }
+
 
 
 
@@ -42,29 +45,70 @@ public class SchedulerThread implements Runnable{
     public void run() {
         while(true){
 
-            //take from floor
-            eventTransferOne = fPutBuffer.take();
-            System.out.println("Scheduling event from floor: " + eventTransferOne.getFloorNumber() + " to floor: "
-                    + eventTransferOne.getElevatorButton() + "(STEP 2)");
+            switch(state) {
+                case IDLE:
 
-            //put in elevator
-            eTakeBuffer.put(eventTransferOne);
-            System.out.println("(STEP 3)");
+                    // Check if any buffer is not empty
+                    if(!ePutBuffer.isEmpty()) {
+                        processingElevatorEventState();
+                    }
+                    else if(!fPutBuffer.isEmpty()) {
+                        processingFloorState();
+                    }
+                    else {
+                        idleState();
+                    }
 
-            //Take from elevator when available, different event to prove transfer
-            eventTransferTwo = ePutBuffer.take();
-            System.out.println("(STEP 6)");
+                    break;
 
-            System.out.println("Scheduler processed event from floor: " + eventTransferTwo.getFloorNumber() + " to floor: "
-                    + eventTransferTwo.getElevatorButton());
+                case PROCESSING_FLOOR_EVENT:
+                    // Take event from fPutBuffer
+                    eventTransferOne = fPutBuffer.take();
+                    System.out.println("Scheduling event from floor: " + eventTransferOne.getFloorNumber() + " to floor: "
+                            + eventTransferOne.getElevatorButton() + "(STEP 2)");
 
-            //put back in floor
-            System.out.println("STEP 7");
-            fTakeBuffer.put(eventTransferTwo);
+                    // Transition to DISPATCHING_TO_ELEVATOR state
+                    dispatchingToElevatorState();
+                    break;
 
+                case DISPATCHING_TO_ELEVATOR:
+                    // Put event in eTakeBuffer
+                    eTakeBuffer.put(eventTransferOne);
+                    System.out.println("(STEP 3)");
+
+                    //transition to idle state
+                    idleState();
+
+                    break;
+
+                case PROCESSING_ELEVATOR_EVENT:
+
+                    // Take event from ePutBuffer if available
+                    if(!ePutBuffer.isEmpty()) {
+                        eventTransferTwo = ePutBuffer.take();
+                        System.out.println("(STEP 6)");
+                    }
+
+                    // Print event information
+                    System.out.println("Scheduler processed event from floor: " + eventTransferTwo.getFloorNumber() + " to floor: "
+                            + eventTransferTwo.getElevatorButton());
+
+
+                    // Transition to DISPATCHING_TO_FLOOR state
+                    dispatchingToFloorState();
+                    break;
+
+                case DISPATCHING_TO_FLOOR:
+                    // Put event in fTakeBuffer
+                    System.out.println("STEP 7");
+                    fTakeBuffer.put(eventTransferTwo);
+                    //go to idle state
+                    idleState();
+                    break;
+            }
 
             try {
-                Thread.sleep(500);
+                Thread.sleep(100);
             } catch (InterruptedException e) {}
 
         }

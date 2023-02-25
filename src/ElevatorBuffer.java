@@ -82,6 +82,8 @@ public class ElevatorBuffer {
         return contents;
     }
 
+    public boolean isEmpty() {return contents.isEmpty();}
+
     public boolean isWriteable() {
         return writeable;
     }
