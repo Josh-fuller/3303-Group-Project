@@ -11,12 +11,25 @@ public class SchedulerThread implements Runnable{
     FloorEvent eventTransferOne;
     FloorEvent eventTransferTwo;
 
+    SchedulerState state;
+
+    boolean emptyBuffer;
+
+    public enum SchedulerState {
+        IDLE,
+        PROCESSING,
+        DISPATCHING
+    }
+
+
+
     public SchedulerThread(ElevatorBuffer ePutBuffer, ElevatorBuffer eTakeBuffer, ElevatorBuffer fPutBuffer, ElevatorBuffer fTakeBuffer){
 
         this.ePutBuffer = ePutBuffer;
         this.eTakeBuffer = eTakeBuffer;
         this.fPutBuffer = fPutBuffer;
         this.fTakeBuffer = fTakeBuffer;
+        state = SchedulerState.IDLE;
     }
 
 
