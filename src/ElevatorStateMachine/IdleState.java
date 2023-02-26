@@ -24,7 +24,7 @@ public class IdleState extends ElevatorState{
         System.out.println("**************************************************************");
     }
 
-/*    @Override
+    @Override
     public void handleOpeningDoor() {
         System.out.println("From " + context.getState() + "State.handleOpeningDoor():");
         System.out.println("Current State: " + context.getState());
@@ -50,7 +50,7 @@ public class IdleState extends ElevatorState{
         System.out.println("From " + context.getState() + " State : handleStopping():");
         System.out.println("Current State: " + context.getState());
         System.out.println("INVALID REQUEST. Elevator is already stationary.");
-    }*/
+    }
 
     public String toString() {
         return "Idle";

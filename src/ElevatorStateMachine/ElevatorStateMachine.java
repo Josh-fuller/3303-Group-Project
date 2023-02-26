@@ -263,35 +263,6 @@ public class ElevatorStateMachine {
         System.out.println("Buttons pressed from inside the elevator: " + e.buttonSet);
         System.out.println("Elevator lamps: " + e.lampSet);*/
 
-        /**
-         * Testing scheduler commands from: IDLE
-         * 1 valid transition:
-         *      Idle -> Stopped
-         *
-         */
-        // VALID REQUESTS
-        // e.closeDoor(); // should transition from idle to stopped.
-        // INVALID REQUESTS
-        // e.openDoor(); // door is already open.
-        // e.moveUp(); // elevator cannot move directly from idle state.
-        // e.moveDown(); // elevator cannot move directly from idle state.
-        // e.stop(); // elevator is already stationary.
-//*****************************************************************************************************
-        /**
-         * Testing scheduler commands from: STOPPED
-         * 3 valid transitions:
-         *      Stopped -> Idle
-         *      Stopped -> MovingUp
-         *      Stopped -> MovingDown
-         */
-         // First bring the system to Stopped state
-         //e.closeDoor();   // Idle -> Stopped
-         // now testing transitions that start from Stopped state
-         // VALID REQUESTS
-         // e.openDoor();    // VALID REQUEST #1. transition Stopped -> Idle
-         // e.moveUp();    // VALID REQUEST #2. transition Stopped -> MovingUp
-         //e.moveDown();    // VALID REQUEST #3. transition Stopped -> MovingDown
-         // TODO TEST INVALID REQUESTS
 //*****************************************************************************************************
         /**
          * Testing longest transition path
