@@ -1,3 +1,5 @@
+import MainPackage.FloorEvent;
+
 /**
  * The Elevator class simulates an elevator which has buttons and lamps inside of the elevator used to select floors and
  * indicate the floors selected, and to indicate the location of the elevator itself.

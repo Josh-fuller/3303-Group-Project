@@ -1,5 +1,6 @@
 import static org.junit.Assert.*;
 
+import MainPackage.FloorEvent;
 import org.junit.Test;
 
 public class SchedulerThreadTest {

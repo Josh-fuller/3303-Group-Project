@@ -1,5 +1,7 @@
+package MainPackage;
+
 /**
- * Class FloorEvent represents the floor input data for requesting an elevator.
+ * Class MainPackage.FloorEvent represents the floor input data for requesting an elevator.
  *
  * @author Mahtab Ameli
  */

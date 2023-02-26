@@ -1,5 +1,6 @@
 import static org.junit.Assert.assertEquals;
 
+import MainPackage.FloorEvent;
 import org.junit.Test;
 
 public class FloorEventTest {

@@ -167,7 +167,7 @@ public class ElevatorStateMachine {
     }
 
     /**
-     * Creates a FloorEvent object for communication to the scheduler, following each button press from inside the elevator.
+     * Creates a MainPackage.FloorEvent object for communication to the scheduler, following each button press from inside the elevator.
      */
     public FloorEvent createElevatorEvent(int destinationFloor) {
         FloorEvent.FloorButton directionButton;

@@ -15,7 +15,7 @@ import org.junit.Test;
 public class ElevatorThreadTest {
     ElevatorBuffer putBuff;
     ElevatorBuffer takeBuff;
-    FloorEvent floorEvnt;
+    MainPackage.FloorEvent floorEvnt;
     ElevatorThread elvtrThread;
     int ElevatorNum = 1;
 
@@ -23,7 +23,7 @@ public class ElevatorThreadTest {
     public void setup(){
         putBuff = new ElevatorBuffer();
         takeBuff = new ElevatorBuffer();
-        floorEvnt = new FloorEvent("01:00:00.000", 3, FloorEvent.FloorButton.UP, 1, ElevatorNum);
+        floorEvnt = new MainPackage.FloorEvent("01:00:00.000", 3, MainPackage.FloorEvent.FloorButton.UP, 1, ElevatorNum);
         takeBuff.getContentsOfBuffer().add(floorEvnt);
 
 

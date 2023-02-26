@@ -1,3 +1,5 @@
+import MainPackage.FloorEvent;
+
 import java.util.*;
 /**
  * @author Josh Fuller
@@ -21,7 +23,7 @@ public class ElevatorBuffer {
     /**
      * Method used to serve ingredients on the plate. Immediately adds 2 items to not separate placement, which is why
      * it is readable right away and also instantly not writeable.
-     * @param event A FloorEvent
+     * @param event A MainPackage.FloorEvent
      */
     public synchronized void put(FloorEvent event)
     {
