@@ -1,4 +1,7 @@
 package ElevatorStateMachine;
+import MainPackage.FloorEvent;
+
+
 
 import java.util.*;
 
@@ -22,6 +25,9 @@ public class ElevatorStateMachine {
     public enum Direction{UP, DOWN, NONE}   // enum type for direction of moving elevator. NONE if elevator is stationary
     private Direction movingDirection;      // current moving direction of the elevator. NONE if elevator is stationary
 
+
+    private List<FloorEvent> elevatorEvents; // list of input events from user pressing buttons inside elevator
+
     /**
      * Constructor for the class.
      */
@@ -36,6 +42,7 @@ public class ElevatorStateMachine {
         this.arrivalSignal = -10;    // the elevator is not approaching any floor when stationary
         this.movingDirection = Direction.NONE; // the elevator is not moving
         this.stopSignal = false;
+        this.elevatorEvents = new ArrayList<>();
         //this.state = new ElevatorState(this);    // the elevator is in the Idle state
         this.state = new IdleState(this);    // the elevator is in the Idle state
     }
@@ -70,12 +77,12 @@ public class ElevatorStateMachine {
         state.handleMovingDown();
     }
 
-    /**
+/*    *//**
      * Signals elevator approaching a new floor..
-     */
+     *//*
     public void approachFloor() throws InterruptedException {
         state.handleApproachingFloor();
-    }
+    }*/
 
     /**
      * Attempts to make the elevator stop at approaching floor.
@@ -103,7 +110,7 @@ public class ElevatorStateMachine {
      * Turns on the elevator lamp for given floor number
      * by adding floorNumber to set of lamps.
      */
-    public void switchLampOn(Integer floorNumber) {
+    public void switchLampOn(int floorNumber) {
         lampSet.add(floorNumber);
     }
 
@@ -111,7 +118,7 @@ public class ElevatorStateMachine {
      * Turns off the elevator lamp for given floor number
      * by removing floorNumber from set of lamps.
      */
-    public void switchLampOff(Integer floorNumber) {
+    public void switchLampOff(int floorNumber) {
         lampSet.remove(floorNumber);
     }
 
@@ -148,22 +155,30 @@ public class ElevatorStateMachine {
     }
 
     /**
-     * Returns set of elevator lamps that are currently switched on.
-     * @return
-     */
-    public Set<Integer> getLampSet() {
-        return this.lampSet;
-    }
-
-    /**
      * Adds floorNumber to set of buttons pressed inside elevator,
      * and to the set of switched-on destination lamps.
      * The scheduler will switchLampOff() once the elevator stops at that floor.
      */
-    public void pressDestinationButton(int floorNumber) {
-        buttonSet.add(floorNumber);
-        lampSet.add(floorNumber);
+    public void pressDestinationButton(int destinationFloor) {
+        buttonSet.add(destinationFloor);
+        lampSet.add(destinationFloor);
         // TODO COMMUNICATE BUTTONS TO SCHEDULER
+        elevatorEvents.add(createElevatorEvent(destinationFloor));
+    }
+
+    /**
+     * Creates a FloorEvent object for communication to the scheduler, following each button press from inside the elevator.
+     */
+    public FloorEvent createElevatorEvent(int destinationFloor) {
+        FloorEvent.FloorButton directionButton;
+        if (destinationFloor >= arrivalSignal) {
+            directionButton = FloorEvent.FloorButton.UP;
+        }
+        else {
+            directionButton = FloorEvent.FloorButton.DOWN;
+        }
+        FloorEvent event = new FloorEvent("10:00:00.000", arrivalSignal, directionButton, destinationFloor, 1);
+        return event;
     }
 
     /**
@@ -174,7 +189,7 @@ public class ElevatorStateMachine {
         this.doorOpen = doorStatus;
     }
 
-    public void setCartStationary(boolean cartStationary) {
+    protected void setCartStationary(boolean cartStationary) {
         this.cartStationary = cartStationary;
     }
 
@@ -182,7 +197,7 @@ public class ElevatorStateMachine {
         this.movingDirection = movingDirection;
     }
 
-    public void setArrivalSignal(Integer arrivalSignal) {
+    public void setArrivalSignal(int arrivalSignal) {
         this.arrivalSignal = arrivalSignal;
     }
 
@@ -190,9 +205,6 @@ public class ElevatorStateMachine {
         return arrivalSignal;
     }
 
-    public List<Integer> getFloors() {
-        return floors;
-    }
 
     public void setCurrentFloor(Integer currentFloor) {
         this.currentFloor = currentFloor;
@@ -238,9 +250,12 @@ public class ElevatorStateMachine {
         this.stopSignal = signal;
     }
 
-
     public Direction getMovingDirection() {
         return movingDirection;
+    }
+
+    public List<FloorEvent> getElevatorEvents() {
+        return elevatorEvents;
     }
 
     public static void main(String[] args) throws InterruptedException {
