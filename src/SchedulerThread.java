@@ -37,6 +37,30 @@ public class SchedulerThread implements Runnable{
         state = SchedulerState.IDLE;
     }
 
+    public void idleState(){
+        state = SchedulerState.IDLE;
+    }
+
+    public void processingFloorState(){
+        state = SchedulerState.PROCESSING_FLOOR_EVENT;
+    }
+
+    public void dispatchingToElevatorState(){
+        state = SchedulerState.DISPATCHING_TO_ELEVATOR;
+    }
+
+    public void processingElevatorEventState(){
+        state = SchedulerState.PROCESSING_ELEVATOR_EVENT;
+    }
+
+    public void dispatchingToFloorState(){
+        state = SchedulerState.DISPATCHING_TO_FLOOR;
+    }
+
+    public SchedulerState getState(){
+        return state;
+    }
+
 
     /** *
      * The runnable portion of scheduler, responsible for acting as the translator from floor/elevator and back
