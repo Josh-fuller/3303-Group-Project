@@ -1,10 +1,6 @@
 package ElevatorStateMachine;
 import MainPackage.FloorEvent;
-
-
-
 import java.util.*;
-
 import static java.lang.Thread.sleep;
 
 /**
