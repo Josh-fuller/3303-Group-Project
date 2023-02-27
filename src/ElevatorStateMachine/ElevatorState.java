@@ -1,5 +1,12 @@
 package ElevatorStateMachine;
 
+/**
+ * ElevatorState represents parent state class for the elevator state machine, based on the State design pattern.
+ * The five concrete states extending this class are: IdleState, StoppedState, MovingUpState, MovingDownState, ApproachingFloorState
+ *
+ * @author  Mahtab Ameli
+ * @version Iteration 2
+ */
 public class ElevatorState {
     protected ElevatorStateMachine context;
     public ElevatorState(ElevatorStateMachine elevator) {

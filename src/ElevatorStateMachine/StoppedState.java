@@ -1,8 +1,18 @@
 package ElevatorStateMachine;
 
+/**
+ * StoppedState is a concrete state of the elevator state machine.
+ * At this state the elevator is stationary and the door is closed.
+ *
+ * @author  Mahtab Ameli
+ * @version Iteration 2
+ */
 public class StoppedState extends ElevatorState{
 
-
+    /**
+     * Constructor for the class.
+     * @param elevator
+     */
     public StoppedState(ElevatorStateMachine elevator) {
         context = elevator;
         context.setDoorOpen(false);
@@ -14,7 +24,7 @@ public class StoppedState extends ElevatorState{
 
     @Override
     /**
-     * 1 of 3 valid requests: (Stopped -> Idle)
+     * 1 of 3 valid transitions from this state: (Stopped -> Idle)
      */
     public void handleOpeningDoor() {
         System.out.println("***** From " + context.getState() + "State.handleOpeningDoor() *****");
@@ -26,7 +36,7 @@ public class StoppedState extends ElevatorState{
 
     @Override
     /**
-     * 1 of 3 valid requests: (Stopped -> MovingUp)
+     * 2 of 3 valid transitions from this state: (Stopped -> MovingUp)
      */
     public void handleMovingUp() throws InterruptedException {
         System.out.println("***** From " + context.getState() + "State.handleMovingUp() *****");
@@ -39,7 +49,7 @@ public class StoppedState extends ElevatorState{
 
     @Override
     /**
-     * 1 of 3 valid requests: (Stopped -> MovingUp)
+     * 3 of 3 valid transitions from this state: (Stopped -> MovingUp)
      */
     public void handleMovingDown() throws InterruptedException {
         System.out.println("***** From " + context.getState() + "State.handleMovingUp() *****");

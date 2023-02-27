@@ -1,7 +1,18 @@
 package ElevatorStateMachine;
 
+/**
+ * IdleState is the starting concrete state of the elevator state machine.
+ * At this state the elevator is stationary and the door is open.
+ *
+ * @author  Mahtab Ameli
+ * @version Iteration 2
+ */
 public class IdleState extends ElevatorState{
 
+    /**
+     * Constructor for the class
+     * @param elevator the context of the elevator state machine
+     */
     public IdleState(ElevatorStateMachine elevator) {
         context = elevator;
         context.setDoorOpen(true);
@@ -11,10 +22,9 @@ public class IdleState extends ElevatorState{
         context.setArrivalSignal(-10);
     }
 
-
     @Override
     /**
-     * 1 of 1 valid requests: (Idle -> Stopped)
+     * 1 of 1 valid transitions from this state: (Idle -> Stopped)
      */
     public void handleClosingDoor() {
         System.out.println("***** From " + context.getState() + "State.handleClosingDoor() *****");
@@ -55,5 +65,4 @@ public class IdleState extends ElevatorState{
     public String toString() {
         return "Idle";
     }
-
 }

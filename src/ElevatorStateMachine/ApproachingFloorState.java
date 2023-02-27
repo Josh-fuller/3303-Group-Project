@@ -1,6 +1,18 @@
 package ElevatorStateMachine;
 
+/**
+ * ApproachingFloorState is a concrete state of the elevator state machine.
+ * At this state the elevator is about to approach the next floor while moving up or down.
+ *
+ * @author  Mahtab Ameli
+ * @version Iteration 2
+ */
 public class ApproachingFloorState extends ElevatorState {
+
+    /**
+     * Constructor for the class.
+     * @param elevator
+     */
     public ApproachingFloorState(ElevatorStateMachine elevator) {
         context = elevator;
         context.setDoorOpen(false);
@@ -9,7 +21,7 @@ public class ApproachingFloorState extends ElevatorState {
 
     @Override
     /**
-     * 1 of 2 valid requests: (ApproachingFloor -> ApproachingFloor)
+     * 1 of 2 valid transitions from this state: (ApproachingFloor -> ApproachingFloor)
      *
      */
     public void handleApproachingFloor() throws InterruptedException {
@@ -36,7 +48,7 @@ public class ApproachingFloorState extends ElevatorState {
 
     @Override
     /**
-     * 2 of 2 valid requests: (ApproachingFloor -> Stopped)
+     * 2 of 2 valid transitions from this state: (ApproachingFloor -> Stopped)
      */
     public void handleStopping() {
         if (context.getStopSignal()) {
