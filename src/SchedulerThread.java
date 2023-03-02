@@ -15,7 +15,13 @@ public class SchedulerThread implements Runnable{
 
     SchedulerState state;
 
-    boolean emptyBuffer;
+
+    int startTranslation; //The number of floors between the cars current location and where the elevator request happens
+    int endTranslation; //The number of floors between the start of the elevator request and the end
+
+    //boolean emptyBuffer;
+
+    ElevatorThread elevatorThread = new ElevatorThread(ePutBuffer,eTakeBuffer, 1);
 
     public enum SchedulerState {
         IDLE,
@@ -61,6 +67,40 @@ public class SchedulerThread implements Runnable{
         return state;
     }
 
+    /** *
+     * Gets the translation number from current floor -> start floor [assuming up is positive]
+     */
+    private int getStartTranslation(){
+        return eventTransferOne.getFloorNumber() - elevatorThread.getCurrentFloor;
+    }
+
+    /** *
+     * Gets the translation number from start floor -> end floor [assuming up is positive]
+     */
+    private int getEndTranslation(){
+        return eventTransferOne.getElevatorButton() - eventTransferOne.getElevatorNum();
+    }
+
+    private void translateCar(int distance){
+
+        boolean direction = true;
+
+        if(distance < 0){
+            direction = false;
+        }
+
+        for(int i = 0;i < distance; i++){
+            if(direction){
+                elevatorThread.moveUp();
+            }
+            else{
+                elevatorThread.moveDown();
+            }
+            elevatorThread.openDoor();
+            elevatorThread.closeDoor();
+        }
+    }
+
 
     /** *
      * The runnable portion of scheduler, responsible for acting as the translator from floor/elevator and back
@@ -75,16 +115,12 @@ public class SchedulerThread implements Runnable{
                 case IDLE:
 
                     // Check if any buffer is not empty
-                    if(!ePutBuffer.isEmpty()) {
-                        processingElevatorEventState();
-                    }
-                    else if(!fPutBuffer.isEmpty()) {
+                    if(!fPutBuffer.isEmpty()) {
                         processingFloorState();
-                    }
-                    else {
+
+                    } else {
                         idleState();
                     }
-
                     break;
 
                 case PROCESSING_FLOOR_EVENT:
@@ -93,41 +129,32 @@ public class SchedulerThread implements Runnable{
                     System.out.println("Scheduling event from floor: " + eventTransferOne.getFloorNumber() + " to floor: "
                             + eventTransferOne.getElevatorButton() + "(STEP 2)");
 
+                    //get the number of floors to translate:
+                    startTranslation = getStartTranslation();
+                    endTranslation = getEndTranslation();
+
                     // Transition to DISPATCHING_TO_ELEVATOR state
                     dispatchingToElevatorState();
                     break;
 
                 case DISPATCHING_TO_ELEVATOR:
-                    // Put event in eTakeBuffer
-                    eTakeBuffer.put(eventTransferOne);
-                    System.out.println("(STEP 3)");
+
+                    //Dispatch elevator based on processed event
+                    translateCar(startTranslation);//go to start floor
+                    translateCar(endTranslation);//go to end floor
+
+                    //go to the right floor to start
+                    //System.out.println("(STEP 3)");
 
                     //transition to idle state
                     idleState();
 
                     break;
 
-                case PROCESSING_ELEVATOR_EVENT:
-
-                    // Take event from ePutBuffer if available
-                    if(!ePutBuffer.isEmpty()) {
-                        eventTransferTwo = ePutBuffer.take();
-                        System.out.println("(STEP 6)");
-                    }
-
-                    // Print event information
-                    System.out.println("Scheduler processed event from floor: " + eventTransferTwo.getFloorNumber() + " to floor: "
-                            + eventTransferTwo.getElevatorButton());
-
-
-                    // Transition to DISPATCHING_TO_FLOOR state
-                    dispatchingToFloorState();
-                    break;
-
                 case DISPATCHING_TO_FLOOR:
-                    // Put event in fTakeBuffer
+                    // Put event in fTakeBuffer, signifying completion of event
                     System.out.println("STEP 7");
-                    fTakeBuffer.put(eventTransferTwo);
+                    fTakeBuffer.put(eventTransferOne);
                     //go to idle state
                     idleState();
                     break;
@@ -156,7 +183,6 @@ public class SchedulerThread implements Runnable{
 
         // Create the floor,scheduler and elevator threads,
         // passing each thread a reference to the
-        // shared BoundedBuffer object.
 
         elevator = new Thread(new
                 ElevatorThread(ePutBuffer, eTakeBuffer,1),"Elevator 1");
