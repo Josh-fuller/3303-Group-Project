@@ -1,9 +1,19 @@
 package ElevatorStateMachine;
 
-import static java.lang.Thread.sleep;
-
+/**
+ * MovingUpState is a concrete state of the elevator state machine.
+ * At this state the elevator is moving up the building floors.
+ *
+ * @author  Mahtab Ameli
+ * @version Iteration 2
+ */
 public class MovingUpState extends ElevatorState{
 
+    /**
+     * Constructor for the class.
+     * @param elevator
+     * @throws InterruptedException
+     */
     public MovingUpState(ElevatorStateMachine elevator) throws InterruptedException {
         context = elevator;
         context.setDoorOpen(false);
@@ -15,7 +25,7 @@ public class MovingUpState extends ElevatorState{
 
     @Override
     /**
-     * 1 of 1 valid requests: (MovingUp -> ApproachingFloor)
+     * 1 of 1 valid transitions from this state: (MovingUp -> ApproachingFloor)
      *
      */
     public void handleApproachingFloor() throws InterruptedException {

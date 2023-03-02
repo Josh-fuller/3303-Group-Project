@@ -1,7 +1,18 @@
 package ElevatorStateMachine;
 
+/**
+ * MovingDownState is a concrete state of the elevator state machine.
+ * At this state the elevator is moving down the building floors.
+ *
+ * @author  Mahtab Ameli
+ * @version Iteration 2
+ */
 public class MovingDownState extends ElevatorState{
 
+    /**
+     * Constructor for the class.
+     * @param elevator
+     */
     public MovingDownState(ElevatorStateMachine elevator) {
         context = elevator;
         context.setDoorOpen(false);
@@ -13,7 +24,7 @@ public class MovingDownState extends ElevatorState{
 
     @Override
     /**
-     * 1 of 1 valid requests: (MovingUp -> ApproachingFloor)
+     * 1 of 1 valid transitions from this state: (MovingUp -> ApproachingFloor)
      *
      */
     public void handleApproachingFloor() throws InterruptedException {
@@ -31,5 +42,4 @@ public class MovingDownState extends ElevatorState{
     public String toString() {
         return "MovingDown";
     }
-
 }

@@ -4,8 +4,11 @@ import java.util.*;
 import static java.lang.Thread.sleep;
 
 /**
- * ElevatorContext represents an elevator state machine's context based on the State design pattern.
- * The states are: Idle, Stopped, MovingUp, MovingDown, ApproachingNextFloor
+ * ElevatorStateMachine represents the context of an elevator state machine, based on the State design pattern.
+ * The concrete states of the machine are: IdleState, StoppedState, MovingUpState, MovingDownState, ApproachingFloorState
+ *
+ * @author  Mahtab Ameli
+ * @version Iteration 2
  */
 public class ElevatorStateMachine {
 
@@ -44,7 +47,7 @@ public class ElevatorStateMachine {
     }
 
     /**
-     * Populates the list of floors with levels 1 through 5.
+     * Populates the list of floors that the machine will move between.
      */
     private void populateFloors() {
         floors.clear();
@@ -72,13 +75,6 @@ public class ElevatorStateMachine {
     public void moveDown() throws InterruptedException {
         state.handleMovingDown();
     }
-
-/*    *//**
-     * Signals elevator approaching a new floor..
-     *//*
-    public void approachFloor() throws InterruptedException {
-        state.handleApproachingFloor();
-    }*/
 
     /**
      * Attempts to make the elevator stop at approaching floor.
@@ -120,7 +116,7 @@ public class ElevatorStateMachine {
 
     /**
      * Getter for doorOpen. Returns true when elevator door is open.
-     * @return
+     * @return doorOpen
      */
     public boolean isDoorOpen() {
         return doorOpen;
@@ -128,7 +124,7 @@ public class ElevatorStateMachine {
 
     /**
      * Getter for cartStationary. Returns true when elevator is stationary.
-     * @return
+     * @return cartStationary
      */
     public boolean isStationary() {
         return cartStationary;
@@ -136,7 +132,7 @@ public class ElevatorStateMachine {
 
     /**
      * getter for the current floor the elevator is on.
-     * @return
+     * @return currentFloor
      */
     public int getCurrentFloor() {
         return currentFloor;
@@ -144,7 +140,7 @@ public class ElevatorStateMachine {
 
     /**
      * Getter for elevator's current state.
-     * @return currentState
+     * @return state
      */
     public ElevatorState getState() {
         return this.state;
@@ -158,12 +154,11 @@ public class ElevatorStateMachine {
     public void pressDestinationButton(int destinationFloor) {
         buttonSet.add(destinationFloor);
         lampSet.add(destinationFloor);
-        // TODO COMMUNICATE BUTTONS TO SCHEDULER
         elevatorEvents.add(createElevatorEvent(destinationFloor));
     }
 
     /**
-     * Creates a MainPackage.FloorEvent object for communication to the scheduler, following each button press from inside the elevator.
+     * Creates a FloorEvent object for communication to the scheduler, following each button press from inside the elevator.
      */
     public FloorEvent createElevatorEvent(int destinationFloor) {
         FloorEvent.FloorButton directionButton;
@@ -178,32 +173,43 @@ public class ElevatorStateMachine {
     }
 
     /**
-     * Setter for doorOpen flag.
+     * Setter for doorOpen.
      * @param doorStatus
      */
     protected void setDoorOpen(boolean doorStatus) {
         this.doorOpen = doorStatus;
     }
 
+    /**
+     * Setter for cartStationary.
+     * @param cartStationary
+     */
     protected void setCartStationary(boolean cartStationary) {
         this.cartStationary = cartStationary;
     }
 
+    /**
+     * Setter for movingDirection. Possible directions are: up, down, none.
+     * @param
+     */
     protected void setMovingDirection(Direction movingDirection) {
         this.movingDirection = movingDirection;
     }
 
+    /**
+     * Setter arrivalSignal. arrivalSignal indicates the floor number that the elevator is approaching.
+     * @param
+     */
     public void setArrivalSignal(int arrivalSignal) {
         this.arrivalSignal = arrivalSignal;
     }
 
+    /**
+     * Getter for arrivalSignal. Returns the floor number that the elevator is approaching.
+     * @return arrivalSignal
+     */
     public Integer getArrivalSignal() {
         return arrivalSignal;
-    }
-
-
-    public void setCurrentFloor(Integer currentFloor) {
-        this.currentFloor = currentFloor;
     }
 
     /**
@@ -219,7 +225,6 @@ public class ElevatorStateMachine {
             currentFloor = i;
         }
         state.handleApproachingFloor();
-        // TODO communicate approaching new floor to scheduler
     }
 
     /**
@@ -235,21 +240,35 @@ public class ElevatorStateMachine {
             currentFloor = i;
         }
         state.handleApproachingFloor();
-        // TODO communicate approaching new floor to scheduler
     }
 
+    /**
+     * Getter for the stopSignal.
+     */
     public boolean getStopSignal() {
         return stopSignal;
     }
 
+    /**
+     * Setter for stopSignal. This signal is set to true internally following scheduler's command to stop() the elevator.
+     * @param signal
+     */
     public void setStopSignal(boolean signal) {
         this.stopSignal = signal;
     }
 
+    /**
+     * Getter for elevator's movingDirection (up, down, or none).
+     * @return
+     */
     public Direction getMovingDirection() {
         return movingDirection;
     }
 
+    /**
+     * Getter for elevatorEvents (list of events corresponding to button presses from inside the elevator).
+     * @return
+     */
     public List<FloorEvent> getElevatorEvents() {
         return elevatorEvents;
     }
@@ -259,39 +278,7 @@ public class ElevatorStateMachine {
         e.pressDestinationButton(2);
         e.pressDestinationButton(5);
         e.pressDestinationButton(1);
-/*        System.out.println("There are " + e.floors.size() + " floors: " + e.floors);
-        System.out.println("Buttons pressed from inside the elevator: " + e.buttonSet);
-        System.out.println("Elevator lamps: " + e.lampSet);*/
 
-        /**
-         * Testing scheduler commands from: IDLE
-         * 1 valid transition:
-         *      Idle -> Stopped
-         *
-         */
-        // VALID REQUESTS
-        // e.closeDoor(); // should transition from idle to stopped.
-        // INVALID REQUESTS
-        // e.openDoor(); // door is already open.
-        // e.moveUp(); // elevator cannot move directly from idle state.
-        // e.moveDown(); // elevator cannot move directly from idle state.
-        // e.stop(); // elevator is already stationary.
-//*****************************************************************************************************
-        /**
-         * Testing scheduler commands from: STOPPED
-         * 3 valid transitions:
-         *      Stopped -> Idle
-         *      Stopped -> MovingUp
-         *      Stopped -> MovingDown
-         */
-         // First bring the system to Stopped state
-         //e.closeDoor();   // Idle -> Stopped
-         // now testing transitions that start from Stopped state
-         // VALID REQUESTS
-         // e.openDoor();    // VALID REQUEST #1. transition Stopped -> Idle
-         // e.moveUp();    // VALID REQUEST #2. transition Stopped -> MovingUp
-         //e.moveDown();    // VALID REQUEST #3. transition Stopped -> MovingDown
-         // TODO TEST INVALID REQUESTS
 //*****************************************************************************************************
         /**
          * Testing longest transition path
