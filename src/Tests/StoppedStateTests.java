@@ -1,4 +1,4 @@
-package ElevatorStateMachineTests;
+package Tests;
 
 import ElevatorStateMachine.ElevatorStateMachine;
 import org.junit.After;

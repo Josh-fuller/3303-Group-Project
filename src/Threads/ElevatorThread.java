@@ -1,4 +1,4 @@
-import MainPackage.FloorEvent;
+package Threads;
 
 /**
  * The Elevator class simulates an elevator which has buttons and lamps inside of the elevator used to select floors and
@@ -19,7 +19,7 @@ public class ElevatorThread extends Thread{
     private int ElevatorNum;    // holds which elevator this currently is
 
     /**
-     * Constructor for the Elevator class
+     * Constructor for the Elevator class (TODO Change elevator to not use buffers)
      *
      * @param elevatorPutBuffer,elevatorTakeBuffer buffer for the scheduler and elevator to communicate the floor events
      * @param ElevatorNum the current elevators number

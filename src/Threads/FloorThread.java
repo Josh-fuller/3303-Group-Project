@@ -1,10 +1,10 @@
-import MainPackage.FloorEvent;
+package Threads;
 
 import java.io.*;
 import java.util.ArrayList;
 
 /**
- * Class FloorThread represents the floor subsystem of the elevator scheduling system.
+ * Class Threads.FloorThread represents the floor subsystem of the elevator scheduling system.
  *
  * @author Mahtab Ameli
  */
@@ -15,7 +15,7 @@ public class FloorThread extends Thread {
     private ElevatorBuffer elevatorPutBuffer;
     private ElevatorBuffer elevatorTakeBuffer;
 
-    private ArrayList<FloorEvent> floorEventList; // list of MainPackage.FloorEvent objects read from input file
+    private ArrayList<FloorEvent> floorEventList; // list of Threads.FloorEvent objects read from input file
 
     /**
      * Constructor for the class.
@@ -39,14 +39,14 @@ public class FloorThread extends Thread {
         String inputLine;
         // Read the text file line by line. Each line contains the information for a separate floorEvent.
         while ((inputLine = reader.readLine()) != null) {
-            // Create a MainPackage.FloorEvent object from the information in the inputLine.
+            // Create a Threads.FloorEvent object from the information in the inputLine.
             FloorEvent event = createFloorEvent(inputLine);
             floorEventList.add(event);
         }
     }
 
 
-    // Create a MainPackage.FloorEvent from a line of information retrieved from "Floor_Input.txt".
+    // Create a Threads.FloorEvent from a line of information retrieved from "Floor_Input.txt".
     private FloorEvent createFloorEvent(String inputLine) {
         // Split the line into words separated by spaces.
         String[] words = inputLine.split("\\s");
@@ -56,7 +56,7 @@ public class FloorThread extends Thread {
         // Time Floor_Number Floor_Button Elevator_Button (hh:mm:ss.mmm n Up/Down n)
         timeInput = words[0]; floorNumberInput = words[1]; floorButtonInput = words[2]; carButtonInput = words[3]; elevatorNumInput = words[4];
 
-        // Cast each string input to the corresponding parameter type of MainPackage.FloorEvent. Create an object of MainPackage.FloorEvent.
+        // Cast each string input to the corresponding parameter type of Threads.FloorEvent. Create an object of Threads.FloorEvent.
         FloorEvent event = new FloorEvent(timeInput,
                 Integer.parseInt(floorNumberInput),
                 FloorEvent.FloorButton.valueOf(floorButtonInput),

@@ -1,6 +1,8 @@
+package Tests;
+
 import static org.junit.Assert.assertEquals;
 
-import MainPackage.FloorEvent;
+import Threads.FloorEvent;
 import org.junit.Test;
 
 public class FloorEventTest {

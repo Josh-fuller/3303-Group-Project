@@ -1,4 +1,9 @@
-import MainPackage.FloorEvent;
+package Tests;
+
+import Threads.ElevatorBuffer;
+import Threads.FloorEvent;
+import Threads.SchedulerThread;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -20,37 +25,37 @@ public class SchedulerStateMachineTests {
         floorEvent = new FloorEvent("01:00:00.000",1,button,1,1);
 
 
-        scheduler = new SchedulerThread(ePutBuffer,eTakeBuffer,fPutBuffer,fTakeBuffer);
+        scheduler = new SchedulerThread();
     }
 
     @Test
     public void testInitialState() {
-        assertEquals(SchedulerThread.SchedulerState.IDLE, scheduler.getState());
+        Assert.assertEquals(SchedulerThread.SchedulerState.IDLE, scheduler.getState());
     }
 
     @Test
     public void testProcessingFloorState() {
         fPutBuffer.put(floorEvent);
         scheduler.processingFloorState();
-        assertEquals(SchedulerThread.SchedulerState.PROCESSING_FLOOR_EVENT, scheduler.getState());
+        Assert.assertEquals(SchedulerThread.SchedulerState.PROCESSING_FLOOR_EVENT, scheduler.getState());
     }
 
     @Test
     public void testDispatchingToElevatorState() {
         scheduler.dispatchingToElevatorState();
-        assertEquals(SchedulerThread.SchedulerState.DISPATCHING_TO_ELEVATOR, scheduler.getState());
+        Assert.assertEquals(SchedulerThread.SchedulerState.DISPATCHING_TO_ELEVATOR, scheduler.getState());
     }
 
     @Test
     public void testProcessingElevatorEventState() {
         scheduler.processingElevatorEventState();
-        assertEquals(SchedulerThread.SchedulerState.PROCESSING_ELEVATOR_EVENT, scheduler.getState());
+        Assert.assertEquals(SchedulerThread.SchedulerState.PROCESSING_ELEVATOR_EVENT, scheduler.getState());
     }
 
     @Test
     public void testDispatchingToFloorState() {
         scheduler.dispatchingToFloorState();
-        assertEquals(SchedulerThread.SchedulerState.DISPATCHING_TO_FLOOR, scheduler.getState());
+        Assert.assertEquals(SchedulerThread.SchedulerState.DISPATCHING_TO_FLOOR, scheduler.getState());
     }
 
 }
