@@ -21,7 +21,8 @@ public class SchedulerThread implements Runnable{
 
     //boolean emptyBuffer;
     // TODO Change thread call to have no buffers
-    ElevatorThread elevatorThread = new ElevatorThread(ePutBuffer,eTakeBuffer, 1);
+    //ElevatorThread elevatorThread = new ElevatorThread(ePutBuffer,eTakeBuffer, 1);
+    ElevatorThread elevatorThread;
 
     public enum SchedulerState {
         IDLE,
@@ -35,8 +36,9 @@ public class SchedulerThread implements Runnable{
 
 
     public SchedulerThread(){
-
+        this.fPutBuffer = new ElevatorBuffer(); //todo move somewhere better?
         state = SchedulerState.IDLE;
+        elevatorThread = new ElevatorThread(ePutBuffer,eTakeBuffer, 1);
     }
 
     public void idleState(){
@@ -79,7 +81,7 @@ public class SchedulerThread implements Runnable{
     }
 
     //TODO Make javadoc + fix up once elevatorThread is fixed
-    private void translateCar(int distance){
+    private void translateCar(int distance) throws InterruptedException {
 
         boolean direction = true;
 
@@ -107,6 +109,39 @@ public class SchedulerThread implements Runnable{
      */
     @Override
     public void run() {
+        // testing if new ElevatorThread correctly executes scheduler commands: moveUp(), moveDown(), openDoor(), closeDoor()
+        // todo remove
+        System.out.println("ELEVATOR CURRENT STATE: " + elevatorThread.getState()
+                + "    CURRENT FLOOR: " + elevatorThread.getCurrentFloor());
+        /**
+         * Testing moveUp()
+         */
+        try {
+            elevatorThread.moveUp(5);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        /**
+         * Testing moveDown()
+         */
+        try {
+            elevatorThread.moveDown(1);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        /**
+         * Testing openDoor()
+         */
+        try {
+            elevatorThread.openDoor();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        /**
+         * Testing closeDoor()
+         */
+        elevatorThread.closeDoor();
+
         while(true){
 
             switch(state) {
@@ -138,8 +173,16 @@ public class SchedulerThread implements Runnable{
                 case DISPATCHING_TO_ELEVATOR:
 
                     //Dispatch elevator based on processed event
-                    translateCar(startTranslation);//go to start floor
-                    translateCar(endTranslation);//go to end floor
+                    try {
+                        translateCar(startTranslation);//go to start floor
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        translateCar(endTranslation);//go to end floor
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
 
                     //go to the right floor to start
                     //System.out.println("(STEP 3)");
@@ -164,4 +207,5 @@ public class SchedulerThread implements Runnable{
 
         }
     }
+
 }
