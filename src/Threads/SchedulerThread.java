@@ -219,17 +219,21 @@ public class SchedulerThread implements Runnable{
     @Override
     public void run() {
 
-        // Create a DatagramSocket
+        //initialise everything as null to start, so it is inside scope in case IDLE is skipped, though that is not possible practically
+        DatagramSocket receiveSocket = null;
+        DatagramPacket receivePacket = null;
 
         try {
+            // Create a DatagramSocket
             receiveSocket = new DatagramSocket(69);
         } catch (SocketException e) {
             throw new RuntimeException(e);
         }
 
         // Get server IP address
+        InetAddress IPAddress = null;
         try {
-            InetAddress IPAddress = InetAddress.getByName("localhost"); //edit with ip
+            IPAddress = InetAddress.getByName("localhost"); //edit with ip
         } catch (UnknownHostException e) {
             throw new RuntimeException(e);
         }
@@ -241,9 +245,7 @@ public class SchedulerThread implements Runnable{
 
                     // Create a DatagramPacket to receive data from client
                     byte[] receiveData = new byte[1024];
-                    DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-
-                    receivePacket = null;
+                    receivePacket = new DatagramPacket(receiveData, receiveData.length);
 
                     try {
                         receiveSocket.receive(receivePacket);
@@ -255,8 +257,7 @@ public class SchedulerThread implements Runnable{
 
                     if (messageType == SchedulerThread.messageType.FLOOR_EVENT) {
                         processingFloorState();
-                    }
-                    else if(messageType == SchedulerThread.messageType.ARRIVAL_SENSOR) {
+                    } else if(messageType == SchedulerThread.messageType.ARRIVAL_SENSOR) {
                         processingSensorRequestState();
                     } else if(messageType == SchedulerThread.messageType.MOVE_REQUEST)
                         processingMoveRequestState();
@@ -277,17 +278,14 @@ public class SchedulerThread implements Runnable{
 
                     sortTasks();
 
-                    //get the number of floors to translate:
-
-                    // Transition to DISPATCHING_TO_ELEVATOR state
                     idleState();
                     break;
 
                 case PROCESSING_MOVE_REQUEST:
 
-                    int currentFloorNum;
+                    int currentFloorNum = parseByteArrayForFloorNum(receivePacket.getData());
 
-                    currentFloorNum = parseByteArrayForFloorNum(receivePacket.getData());
+
 
                     idleState();
 
