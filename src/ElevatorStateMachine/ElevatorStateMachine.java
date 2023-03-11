@@ -82,9 +82,21 @@ public class ElevatorStateMachine {
      */
     public void forceMoveUp(int destination) throws InterruptedException {
         state = new MovingUpState(this);
-        this.currentFloor = destination;
-        this.arrivalSignal = destination;
-        //state.handleApproachingFloor();
+        if (!(destination > currentFloor)) {
+            System.out.println("Elevator cannot move up from " + currentFloor + " to " + destination
+                    + ". Move up destination must be larger than current floor.");
+            return;
+        }
+        int floorDifference = destination - currentFloor;
+        for (int i = 0; i < floorDifference; i++) {
+            forceIncrementFloor();
+            if (stopSignal) { // if there is a stop signal, stop the elevator and stop going up more floors
+                state = new StoppedState(this);
+                System.out.println("\nElevator has stopped at " + currentFloor + ", because of scheduler's stop signal.");
+                stopSignal = false; // resetting stop signal to false until scheduler sets it to true again
+                break;
+            }
+        }
         System.out.print("****************************************************************************\n"
             + "ELEVATOR EXECUTING SCHEDULER COMMAND TO MOVE UP...\n"
             + "CURRENT ELEVATOR STATE: " + state + "     CURRENT FLOOR: " + currentFloor + "\n"
@@ -96,6 +108,21 @@ public class ElevatorStateMachine {
      */
     public void forceMoveDown(int destination) throws InterruptedException {
         state = new MovingDownState(this);
+        if (destination >= currentFloor) {
+            System.out.println("Elevator cannot move down from " + currentFloor + " to " + destination
+                    + ". Move down destination must be lower than current floor.");
+            return;
+        }
+        int floorDifference = currentFloor - destination;
+        for (int i = 0; i < floorDifference; i++) {
+            forceDecrementFloor();
+            if (stopSignal) { // if there is a stop signal, stop the elevator and stop going down more floors
+                state = new StoppedState(this);
+                System.out.println("\nElevator has stopped at " + currentFloor + ", because of scheduler's stop signal.");
+                stopSignal = false; // resetting stop signal to false until scheduler sets it to true again
+                break;
+            }
+        }
         this.currentFloor = destination;
         this.arrivalSignal = destination;
         //state.handleApproachingFloor();
@@ -283,15 +310,17 @@ public class ElevatorStateMachine {
     /**
      * Increments floors one by one and signals arrival to each floor.
      */
-    public void forceIncrementFloor() throws InterruptedException {
+    public void forceIncrementFloor() {
         int topFloor= floors.size();
         int i = currentFloor;
         if (i < topFloor) {
             i++;
-            arrivalSignal = i;
             currentFloor = i;
+            arrivalSignal = i;
+            System.out.println("\nCURRENT FLOOR: " + currentFloor);
         }
     }
+
 
     /**
      * decrements floors one by one and signals arrival to each floor.
@@ -306,6 +335,20 @@ public class ElevatorStateMachine {
             currentFloor = i;
         }
         state.handleApproachingFloor();
+    }
+
+    /**
+     * Decrements floors by one level only and signals arrival to each floor.
+     */
+    public void forceDecrementFloor() throws InterruptedException {
+        int bottomFloor = 1;
+        int i = currentFloor;
+        if (i > bottomFloor) {
+            i--;
+            arrivalSignal = i;
+            currentFloor = i;
+            System.out.println("\nCURRENT FLOOR: " + currentFloor);
+        }
     }
 
     /**
@@ -340,20 +383,20 @@ public class ElevatorStateMachine {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        ElevatorStateMachine e = new ElevatorStateMachine();
+/*        ElevatorStateMachine e = new ElevatorStateMachine();
         e.pressDestinationButton(2);
         e.pressDestinationButton(5);
-        e.pressDestinationButton(1);
+        e.pressDestinationButton(1);*/
 
 //*****************************************************************************************************
         /**
          * Testing longest transition path
          */
-        e.closeDoor();  // Idle -> Stopped
+/*        e.closeDoor();  // Idle -> Stopped
         e.moveUp();     // Stopped -> MovingUp -> ApproachingFloor -> ApproachingFloor
         e.stop();       // ApproachingFloor -> Stopped
         e.moveDown();   // Stopped -> MovingDown -> ApproachingFloor -> ApproachingFloor
         e.stop();       // MovingDown -> Stopped
-        e.openDoor();   // Stopped -> Idle
+        e.openDoor();   // Stopped -> Idle*/
     }
 }
