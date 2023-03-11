@@ -158,7 +158,16 @@ public class SchedulerThread implements Runnable{
         return serializedMessage;
     }
 
+    public static byte[] intToByteArray(int value) {
+        byte[] bytes = new byte[4];
+        for (int i = 0; i < 4; i++) {
+            bytes[i] = (byte) (value >>> (i * 8));
+        }
+        return bytes;
+    }
+
     public static messageType parseByteArrayForType(byte[] byteArray) {
+
         messageType type = messageType.ERROR; // default value
 
         // check first two bytes
@@ -220,15 +229,7 @@ public class SchedulerThread implements Runnable{
     public void run() {
 
         //initialise everything as null to start, so it is inside scope in case IDLE is skipped, though that is not possible practically
-        DatagramSocket receiveSocket = null;
         DatagramPacket receivePacket = null;
-
-        try {
-            // Create a DatagramSocket
-            receiveSocket = new DatagramSocket(69);
-        } catch (SocketException e) {
-            throw new RuntimeException(e);
-        }
 
         // Get server IP address
         InetAddress IPAddress = null;
@@ -269,7 +270,7 @@ public class SchedulerThread implements Runnable{
                     break;
 
                 case PROCESSING_FLOOR_EVENT:
-                    // Take event from fPutBuffer
+
                     FloorEvent tempFloorEvent;
 
                     try {
@@ -289,29 +290,60 @@ public class SchedulerThread implements Runnable{
 
                 case PROCESSING_MOVE_REQUEST:
 
-                    int currentFloorNum = parseByteArrayForFloorNum(receivePacket.getData());
+                    int currentMovingFloorNum = parseByteArrayForFloorNum(receivePacket.getData());
+                    int destinationFloor = getDestinationFloor(currentMovingFloorNum);
 
+                    byte[] destinationFloorMessage = intToByteArray(destinationFloor);
 
+                    DatagramPacket sendElevatorMovePacket = new DatagramPacket(destinationFloorMessage, destinationFloorMessage.length, IPAddress, 69);//TODO USE RIGHT PORT
+                    //TODO ACC SEND THE MESSAGE
 
                     idleState();
-
                     break;
 
                 case PROCESSING_ARRIVAL_SENSOR:
 
-                    //Dispatch elevator based on processed event
+                    int stopRequest; //0 is affirmative, 1 is negative
 
-                    //go to the right floor to start
-                    //System.out.println("(STEP 3)");
+                    int currentArrivingFloorNum = parseByteArrayForFloorNum(receivePacket.getData());
 
-                    //transition to idle state
-                    idleState();
+                    if(processStopRequest(currentArrivingFloorNum)){
+                        stopRequest = 0;
+                    } else {
+                        stopRequest = 1;
+                    }
+
+                    byte[] stopFloorMessage = intToByteArray(stopRequest);
+
+                    DatagramPacket sendElevatorStopPacket = new DatagramPacket(stopFloorMessage, stopFloorMessage.length, IPAddress, 69);//TODO USE RIGHT PORT
+
+                    //TODO ACC SEND THE MESSAGE
+
+                    if(stopRequest == 0){
+                        dispatchingToFloorState();
+                    } else{
+                        idleState();
+                    }
+
 
                     break;
 
                 case DISPATCHING_TO_FLOOR:
-                    // Put event in fTakeBuffer, signifying completion of event
-                    System.out.println("SENDING ACKNOWLEDGE TO FLOOR");
+                    // A stop was made at a floor, make sure the floor acknowledges
+
+                    int floorNumber = parseByteArrayForFloorNum(receivePacket.getData());
+
+                    byte[] sendFloorData = intToByteArray(floorNumber);
+
+                    DatagramPacket sendFloorPacket = new DatagramPacket(sendFloorData, sendFloorData.length, IPAddress, 2529);//TODO CHANGE PORT
+
+                    sendSocket.send(sendFloorPacket);
+
+                    byte[] receivedFloorData = new byte[1024];
+                    DatagramPacket receivedFloorPacket = new DatagramPacket(receivedFloorData, receivedFloorData.length); //Add error handling in future iterations
+
+                    receiveSocket.receive(receivedFloorPacket);
+                    System.out.println("RECEIVED ACK FROM FLOOR");
 
                     //go to idle state
                     idleState();
