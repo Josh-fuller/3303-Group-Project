@@ -3,6 +3,7 @@ import MainPackage.FloorEvent;
 import java.io.*;
 import java.net.DatagramPacket;
 import java.util.ArrayList;
+import Threads.ElevatorThread;
 
 /** *
  * Class Scheduler used to translate data between Floors and Elevators.
@@ -12,7 +13,7 @@ import java.util.ArrayList;
 public class SchedulerThread implements Runnable{
 
     ElevatorBuffer ePutBuffer,eTakeBuffer,fPutBuffer,fTakeBuffer;
-    FloorEvent eventTransferOne;
+    FloorEvent eventTransferOne;        //TODO Needed?
     FloorEvent eventTransferTwo;
 
     SchedulerState state;
@@ -22,7 +23,7 @@ public class SchedulerThread implements Runnable{
     int endTranslation; //The number of floors between the start of the elevator request and the end
 
     //boolean emptyBuffer;
-
+    // TODO Change thread call to have no buffers
     ElevatorThread elevatorThread = new ElevatorThread(ePutBuffer,eTakeBuffer, 1);
 
     ArrayList<FloorEvent> schedulerTasks, elevatorOneTasks, elevatorTwoTasks, elevatorThreeTasks;
@@ -81,6 +82,7 @@ public class SchedulerThread implements Runnable{
 
     /** *
      * Gets the translation number from current floor -> start floor [assuming up is positive]
+     * TODO Make current floor variable in elevator (Do we need this function after UDP changes?)
      */
     private int getStartTranslation(){
         return eventTransferOne.getFloorNumber() - elevatorThread.getCurrentFloor;
@@ -93,6 +95,7 @@ public class SchedulerThread implements Runnable{
         return eventTransferOne.getElevatorButton() - eventTransferOne.getElevatorNum();
     }
 
+    //TODO Make javadoc + fix up once elevatorThread is fixed
     private void translateCar(int distance){
 
         boolean direction = true;
