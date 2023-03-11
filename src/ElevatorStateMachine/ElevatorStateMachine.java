@@ -69,11 +69,64 @@ public class ElevatorStateMachine {
         state.handleMovingUp();
     }
 
+
     /**
      * Attempts to make the elevator move down.
      */
     public void moveDown() throws InterruptedException {
         state.handleMovingDown();
+    }
+
+    /**
+     * Forces the elevator to move up 1 floor.
+     */
+    public void forceMoveUp(int destination) throws InterruptedException {
+        state = new MovingUpState(this);
+        this.currentFloor = destination;
+        this.arrivalSignal = destination;
+        //state.handleApproachingFloor();
+        System.out.print("****************************************************************************\n"
+            + "ELEVATOR EXECUTING SCHEDULER COMMAND TO MOVE UP...\n"
+            + "CURRENT ELEVATOR STATE: " + state + "     CURRENT FLOOR: " + currentFloor + "\n"
+            + "****************************************************************************\n");
+    }
+
+    /**
+     * Forces the elevator to move down.
+     */
+    public void forceMoveDown(int destination) throws InterruptedException {
+        state = new MovingDownState(this);
+        this.currentFloor = destination;
+        this.arrivalSignal = destination;
+        //state.handleApproachingFloor();
+        System.out.print("****************************************************************************\n"
+            + "ELEVATOR EXECUTING SCHEDULER COMMAND TO MOVE DOWN...\n"
+            + "CURRENT ELEVATOR STATE: " + state + "     CURRENT FLOOR: " + currentFloor + "\n"
+            + "****************************************************************************\n");
+    }
+
+    /**
+     * Force opens the elevator door.
+     */
+    public void forceOpenDoor() throws InterruptedException {
+        state = new IdleState(this);
+        System.out.print("****************************************************************************\n"
+                + "ELEVATOR EXECUTING SCHEDULER COMMAND TO OPEN DOOR...\n"
+                + "CURRENT ELEVATOR STATE: " + state + "     CURRENT FLOOR: " + currentFloor
+                + "     DOOR OPEN: " + doorOpen + "\n"
+                + "****************************************************************************\n");
+    }
+
+    /**
+     * Force closes the elevator door.
+     */
+    public void forceCloseDoor() {
+        state = new StoppedState(this);
+        System.out.print("****************************************************************************\n"
+                + "ELEVATOR EXECUTING SCHEDULER COMMAND TO CLOSE DOOR...\n"
+                + "CURRENT ELEVATOR STATE: " + state + "     CURRENT FLOOR: " + currentFloor
+                + "     DOOR OPEN: " + doorOpen + "\n"
+                + "****************************************************************************\n");
     }
 
     /**
@@ -87,7 +140,7 @@ public class ElevatorStateMachine {
     /**
      * Attempts to make the elevator open its door.
      */
-    public void openDoor() {
+    public void openDoor() throws InterruptedException {
         state.handleOpeningDoor();
     }
 
@@ -225,6 +278,19 @@ public class ElevatorStateMachine {
             currentFloor = i;
         }
         state.handleApproachingFloor();
+    }
+
+    /**
+     * Increments floors one by one and signals arrival to each floor.
+     */
+    public void forceIncrementFloor() throws InterruptedException {
+        int topFloor= floors.size();
+        int i = currentFloor;
+        if (i < topFloor) {
+            i++;
+            arrivalSignal = i;
+            currentFloor = i;
+        }
     }
 
     /**
