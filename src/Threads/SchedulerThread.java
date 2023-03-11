@@ -11,15 +11,9 @@ import java.util.*;
  */
 public class SchedulerThread implements Runnable{
 
-    ElevatorBuffer ePutBuffer,eTakeBuffer,fPutBuffer,fTakeBuffer;
-    FloorEvent eventTransferOne;        //TODO Needed?
-    FloorEvent eventTransferTwo;
+    ElevatorBuffer ePutBuffer,eTakeBuffer;
 
     SchedulerState state;
-
-
-    int startTranslation; //The number of floors between the cars current location and where the elevator request happens
-    int endTranslation; //The number of floors between the start of the elevator request and the end
 
     //boolean emptyBuffer;
     // TODO Change thread call to have no buffers
@@ -50,12 +44,11 @@ public class SchedulerThread implements Runnable{
     }
 
     public SchedulerThread(){
-
-        state = SchedulerState.IDLE;
+        
         this.schedulerTasks = new ArrayList<>();
-        this.elevatorOneTasks = new ArrayList<>();
-        this.elevatorTwoTasks = new ArrayList<>();
-        this.elevatorThreeTasks = new ArrayList<>();
+        state = SchedulerState.IDLE;
+
+        this.schedulerTasks = new ArrayList<>();
     }
 
     public void idleState(){
@@ -137,7 +130,6 @@ public class SchedulerThread implements Runnable{
         schedulerTasks.remove(0);
         return destinationFloor;
     }
-
     public int proccessStopRequest(int currentFloor){
         for(int i = 0;i < elevatorStops.size(); i++){
             if(elevatorStops.contains(currentFloor)){
@@ -145,17 +137,22 @@ public class SchedulerThread implements Runnable{
             }else{
                 return 1;
             }
-        }
-
-    }
 
     public FloorEvent byteToFloorEvent(byte[] event) throws IOException, ClassNotFoundException {
         ObjectInputStream inputStream = new ObjectInputStream(new ByteArrayInputStream(event));
         return (FloorEvent) inputStream.readObject();
     }
 
+    public static byte[] intToByteArray(int value) {
+        byte[] bytes = new byte[4];
+        for (int i = 0; i < 4; i++) {
+            bytes[i] = (byte) (value >>> (i * 8));
+        }
+        return bytes;
+    }
 
     public static messageType parseByteArrayForType(byte[] byteArray) {
+
         messageType type = messageType.ERROR; // default value
 
         // check first two bytes
@@ -217,15 +214,7 @@ public class SchedulerThread implements Runnable{
     public void run() {
 
         //initialise everything as null to start, so it is inside scope in case IDLE is skipped, though that is not possible practically
-        DatagramSocket receiveSocket = null;
         DatagramPacket receivePacket = null;
-
-        try {
-            // Create a DatagramSocket
-            receiveSocket = new DatagramSocket(69);
-        } catch (SocketException e) {
-            throw new RuntimeException(e);
-        }
 
         // Get server IP address
         InetAddress IPAddress = null;
@@ -245,13 +234,14 @@ public class SchedulerThread implements Runnable{
                     receivePacket = new DatagramPacket(receiveData, receiveData.length);
 
                     try {
-                        receiveSocket.receive(receivePacket);
+                        receiveSocket.receive(receivePacket); //Receive from anywhere
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
 
                     messageType messageType = parseByteArrayForType(receivePacket.getData());
 
+                    //based on message type, go to state
                     if (messageType == SchedulerThread.messageType.FLOOR_EVENT) {
                         processingFloorState();
                     } else if(messageType == SchedulerThread.messageType.ARRIVAL_SENSOR) {
@@ -266,7 +256,7 @@ public class SchedulerThread implements Runnable{
                     break;
 
                 case PROCESSING_FLOOR_EVENT:
-                    // Take event from fPutBuffer
+
                     FloorEvent tempFloorEvent;
 
                     try {
@@ -286,29 +276,60 @@ public class SchedulerThread implements Runnable{
 
                 case PROCESSING_MOVE_REQUEST:
 
-                    int currentFloorNum = parseByteArrayForFloorNum(receivePacket.getData());
+                    int currentMovingFloorNum = parseByteArrayForFloorNum(receivePacket.getData());
+                    int destinationFloor = getDestinationFloor(currentMovingFloorNum);
 
+                    byte[] destinationFloorMessage = intToByteArray(destinationFloor);
 
+                    DatagramPacket sendElevatorMovePacket = new DatagramPacket(destinationFloorMessage, destinationFloorMessage.length, IPAddress, 69);//SEND BACK TO ELEVATOR THAT MADE THE REQUEST
+                    //TODO ACC SEND THE MESSAGE
 
                     idleState();
-
                     break;
 
                 case PROCESSING_ARRIVAL_SENSOR:
 
-                    //Dispatch elevator based on processed event
+                    int stopRequest; //0 is affirmative, 1 is negative
 
-                    //go to the right floor to start
-                    //System.out.println("(STEP 3)");
+                    int currentArrivingFloorNum = parseByteArrayForFloorNum(receivePacket.getData()); //gets the 4th byte as the floor num, message = 2 bytes mode + 0 byte + floor num byte
 
-                    //transition to idle state
-                    idleState();
+                    if(processStopRequest(currentArrivingFloorNum)){
+                        stopRequest = 0;
+                    } else {
+                        stopRequest = 1;
+                    }
+
+                    byte[] stopFloorMessage = intToByteArray(stopRequest);
+
+                    DatagramPacket sendElevatorStopPacket = new DatagramPacket(stopFloorMessage, stopFloorMessage.length, IPAddress, 69);//SEND TO ELEVATOR TAT ASKED TO MOVE
+
+                    //TODO ACC SEND THE MESSAGE
+
+                    if(stopRequest == 0){
+                        dispatchingToFloorState();
+                    } else{
+                        idleState();
+                    }
+
 
                     break;
 
                 case DISPATCHING_TO_FLOOR:
-                    // Put event in fTakeBuffer, signifying completion of event
-                    System.out.println("SENDING ACKNOWLEDGE TO FLOOR");
+                    // A stop was made at a floor, make sure the floor acknowledges
+
+                    int floorNumber = parseByteArrayForFloorNum(receivePacket.getData()); //the floor it stopped at
+
+                    byte[] sendFloorData = intToByteArray(floorNumber); //the data to send to the floor
+
+                    DatagramPacket sendFloorPacket = new DatagramPacket(sendFloorData, sendFloorData.length, IPAddress, 2529);//SEND TO FLOOR
+
+                    sendSocket.send(sendFloorPacket);//SEND TO FLOOR
+
+                    byte[] receivedFloorData = new byte[1024];
+                    DatagramPacket receivedFloorPacket = new DatagramPacket(receivedFloorData, receivedFloorData.length); //Add error handling in future iterations
+
+                    receiveSocket.receive(receivedFloorPacket);//RECEIVE FROM FLOOR, just an ack rn but will be used for error hanndling in the future
+                    System.out.println("RECEIVED ACK FROM FLOOR");
 
                     //go to idle state
                     idleState();
