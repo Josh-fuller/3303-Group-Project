@@ -272,7 +272,13 @@ public class SchedulerThread implements Runnable{
                     // Take event from fPutBuffer
                     FloorEvent tempFloorEvent;
 
-                    tempFloorEvent = byteToFloorEvent(receivePacket.getData());
+                    try {
+                        tempFloorEvent = byteToFloorEvent(receivePacket.getData());
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    } catch (ClassNotFoundException e) {
+                        throw new RuntimeException(e);
+                    }
 
                     schedulerTasks.add(tempFloorEvent);
 
