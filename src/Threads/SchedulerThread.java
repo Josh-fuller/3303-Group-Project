@@ -141,6 +141,23 @@ public class SchedulerThread implements Runnable{
          */
     }
 
+    public FloorEvent byteToFloorEvent(byte[] event) throws IOException, ClassNotFoundException {
+        ObjectInputStream inputStream = new ObjectInputStream(new ByteArrayInputStream(event));
+        return (FloorEvent) inputStream.readObject();
+    }
+
+    public byte[] floorEventToByte(FloorEvent event) throws IOException {
+        // Serialize to a byte array
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        ObjectOutput object = new ObjectOutputStream(stream);
+        object.writeObject(event);
+        object.close();
+
+        byte[] serializedMessage = stream.toByteArray();
+
+        return serializedMessage;
+    }
+
     public static messageType parseByteArrayForType(byte[] byteArray) {
         messageType type = messageType.ERROR; // default value
 
@@ -246,6 +263,8 @@ public class SchedulerThread implements Runnable{
                     else if (messageType == SchedulerThread.messageType.ERROR) {
                         System.out.println("ERROR DETECTED IN SCHEDULER MESSAGE");
                     }
+
+
                     break;
 
                 case PROCESSING_FLOOR_EVENT:
@@ -294,6 +313,8 @@ public class SchedulerThread implements Runnable{
                     idleState();
                     break;
             }
+
+
 
             try {
                 Thread.sleep(100);

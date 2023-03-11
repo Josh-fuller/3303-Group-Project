@@ -30,6 +30,7 @@ public class main {
                 ElevatorThread(ePutBuffer, eTakeBuffer,1),"Elevator 1");
         System.out.println("Elevator Created");
 
+
         floor = new Thread(new
                 FloorThread(fPutBuffer, fTakeBuffer), "Floor");
         System.out.println("Floor Created");

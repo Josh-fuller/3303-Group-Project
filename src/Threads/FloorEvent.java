@@ -1,11 +1,13 @@
 package Threads;
 
+import java.io.*;
+
 /**
  * Class Threads.FloorEvent represents the floor input data for requesting an elevator.
  *
  * @author Mahtab Ameli
  */
-public class FloorEvent {
+public class FloorEvent implements Serializable{
 
     public enum FloorButton {UP, DOWN}; // FloorButton variable represents the direction button pressed elevator from floor
 
@@ -45,6 +47,7 @@ public class FloorEvent {
         return "[Time: " + time + ", Floor #: " + floorNumber +
                 ", Floor Button: " + floorButton + ", Elevator Button: " + elevatorButton + "]";
     }
+
 
     /**
      * Getters for data

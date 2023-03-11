@@ -66,6 +66,18 @@ public class FloorThread extends Thread {
         return event;
     }
 
+    public byte[] floorEventToByte(FloorEvent event) throws IOException {
+        // Serialize to a byte array
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        ObjectOutput object = new ObjectOutputStream(stream);
+        object.writeObject(event);
+        object.close();
+
+        byte[] serializedMessage = stream.toByteArray();
+
+        return serializedMessage;
+    }
+
 
     // Put each event from floorEventList in the floorEventBuffer for communication to the scheduler.
     public void run () {
