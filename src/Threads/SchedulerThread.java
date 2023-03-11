@@ -91,12 +91,27 @@ public class SchedulerThread implements Runnable{
 
         for(int i = 0;i < distance; i++){
             if(direction){
-                elevatorThread.moveUp();
+                //elevatorThread.moveUp();
+                try {
+                    elevatorThread.moveUp(5);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
             else{
-                elevatorThread.moveDown();
+                //elevatorThread.moveDown();
+                try {
+                    elevatorThread.moveDown(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
-            elevatorThread.openDoor();
+            //elevatorThread.openDoor();
+            try {
+                elevatorThread.openDoor();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             elevatorThread.closeDoor();
         }
     }
@@ -110,37 +125,35 @@ public class SchedulerThread implements Runnable{
     @Override
     public void run() {
         // testing if new ElevatorThread correctly executes scheduler commands: moveUp(), moveDown(), openDoor(), closeDoor()
-        // todo remove
+        // todo remove commented out block
         System.out.println("ELEVATOR CURRENT STATE: " + elevatorThread.getState()
                 + "    CURRENT FLOOR: " + elevatorThread.getCurrentFloor());
-        /**
-         * Testing moveUp()
-         */
+
+        // Testing moveUp()
         try {
             elevatorThread.moveUp(5);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        /**
-         * Testing moveDown()
-         */
+
+        // Testing moveDown()
         try {
             elevatorThread.moveDown(1);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        /**
-         * Testing openDoor()
-         */
+
+        // Testing openDoor()
         try {
             elevatorThread.openDoor();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        /**
-         * Testing closeDoor()
-         */
+
+        // Testing closeDoor()
         elevatorThread.closeDoor();
+
+
 
         while(true){
 
