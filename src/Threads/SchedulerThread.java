@@ -279,10 +279,15 @@ public class SchedulerThread implements Runnable{
 
                 case PROCESSING_MOVE_REQUEST:
 
+                    byte[] destinationFloorMessage;
                     int currentMovingFloorNum = parseByteArrayForFloorNum(receivePacket.getData());
                     int destinationFloor = getDestinationFloor(currentMovingFloorNum);
 
-                    byte[] destinationFloorMessage = intToByteArray(destinationFloor);
+                    if(destinationFloor == -1){
+                        destinationFloorMessage = {0xF};
+                    }else{
+                        destinationFloorMessage = intToByteArray(destinationFloor);
+                    }
 
                     DatagramPacket sendElevatorMovePacket = new DatagramPacket(destinationFloorMessage, destinationFloorMessage.length, IPAddress, 69);//SEND BACK TO ELEVATOR THAT MADE THE REQUEST
                     //TODO ACC SEND THE MESSAGE
