@@ -280,7 +280,7 @@ public class SchedulerThread implements Runnable{
 
                     byte[] destinationFloorMessage;
                     int currentMovingFloorNum = parseByteArrayForFloorNum(receivePacket.getData());
-                    int destinationFloor = getDestinationFloor(currentMovingFloorNum);
+                    int destinationFloor = getDestinationFloor();
 
                     if(destinationFloor == -1){
                         destinationFloorMessage = {0xF};
