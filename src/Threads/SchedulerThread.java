@@ -2,11 +2,7 @@ package Threads;
 
 import java.io.*;
 import java.net.*;
-import java.util.ArrayList;
-
-import Threads.ElevatorBuffer;
-import Threads.ElevatorThread;
-import Threads.FloorEvent;
+import java.util.*;
 
 /** *
  * Class Scheduler used to translate data between Floors and Elevators.
@@ -29,7 +25,13 @@ public class SchedulerThread implements Runnable{
     // TODO Change thread call to have no buffers
     ElevatorThread elevatorThread = new ElevatorThread(ePutBuffer,eTakeBuffer, 1);
 
-    ArrayList<FloorEvent> schedulerTasks, elevatorOneTasks, elevatorTwoTasks, elevatorThreeTasks;
+    public ArrayList<FloorEvent> getSchedulerTasks() {
+        return schedulerTasks;
+    }
+
+    ArrayList<FloorEvent> schedulerTasks, destinationList;
+    Set<Integer> elevatorStops = new TreeSet<>();
+
 
     public enum SchedulerState {
         IDLE,
@@ -50,12 +52,6 @@ public class SchedulerThread implements Runnable{
     public SchedulerThread(){
 
         state = SchedulerState.IDLE;
-        this.schedulerTasks = new ArrayList<>();
-        this.elevatorOneTasks = new ArrayList<>();
-        this.elevatorTwoTasks = new ArrayList<>();
-        this.elevatorThreeTasks = new ArrayList<>();
-        state = SchedulerState.IDLE;
-
         this.schedulerTasks = new ArrayList<>();
         this.elevatorOneTasks = new ArrayList<>();
         this.elevatorTwoTasks = new ArrayList<>();
@@ -107,6 +103,11 @@ public class SchedulerThread implements Runnable{
     //}
 
     //TODO Make javadoc + fix up once elevatorThread is fixed
+
+    public Set<Integer> getElevatorStops() {
+        return elevatorStops;
+    }
+
     /**
     private void translateCar(int distance){
 
@@ -129,16 +130,23 @@ public class SchedulerThread implements Runnable{
     }
      */
 
-    public void sortTasks(){
 
-        for(int i = 0; i < schedulerTasks.size(); i++){
+    public int getDestinationFloor(){
+        int destinationFloor = schedulerTasks.get(0).getElevatorButton();
+        elevatorStops.add(destinationFloor);
+        schedulerTasks.remove(0);
+        return destinationFloor;
+    }
 
+    public int proccessStopRequest(int currentFloor){
+        for(int i = 0;i < elevatorStops.size(); i++){
+            if(elevatorStops.contains(currentFloor)){
+                return 0;
+            }else{
+                return 1;
+            }
         }
 
-        /*
-        Two messages -
-        Elevator message(Up or down) and floor message(
-         */
     }
 
     public FloorEvent byteToFloorEvent(byte[] event) throws IOException, ClassNotFoundException {
@@ -146,17 +154,6 @@ public class SchedulerThread implements Runnable{
         return (FloorEvent) inputStream.readObject();
     }
 
-    public byte[] floorEventToByte(FloorEvent event) throws IOException {
-        // Serialize to a byte array
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        ObjectOutput object = new ObjectOutputStream(stream);
-        object.writeObject(event);
-        object.close();
-
-        byte[] serializedMessage = stream.toByteArray();
-
-        return serializedMessage;
-    }
 
     public static messageType parseByteArrayForType(byte[] byteArray) {
         messageType type = messageType.ERROR; // default value
