@@ -31,8 +31,12 @@ public class SchedulerThread implements Runnable{
         DISPATCHING_TO_FLOOR
     }
 
-
-
+    public enum messageType {
+        ARRIVAL_SENSOR,
+        FLOOR_EVENT,
+        MOVE_REQUEST,
+        ERROR
+    }
 
     public SchedulerThread(){
 
