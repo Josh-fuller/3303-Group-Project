@@ -1,9 +1,12 @@
-import MainPackage.FloorEvent;
+package Threads;
 
 import java.io.*;
-import java.net.DatagramPacket;
+import java.net.*;
 import java.util.ArrayList;
+
+import Threads.ElevatorBuffer;
 import Threads.ElevatorThread;
+import Threads.FloorEvent;
 
 /** *
  * Class Scheduler used to translate data between Floors and Elevators.
@@ -31,7 +34,8 @@ public class SchedulerThread implements Runnable{
     public enum SchedulerState {
         IDLE,
         PROCESSING_FLOOR_EVENT,
-        DISPATCHING_TO_ELEVATOR,
+        PROCESSING_ARRIVAL_SENSOR,
+        PROCESSING_MOVE_REQUEST,
         PROCESSING_ELEVATOR_EVENT,
         DISPATCHING_TO_FLOOR
     }
@@ -49,10 +53,12 @@ public class SchedulerThread implements Runnable{
         this.schedulerTasks = new ArrayList<>();
         this.elevatorOneTasks = new ArrayList<>();
         this.elevatorTwoTasks = new ArrayList<>();
-        this.elevatorThreeTasks = new ArrayList<>(); state = SchedulerState.IDLE;
-                                                            this.schedulerTasks = new ArrayList<>();
-                                                            this.elevatorOneTasks = new ArrayList<>();
-                                                            this.elevatorTwoTasks = new ArrayList<>();
+        this.elevatorThreeTasks = new ArrayList<>();
+        state = SchedulerState.IDLE;
+
+        this.schedulerTasks = new ArrayList<>();
+        this.elevatorOneTasks = new ArrayList<>();
+        this.elevatorTwoTasks = new ArrayList<>();
         this.elevatorThreeTasks = new ArrayList<>();
     }
 
@@ -64,9 +70,14 @@ public class SchedulerThread implements Runnable{
         state = SchedulerState.PROCESSING_FLOOR_EVENT;
     }
 
-    public void dispatchingToElevatorState(){
-        state = SchedulerState.DISPATCHING_TO_ELEVATOR;
+    public void processingMoveRequestState(){
+        state = SchedulerState.PROCESSING_MOVE_REQUEST;
     }
+
+    public void processingSensorRequestState(){
+        state = SchedulerState.PROCESSING_ARRIVAL_SENSOR;
+    }
+
 
     public void processingElevatorEventState(){
         state = SchedulerState.PROCESSING_ELEVATOR_EVENT;
@@ -84,18 +95,19 @@ public class SchedulerThread implements Runnable{
      * Gets the translation number from current floor -> start floor [assuming up is positive]
      * TODO Make current floor variable in elevator (Do we need this function after UDP changes?)
      */
-    private int getStartTranslation(){
-        return eventTransferOne.getFloorNumber() - elevatorThread.getCurrentFloor;
-    }
+    //private int getStartTranslation(){
+        //return eventTransferOne.getFloorNumber() - elevatorThread.getCurrentFloor;
+    //}
 
     /** *
      * Gets the translation number from start floor -> end floor [assuming up is positive]
      */
-    private int getEndTranslation(){
-        return eventTransferOne.getElevatorButton() - eventTransferOne.getElevatorNum();
-    }
+    //private int getEndTranslation(){
+        //return eventTransferOne.getElevatorButton() - eventTransferOne.getElevatorNum();
+    //}
 
     //TODO Make javadoc + fix up once elevatorThread is fixed
+    /**
     private void translateCar(int distance){
 
         boolean direction = true;
@@ -115,10 +127,11 @@ public class SchedulerThread implements Runnable{
             elevatorThread.closeDoor();
         }
     }
+     */
 
     public void sortTasks(){
 
-        for(int i = 0; schedulerTasks.size(); i++){
+        for(int i = 0; i < schedulerTasks.size(); i++){
 
         }
 
@@ -139,7 +152,8 @@ public class SchedulerThread implements Runnable{
         }
         else if (byteArray.length >= 2 && byteArray[0] == 0x0 && byteArray[1] == 0x3) {
             type = messageType.MOVE_REQUEST;
-    }
+        }
+
 
         // find first 0
         int firstZeroIndex = -1;
@@ -165,7 +179,7 @@ public class SchedulerThread implements Runnable{
             }
         }
 
-        // if no second 0 found or second 0 is at end of array, set type to 2
+        // if no second 0 found, set type to 2
         if (secondZeroIndex == -1) {
             type = messageType.ERROR;;
         }
@@ -187,6 +201,22 @@ public class SchedulerThread implements Runnable{
      */
     @Override
     public void run() {
+
+        // Create a DatagramSocket
+
+        try {
+            receiveSocket = new DatagramSocket(69);
+        } catch (SocketException e) {
+            throw new RuntimeException(e);
+        }
+
+        // Get server IP address
+        try {
+            InetAddress IPAddress = InetAddress.getByName("localhost"); //edit with ip
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
+
         while(true){
 
             switch(state) {
@@ -195,7 +225,14 @@ public class SchedulerThread implements Runnable{
                     // Create a DatagramPacket to receive data from client
                     byte[] receiveData = new byte[1024];
                     DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-                    receiveSocket.receive(receivePacket);
+
+                    receivePacket = null;
+
+                    try {
+                        receiveSocket.receive(receivePacket);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
 
                     messageType messageType = parseByteArrayForType(receivePacket.getData());
 
@@ -203,30 +240,43 @@ public class SchedulerThread implements Runnable{
                         processingFloorState();
                     }
                     else if(messageType == SchedulerThread.messageType.ARRIVAL_SENSOR) {
-                        dispatchingToElevatorState();
-                    } else if(messageType == SchedulerThread.messageType.FLOOR_EVENT)
-                        System.out.println("INVALID MESSAGE");
+                        processingSensorRequestState();
+                    } else if(messageType == SchedulerThread.messageType.MOVE_REQUEST)
+                        processingMoveRequestState();
+                    else if (messageType == SchedulerThread.messageType.ERROR) {
+                        System.out.println("ERROR DETECTED IN SCHEDULER MESSAGE");
+                    }
                     break;
 
                 case PROCESSING_FLOOR_EVENT:
                     // Take event from fPutBuffer
+                    FloorEvent tempFloorEvent;
+
+                    tempFloorEvent = byteToFloorEvent(receivePacket.getData());
+
+                    schedulerTasks.add(tempFloorEvent);
+
                     sortTasks();
-                    System.out.println("Scheduling event from floor: " + eventTransferOne.getFloorNumber() + " to floor: "
-                            + eventTransferOne.getElevatorButton() + "(STEP 2)");
 
                     //get the number of floors to translate:
-                    startTranslation = getStartTranslation();
-                    endTranslation = getEndTranslation();
 
                     // Transition to DISPATCHING_TO_ELEVATOR state
-                    dispatchingToElevatorState();
+                    idleState();
                     break;
 
-                case DISPATCHING_TO_ELEVATOR:
+                case PROCESSING_MOVE_REQUEST:
+
+                    int currentFloorNum;
+
+                    currentFloorNum = parseByteArrayForFloorNum(receivePacket.getData());
+
+                    idleState();
+
+                    break;
+
+                case PROCESSING_ARRIVAL_SENSOR:
 
                     //Dispatch elevator based on processed event
-                    translateCar(startTranslation);//go to start floor
-                    translateCar(endTranslation);//go to end floor
 
                     //go to the right floor to start
                     //System.out.println("(STEP 3)");
