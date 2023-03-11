@@ -44,6 +44,7 @@ public class ElevatorStateMachine {
         this.elevatorEvents = new ArrayList<>();
         //this.state = new ElevatorState(this);    // the elevator is in the Idle state
         this.state = new IdleState(this);    // the elevator is in the Idle state
+        this.sendMoveRequest();
     }
 
     /**
@@ -134,6 +135,13 @@ public class ElevatorStateMachine {
             + "ELEVATOR EXECUTING SCHEDULER COMMAND TO MOVE DOWN...\n"
             + "CURRENT ELEVATOR STATE: " + state + "     CURRENT FLOOR: " + currentFloor + "\n"
             + "****************************************************************************\n");
+    }
+
+    /**
+     * Sends move request to the scheduler via UDP communication.
+     */
+    public void sendMoveRequest() {
+        // todo send move request message to scheduler
     }
 
     /**
