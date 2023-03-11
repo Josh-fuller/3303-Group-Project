@@ -90,8 +90,10 @@ public class ElevatorStateMachine {
         int floorDifference = destination - currentFloor;
         for (int i = 0; i < floorDifference; i++) {
             forceIncrementFloor();
+            //todo communicate this.arrivalSignal to scheduler. wait to hear back about whether to stop at this floor
+            //todo update this.stopSignal based on communication received back from scheduler on whether to stop at this floor
             if (stopSignal) { // if there is a stop signal, stop the elevator and stop going up more floors
-                state = new StoppedState(this);
+                state = new IdleState(this);
                 System.out.println("\nElevator has stopped at " + currentFloor + ", because of scheduler's stop signal.");
                 stopSignal = false; // resetting stop signal to false until scheduler sets it to true again
                 break;
@@ -116,10 +118,12 @@ public class ElevatorStateMachine {
         int floorDifference = currentFloor - destination;
         for (int i = 0; i < floorDifference; i++) {
             forceDecrementFloor();
-            if (stopSignal) { // if there is a stop signal, stop the elevator and stop going down more floors
-                state = new StoppedState(this);
-                System.out.println("\nElevator has stopped at " + currentFloor + ", because of scheduler's stop signal.");
-                stopSignal = false; // resetting stop signal to false until scheduler sets it to true again
+            //todo communicate this.arrivalSignal to scheduler. wait to hear back about whether to stop at this floor
+            //todo update this.stopSignal based on communication received back from scheduler
+            if (stopSignal) { // if there is a stop signal, stop the elevator at current floor
+                state = new IdleState(this); // transition to idle state with open door to load/unload users
+                System.out.println("\nElevator has stopped at " + currentFloor + ", following scheduler's stop signal.");
+                stopSignal = false; // reset stop signal
                 break;
             }
         }
