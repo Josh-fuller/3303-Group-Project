@@ -125,18 +125,22 @@ public class SchedulerThread implements Runnable{
 
 
     public int getDestinationFloor(){
+        if(schedulerTasks.isEmpty()){
+            return -1;
+        }
         int destinationFloor = schedulerTasks.get(0).getElevatorButton();
         elevatorStops.add(destinationFloor);
         schedulerTasks.remove(0);
         return destinationFloor;
     }
-    public int proccessStopRequest(int currentFloor){
-        for(int i = 0;i < elevatorStops.size(); i++){
-            if(elevatorStops.contains(currentFloor)){
-                return 0;
-            }else{
-                return 1;
+    public boolean processStopRequest(int currentFloor){
+        for(int i = 0;i < elevatorStops.size(); i++) {
+            if (elevatorStops.contains(currentFloor)) {
+                return true;
             }
+        }
+        return false;
+    }
 
     public FloorEvent byteToFloorEvent(byte[] event) throws IOException, ClassNotFoundException {
         ObjectInputStream inputStream = new ObjectInputStream(new ByteArrayInputStream(event));
@@ -268,8 +272,6 @@ public class SchedulerThread implements Runnable{
                     }
 
                     schedulerTasks.add(tempFloorEvent);
-
-                    sortTasks();
 
                     idleState();
                     break;
