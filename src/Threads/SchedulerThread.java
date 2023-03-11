@@ -278,12 +278,13 @@ public class SchedulerThread implements Runnable{
 
                 case PROCESSING_MOVE_REQUEST:
 
-                    byte[] destinationFloorMessage;
+                    byte b = (byte) 0xFF;
+                    byte[] destinationFloorMessage = null;
                     int currentMovingFloorNum = parseByteArrayForFloorNum(receivePacket.getData());
-                    int destinationFloor = getDestinationFloor(currentMovingFloorNum);
+                    int destinationFloor = getDestinationFloor();
 
                     if(destinationFloor == -1){
-                        destinationFloorMessage = {0xF};
+                        destinationFloorMessage[0] = b;
                     }else{
                         destinationFloorMessage = intToByteArray(destinationFloor);
                     }
