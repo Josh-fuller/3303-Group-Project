@@ -1,7 +1,7 @@
-package MainPackage;
+package Threads;
 
 /**
- * Class MainPackage.FloorEvent represents the floor input data for requesting an elevator.
+ * Class Threads.FloorEvent represents the floor input data for requesting an elevator.
  *
  * @author Mahtab Ameli
  */

@@ -1,6 +1,10 @@
+package Tests;
+
 import static org.junit.Assert.*;
 
-import MainPackage.FloorEvent;
+import Threads.ElevatorBuffer;
+import Threads.FloorEvent;
+import Threads.SchedulerThread;
 import org.junit.Test;
 
 public class SchedulerThreadTest {
@@ -9,7 +13,7 @@ public class SchedulerThreadTest {
     private ElevatorBuffer eTakeBuffer = new ElevatorBuffer();
     private ElevatorBuffer fPutBuffer = new ElevatorBuffer();
     private ElevatorBuffer fTakeBuffer = new ElevatorBuffer();
-    private SchedulerThread scheduler = new SchedulerThread(ePutBuffer, eTakeBuffer, fPutBuffer, fTakeBuffer);
+    private SchedulerThread scheduler = new SchedulerThread();
 
 
 

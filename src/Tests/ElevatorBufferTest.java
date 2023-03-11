@@ -1,15 +1,18 @@
+package Tests;
+
 import static org.junit.Assert.*;
 
-import MainPackage.FloorEvent;
+import Threads.ElevatorBuffer;
+import Threads.FloorEvent;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 /**
  * @author ahmad
- * In this test, a new ElevatorBuffer object is created and a MainPackage.FloorEvent object
+ * In this test, a new Threads.ElevatorBuffer object is created and a Threads.FloorEvent object
  * is added to it using the put method. Then, the take method is called and the
- * contents of the ElevatorBuffer object are retrieved using the getContentsOfBuffer
+ * contents of the Threads.ElevatorBuffer object are retrieved using the getContentsOfBuffer
  * method. Finally, assertTrue is used to check if the contents are empty.
  */
 

@@ -13,17 +13,17 @@ import org.junit.Test;
 
 
 public class ElevatorThreadTest {
-    ElevatorBuffer putBuff;
-    ElevatorBuffer takeBuff;
-    MainPackage.FloorEvent floorEvnt;
-    ElevatorThread elvtrThread;
+    Threads.ElevatorBuffer putBuff;
+    Threads.ElevatorBuffer takeBuff;
+    Threads.FloorEvent floorEvnt;
+    Threads.ElevatorThread elvtrThread;
     int ElevatorNum = 1;
 
     @Before
     public void setup(){
-        putBuff = new ElevatorBuffer();
-        takeBuff = new ElevatorBuffer();
-        floorEvnt = new MainPackage.FloorEvent("01:00:00.000", 3, MainPackage.FloorEvent.FloorButton.UP, 1, ElevatorNum);
+        putBuff = new Threads.ElevatorBuffer();
+        takeBuff = new Threads.ElevatorBuffer();
+        floorEvnt = new Threads.FloorEvent("01:00:00.000", 3, Threads.FloorEvent.FloorButton.UP, 1, ElevatorNum);
         takeBuff.getContentsOfBuffer().add(floorEvnt);
 
 
@@ -32,7 +32,7 @@ public class ElevatorThreadTest {
 
     @Test
     public void testingIsRightElevatorTrue(){
-        elvtrThread = new ElevatorThread(putBuff, takeBuff, ElevatorNum);
+        elvtrThread = new Threads.ElevatorThread(putBuff, takeBuff, ElevatorNum);
         elvtrThread.run();
 
         assertTrue(elvtrThread.isRightElevator);

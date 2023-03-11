@@ -1,3 +1,10 @@
+package MainPackage;
+
+import Threads.ElevatorBuffer;
+import Threads.ElevatorThread;
+import Threads.FloorThread;
+import Threads.SchedulerThread;
+
 import java.io.IOException;
 
 public class main {
@@ -28,7 +35,7 @@ public class main {
         System.out.println("Floor Created");
 
         scheduler = new Thread(new
-                SchedulerThread(ePutBuffer, eTakeBuffer,fPutBuffer,fTakeBuffer), "Scheduler");
+                SchedulerThread(), "Scheduler");
         System.out.println("Scheduler Created");
 
 
