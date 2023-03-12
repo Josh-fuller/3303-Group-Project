@@ -1,5 +1,7 @@
 package Threads;
 
+import ElevatorStateMachine.ElevatorStateMachine;
+
 /**
  * The Elevator class simulates an elevator which has buttons and lamps inside of the elevator used to select floors and
  * indicate the floors selected, and to indicate the location of the elevator itself.
@@ -9,7 +11,7 @@ package Threads;
  * @version Iteration 1
  * @since   2023-02-03
  */
-public class ElevatorThread extends Thread{
+public class ElevatorThread extends ElevatorStateMachine implements Runnable {
 
     private ElevatorBuffer elevatorPutBuffer;  // buffer for the scheduler and elevator data
     private ElevatorBuffer elevatorTakeBuffer;
@@ -25,10 +27,29 @@ public class ElevatorThread extends Thread{
      * @param ElevatorNum the current elevators number
      */
     public ElevatorThread(ElevatorBuffer elevatorPutBuffer, ElevatorBuffer elevatorTakeBuffer, int ElevatorNum){
-        super("Elevator");
+        //super("Elevator");
         this.elevatorPutBuffer = elevatorPutBuffer;
         this.elevatorTakeBuffer = elevatorTakeBuffer;
         this.ElevatorNum = ElevatorNum;
+    }
+
+
+    public void moveUp(int destination) throws InterruptedException {
+        super.forceMoveUp(destination);
+    }
+
+    public void moveDown(int destination) throws InterruptedException {
+        super.forceMoveDown(destination);
+    }
+
+    @Override
+    public void openDoor() throws InterruptedException {
+        super.forceOpenDoor();
+    }
+
+    @Override
+    public void closeDoor() {
+        super.forceCloseDoor();
     }
 
     /**
@@ -76,15 +97,13 @@ public class ElevatorThread extends Thread{
                     System.out.println("STEP 5");
                     elevatorPutBuffer.put(destination);
                 }
-
                 try{
                     Thread.sleep(500);
                 }catch(InterruptedException e){}
             }
 
-
         }
-
     }
+
 }
 
