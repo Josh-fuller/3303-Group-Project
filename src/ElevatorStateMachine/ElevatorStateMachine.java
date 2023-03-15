@@ -44,6 +44,7 @@ public class ElevatorStateMachine {
         this.elevatorEvents = new ArrayList<>();
         //this.state = new ElevatorState(this);    // the elevator is in the Idle state
         this.state = new IdleState(this);    // the elevator is in the Idle state
+        this.sendMoveRequest();
     }
 
     /**
@@ -69,11 +70,102 @@ public class ElevatorStateMachine {
         state.handleMovingUp();
     }
 
+
     /**
      * Attempts to make the elevator move down.
      */
     public void moveDown() throws InterruptedException {
         state.handleMovingDown();
+    }
+
+    /**
+     * Forces the elevator to move up 1 floor.
+     */
+    public void forceMoveUp(int destination) throws InterruptedException {
+        state = new MovingUpState(this);
+        if (!(destination > currentFloor)) {
+            System.out.println("Elevator cannot move up from " + currentFloor + " to " + destination
+                    + ". Move up destination must be larger than current floor.");
+            return;
+        }
+        int floorDifference = destination - currentFloor;
+        for (int i = 0; i < floorDifference; i++) {
+            forceIncrementFloor();
+            //todo communicate this.arrivalSignal to scheduler. wait to hear back about whether to stop at this floor
+            //todo update this.stopSignal based on communication received back from scheduler on whether to stop at this floor
+            if (stopSignal) { // if there is a stop signal, stop the elevator and stop going up more floors
+                state = new IdleState(this);
+                System.out.println("\nElevator has stopped at " + currentFloor + ", because of scheduler's stop signal.");
+                stopSignal = false; // resetting stop signal to false until scheduler sets it to true again
+                break;
+            }
+        }
+        System.out.print("****************************************************************************\n"
+                + "ELEVATOR EXECUTING SCHEDULER COMMAND TO MOVE UP...\n"
+                + "CURRENT ELEVATOR STATE: " + state + "     CURRENT FLOOR: " + currentFloor + "\n"
+                + "****************************************************************************\n");
+    }
+
+    /**
+     * Forces the elevator to move down.
+     */
+    public void forceMoveDown(int destination) throws InterruptedException {
+        state = new MovingDownState(this);
+        if (destination >= currentFloor) {
+            System.out.println("Elevator cannot move down from " + currentFloor + " to " + destination
+                    + ". Move down destination must be lower than current floor.");
+            return;
+        }
+        int floorDifference = currentFloor - destination;
+        for (int i = 0; i < floorDifference; i++) {
+            forceDecrementFloor();
+            //todo communicate this.arrivalSignal to scheduler. wait to hear back about whether to stop at this floor
+            //todo update this.stopSignal based on communication received back from scheduler
+            if (stopSignal) { // if there is a stop signal, stop the elevator at current floor
+                state = new IdleState(this); // transition to idle state with open door to load/unload users
+                System.out.println("\nElevator has stopped at " + currentFloor + ", following scheduler's stop signal.");
+                stopSignal = false; // reset stop signal
+                break;
+            }
+        }
+        this.currentFloor = destination;
+        this.arrivalSignal = destination;
+        //state.handleApproachingFloor();
+        System.out.print("****************************************************************************\n"
+                + "ELEVATOR EXECUTING SCHEDULER COMMAND TO MOVE DOWN...\n"
+                + "CURRENT ELEVATOR STATE: " + state + "     CURRENT FLOOR: " + currentFloor + "\n"
+                + "****************************************************************************\n");
+    }
+
+    /**
+     * Sends move request to the scheduler via UDP communication.
+     */
+    public void sendMoveRequest() {
+        // todo send move request message to scheduler
+    }
+
+    /**
+     * Force opens the elevator door.
+     */
+    public void forceOpenDoor() throws InterruptedException {
+        state = new IdleState(this);
+        System.out.print("****************************************************************************\n"
+                + "ELEVATOR EXECUTING SCHEDULER COMMAND TO OPEN DOOR...\n"
+                + "CURRENT ELEVATOR STATE: " + state + "     CURRENT FLOOR: " + currentFloor
+                + "     DOOR OPEN: " + doorOpen + "\n"
+                + "****************************************************************************\n");
+    }
+
+    /**
+     * Force closes the elevator door.
+     */
+    public void forceCloseDoor() {
+        state = new StoppedState(this);
+        System.out.print("****************************************************************************\n"
+                + "ELEVATOR EXECUTING SCHEDULER COMMAND TO CLOSE DOOR...\n"
+                + "CURRENT ELEVATOR STATE: " + state + "     CURRENT FLOOR: " + currentFloor
+                + "     DOOR OPEN: " + doorOpen + "\n"
+                + "****************************************************************************\n");
     }
 
     /**
@@ -87,7 +179,7 @@ public class ElevatorStateMachine {
     /**
      * Attempts to make the elevator open its door.
      */
-    public void openDoor() {
+    public void openDoor() throws InterruptedException {
         state.handleOpeningDoor();
     }
 
@@ -228,6 +320,21 @@ public class ElevatorStateMachine {
     }
 
     /**
+     * Increments floors one by one and signals arrival to each floor.
+     */
+    public void forceIncrementFloor() {
+        int topFloor= floors.size();
+        int i = currentFloor;
+        if (i < topFloor) {
+            i++;
+            currentFloor = i;
+            arrivalSignal = i;
+            System.out.println("\nCURRENT FLOOR: " + currentFloor);
+        }
+    }
+
+
+    /**
      * decrements floors one by one and signals arrival to each floor.
      */
     public void decrementFloor() throws InterruptedException {
@@ -240,6 +347,20 @@ public class ElevatorStateMachine {
             currentFloor = i;
         }
         state.handleApproachingFloor();
+    }
+
+    /**
+     * Decrements floors by one level only and signals arrival to each floor.
+     */
+    public void forceDecrementFloor() throws InterruptedException {
+        int bottomFloor = 1;
+        int i = currentFloor;
+        if (i > bottomFloor) {
+            i--;
+            arrivalSignal = i;
+            currentFloor = i;
+            System.out.println("\nCURRENT FLOOR: " + currentFloor);
+        }
     }
 
     /**
@@ -274,20 +395,20 @@ public class ElevatorStateMachine {
     }
 
     public static void main(String[] args) throws InterruptedException {
-        ElevatorStateMachine e = new ElevatorStateMachine();
+/*        ElevatorStateMachine e = new ElevatorStateMachine();
         e.pressDestinationButton(2);
         e.pressDestinationButton(5);
-        e.pressDestinationButton(1);
+        e.pressDestinationButton(1);*/
 
 //*****************************************************************************************************
         /**
          * Testing longest transition path
          */
-        e.closeDoor();  // Idle -> Stopped
+/*        e.closeDoor();  // Idle -> Stopped
         e.moveUp();     // Stopped -> MovingUp -> ApproachingFloor -> ApproachingFloor
         e.stop();       // ApproachingFloor -> Stopped
         e.moveDown();   // Stopped -> MovingDown -> ApproachingFloor -> ApproachingFloor
         e.stop();       // MovingDown -> Stopped
-        e.openDoor();   // Stopped -> Idle
+        e.openDoor();   // Stopped -> Idle*/
     }
 }
