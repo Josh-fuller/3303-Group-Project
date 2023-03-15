@@ -1,10 +1,12 @@
 package Threads;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.io.*;
 import java.net.*;
 import java.net.DatagramPacket;
-
+import java.net.DatagramSocket;
 /**
  * Class Threads.FloorThread represents the floor subsystem of the elevator scheduling system.
  *
@@ -16,13 +18,11 @@ public class FloorThread extends Thread {
 
     private final ElevatorBuffer elevatorPutBuffer;
     private final ElevatorBuffer elevatorTakeBuffer;
-
     private int schedulerPort;
     private DatagramPacket sendPacket, receivePacket;
     private DatagramSocket sendReceiveSocket;
-
     private final ArrayList<FloorEvent> floorEventList; // list of Threads.FloorEvent objects read from input file
-
+    private InetAddress IPAddress;
     private byte[] array;
 
     /**
@@ -85,67 +85,39 @@ public class FloorThread extends Thread {
                 FloorEvent.FloorButton.valueOf(floorButtonInput),
                 Integer.parseInt(carButtonInput), Integer.parseInt(elevatorNumInput));
         //System.out.println(event);
-
-
         return event;
     }
 
 
-    private byte[] buildFloorByteMsg(ArrayList<FloorEvent> floorEventList) {
+    private byte[] buildFloorByteMsg(FloorEvent flrEvntLst) throws Exception {
 
-        array[0] = (byte) 0;
-        array[1] = (byte) 1;
-        array[2] = (byte) 3;
-        array[3] = (byte) floorEventList.get(3).getFloorNumber();
-        array[4] = (byte) 3;
-        array[5] = (byte) floorEventList.get(5).getElevatorButton();
-        array[6] = (byte) floorEventList.get(6).getElevatorNum();
+        ArrayList<Object> data = null;
+        data.add(Integer.valueOf(0));
+        data.add(Integer.valueOf(2));
+        data.add(flrEvntLst.getTime());
+        data.add(Integer.valueOf(flrEvntLst.getFloorNumber()));
+        data.add(flrEvntLst.getFloorButton());
+        data.add(Integer.valueOf(flrEvntLst.getElevatorButton()));
+        data.add(Integer.valueOf(flrEvntLst.getElevatorNum()));
 
-        byte[] bMsg = array;
-        return bMsg;
-    }
 
-    // Receive a Datagram packet on the sendReceive socket
-    // and print out the packets details
-    private void receivePacket() {
-        // Wait for incoming Datagram packet
-        byte[] data = new byte[1024];
-        receivePacket = new DatagramPacket(data, data.length);
-
-        try {
-            // Block until a Datagram is received via sendReceiveSocket.
-            sendReceiveSocket.receive(receivePacket);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-
-        int schedulerPort = recievePacket.getPort();
-    }
-
-    private void sendPacket(byte[] bMsg) {
-        // Create the Datagram packet
-        try {
-            sendPacket = new DatagramPacket(bMsg, bMsg.length,
-                    InetAddress.getLocalHost(), schedulerPort);
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-
-        // Send the Datagram packet to the server
-        try {
-            sendReceiveSocket.send(sendPacket);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
+        // Convert ArrayList to byte array
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(bos);
+        oos.writeObject(data);
+        byte[] floorEventToSendScheduler = bos.toByteArray();
+        return floorEventToSendScheduler;
     }
 
 
-
-
-
+    /**
+     * Getter for floor event list.
+     *
+     * @return floorEventList
+     */
+    public ArrayList<FloorEvent> getFloorEventList() {
+        return floorEventList;
+    }
 
 
    /* public byte[] floorEventToByte(FloorEvent event) throws IOException {
@@ -163,46 +135,49 @@ public class FloorThread extends Thread {
 
     // Put each event from floorEventList in the floorEventBuffer for communication to the scheduler.
     public void run() {
-        for (int i = 0; i < floorEventList.size(); i++) {
-            FloorEvent currentFloorEvent = floorEventList.get(i);
+        while (true) {
 
-            this.sendPacket(buildFloorByteMsg(floorEventList));
-            elevatorTakeBuffer.take();
-
-
-            byte[] data = new byte[1024];
-            receivePacket = new DatagramPacket(data, data.length);
             try {
-                // Block until a Datagram is received via sendReceiveSocket.
-                sendReceiveSocket.receive(receivePacket);
-            } catch (IOException e) {
-                e.printStackTrace();
-                System.exit(1);
+                IPAddress = InetAddress.getByName("localhost"); //edit with ip for later iteration
+            } catch (UnknownHostException e) {
+                throw new RuntimeException(e);
             }
 
-            elevatorPutBuffer.put(currentFloorEvent);
+            byte[] schedulerRequest = new byte[1024];
+            receivePacket = new DatagramPacket(schedulerRequest, schedulerRequest.length);
+            try {
+                // Block until a Datagram is received via sendReceiveSocket.
+                sendReceiveSocket.receive(receivePacket); //recieve request from scheduler
+                schedulerPort = receivePacket.getPort(); // identify scheduler's port
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
 
+            for (int i = 0; i < floorEventList.size(); i++) {
+                FloorEvent currentFloorEvent = floorEventList.get(i);
+                //elevatorPutBuffer.put(currentFloorEvent); //Not being used :put current floor event in buffer
 
-            FloorEvent finishedFloorEvent = elevatorTakeBuffer.take();
-            System.out.println("STEP 8");
-            System.out.println("Finished Processing Use #" + i);
+                byte[] bMsg;
+
+                try {
+                    bMsg = (buildFloorByteMsg(currentFloorEvent));
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                sendPacket = new DatagramPacket(bMsg, bMsg.length, IPAddress, schedulerPort);
+
+                // Send floor event contained in a DatagramPacket to scheduler
+
+            }
 
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
+
             }
         }
-
-
     }
 
-    /**
-     * Getter for floor event list.
-     *
-     * @return floorEventList
-     */
-    public ArrayList<FloorEvent> getFloorEventList() {
-        return floorEventList;
-    }
+
 
 }

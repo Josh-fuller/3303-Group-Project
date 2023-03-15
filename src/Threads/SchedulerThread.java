@@ -11,6 +11,9 @@ import java.util.*;
  */
 public class SchedulerThread implements Runnable{
 
+    private DatagramSocket sendSocket;
+    private DatagramSocket receiveSocket;
+
     ElevatorBuffer ePutBuffer,eTakeBuffer;
 
     SchedulerState state;
@@ -44,6 +47,22 @@ public class SchedulerThread implements Runnable{
     }
 
     public SchedulerThread(){
+
+        try {
+            // Build a Datagram socket
+            sendSocket = new DatagramSocket(2529);
+        } catch (SocketException se) {   // Incase a socket can't be created.
+            se.printStackTrace();
+            System.exit(1);
+        }
+
+        try {
+            // Build a Datagram socket
+            receiveSocket = new DatagramSocket(2529);
+        } catch (SocketException se) {   // Incase a socket can't be created.
+            se.printStackTrace();
+            System.exit(1);
+        }
         
         this.schedulerTasks = new ArrayList<>();
         state = SchedulerState.IDLE;
@@ -226,6 +245,7 @@ public class SchedulerThread implements Runnable{
             IPAddress = InetAddress.getByName("localhost"); //edit with ip
         } catch (UnknownHostException e) {
             throw new RuntimeException(e);
+
         }
 
         while(true){
@@ -331,12 +351,20 @@ public class SchedulerThread implements Runnable{
 
                     DatagramPacket sendFloorPacket = new DatagramPacket(sendFloorData, sendFloorData.length, IPAddress, 2529);//SEND TO FLOOR
 
-                    sendSocket.send(sendFloorPacket);//SEND TO FLOOR
+                    try {
+                        sendSocket.send(sendFloorPacket);//SEND TO FLOOR
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
 
                     byte[] receivedFloorData = new byte[1024];
                     DatagramPacket receivedFloorPacket = new DatagramPacket(receivedFloorData, receivedFloorData.length); //Add error handling in future iterations
 
-                    receiveSocket.receive(receivedFloorPacket);//RECEIVE FROM FLOOR, just an ack rn but will be used for error hanndling in the future
+                    try {
+                        receiveSocket.receive(receivedFloorPacket);//RECEIVE FROM FLOOR, just an ack rn but will be used for error hanndling in the future
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                     System.out.println("RECEIVED ACK FROM FLOOR");
 
                     //go to idle state
