@@ -26,7 +26,7 @@ public class SchedulerThread implements Runnable{
     ArrayList<FloorEvent> schedulerTasks, destinationList;
     Set<Integer> elevatorStops = new TreeSet<>();
 
-    DatagramSocket elevatorSendSocket,floorSendSocket,recieveSocket;
+    DatagramSocket elevatorSendSocket,floorSendSocket, receiveSocket;
 
 
 
@@ -54,7 +54,7 @@ public class SchedulerThread implements Runnable{
         try {
             elevatorSendSocket = new DatagramSocket();
             floorSendSocket = new DatagramSocket();
-            recieveSocket = new DatagramSocket(1003);
+            receiveSocket = new DatagramSocket(1003);
         } catch (SocketException e) {
             throw new RuntimeException(e);
         }
@@ -247,7 +247,7 @@ public class SchedulerThread implements Runnable{
                     byte[] receiveData = new byte[1024];
                     receivePacket = new DatagramPacket(receiveData, receiveData.length);
                     try {
-                        recieveSocket.receive(receivePacket);
+                        receiveSocket.receive(receivePacket);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
