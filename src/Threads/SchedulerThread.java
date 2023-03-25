@@ -347,6 +347,8 @@ public class SchedulerThread implements Runnable{
                     receiveSocket.receive(receivedFloorPacket);//RECEIVE FROM FLOOR, just an ack rn but will be used for error hanndling in the future
                     System.out.println("RECEIVED ACK FROM FLOOR");
 
+                    //TODO SEND MESSAGE BACK TO ELEVATOR CONFIRMING STOP AT ELEVATOR SUCCESS
+
                     //go to idle state
                     idleState();
                     break;
