@@ -117,7 +117,7 @@ public class FloorThread extends Thread {
             System.exit(1);
         }
 
-     //TODO fix   int schedulerPort = recievePacket.getPort();
+
     }
 
     public void sendPacket(byte[] bMsg) {

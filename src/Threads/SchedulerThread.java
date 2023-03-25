@@ -35,7 +35,8 @@ public class SchedulerThread implements Runnable{
         PROCESSING_ARRIVAL_SENSOR,
         PROCESSING_MOVE_REQUEST,
         PROCESSING_ELEVATOR_EVENT,
-        DISPATCHING_TO_FLOOR
+        DISPATCHING_TO_FLOOR,
+        SENDING_STOP_COMPLETE
     }
 
     public enum messageType {
@@ -371,7 +372,7 @@ public class SchedulerThread implements Runnable{
                 case DISPATCHING_TO_FLOOR:
                     // A stop was made at a floor, make sure the floor acknowledges
 
-                    int floorNumber = parseByteArrayForFloorNum(receivePacket.getData()); //the floor it stopped at
+                    int floorNumber = parseByteArrayForFloorNum(receivePacket.getData()); //the floor it stopped at, have to do it again might not be init
 
                     byte[] sendFloorData = intToByteArray(floorNumber); //the data to send to the floor
 
@@ -393,8 +394,6 @@ public class SchedulerThread implements Runnable{
                     }
                     System.out.println("RECEIVED ACK FROM FLOOR");
 
-                    //TODO SEND MESSAGE BACK TO ELEVATOR CONFIRMING STOP AT ELEVATOR SUCCESS
-
                     //go to idle state
                     idleState();
                     break;
@@ -404,7 +403,7 @@ public class SchedulerThread implements Runnable{
 
                     byte[] stopCompleteMessage = new byte[] {0x1};
 
-                    DatagramPacket sendFloorSecondPacket = new DatagramPacket(stopCompleteMessage, stopCompleteMessage.length, IPAddress, 2529);//TODO MAKE RIGHT PORT FOR FLOOR
+                    DatagramPacket sendFloorSecondPacket = new DatagramPacket(stopCompleteMessage, stopCompleteMessage.length, IPAddress, 2529);
 
                     sendSocket.send(sendFloorSecondPacket);//SEND TO FLOOR
 
