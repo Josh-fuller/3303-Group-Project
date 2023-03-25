@@ -33,13 +33,15 @@ public class SchedulerThread implements Runnable{
         PROCESSING_ARRIVAL_SENSOR,
         PROCESSING_MOVE_REQUEST,
         PROCESSING_ELEVATOR_EVENT,
-        DISPATCHING_TO_FLOOR
+        DISPATCHING_TO_FLOOR,
+        SENDING_STOP_COMPLETE
     }
 
     public enum messageType {
         ARRIVAL_SENSOR,
         FLOOR_EVENT,
         MOVE_REQUEST,
+        STOP_FINISHED,
         ERROR
     }
 
@@ -62,6 +64,8 @@ public class SchedulerThread implements Runnable{
     public void processingMoveRequestState(){
         state = SchedulerState.PROCESSING_MOVE_REQUEST;
     }
+
+    public void sendingStopCompleteState(){ state = SchedulerState.SENDING_STOP_COMPLETE;}
 
     public void processingSensorRequestState(){
         state = SchedulerState.PROCESSING_ARRIVAL_SENSOR;
@@ -164,9 +168,10 @@ public class SchedulerThread implements Runnable{
             type = messageType.ARRIVAL_SENSOR;
         } else if (byteArray.length >= 2 && byteArray[0] == 0x0 && byteArray[1] == 0x2) {
             type = messageType.FLOOR_EVENT;
-        }
-        else if (byteArray.length >= 2 && byteArray[0] == 0x0 && byteArray[1] == 0x3) {
+        } else if (byteArray.length >= 2 && byteArray[0] == 0x0 && byteArray[1] == 0x3) {
             type = messageType.MOVE_REQUEST;
+        } else if (byteArray.length >= 2 && byteArray[0] == 0x0 && byteArray[1] == 0x4) {
+            type = messageType.STOP_FINISHED;
         }
 
 
@@ -250,8 +255,11 @@ public class SchedulerThread implements Runnable{
                         processingFloorState();
                     } else if(messageType == SchedulerThread.messageType.ARRIVAL_SENSOR) {
                         processingSensorRequestState();
-                    } else if(messageType == SchedulerThread.messageType.MOVE_REQUEST)
+                    } else if(messageType == SchedulerThread.messageType.MOVE_REQUEST) {
                         processingMoveRequestState();
+                    } else if(messageType == SchedulerThread.messageType.STOP_FINISHED) {
+                        sendingStopCompleteState();
+                    }
                     else if (messageType == SchedulerThread.messageType.ERROR) {
                         System.out.println("ERROR DETECTED IN SCHEDULER MESSAGE");
                     }
@@ -338,6 +346,19 @@ public class SchedulerThread implements Runnable{
 
                     receiveSocket.receive(receivedFloorPacket);//RECEIVE FROM FLOOR, just an ack rn but will be used for error hanndling in the future
                     System.out.println("RECEIVED ACK FROM FLOOR");
+
+                    //go to idle state
+                    idleState();
+                    break;
+
+                case SENDING_STOP_COMPLETE:
+                    // A stop was completed at a floor, make sure the floor acknowledges to stop timer
+
+                    byte[] stopCompleteMessage = new byte[] {0x1};
+
+                    DatagramPacket sendFloorSecondPacket = new DatagramPacket(stopCompleteMessage, stopCompleteMessage.length, IPAddress, 2529);//TODO MAKE RIGHT PORT FOR FLOOR
+
+                    sendSocket.send(sendFloorSecondPacket);//SEND TO FLOOR
 
                     //go to idle state
                     idleState();
