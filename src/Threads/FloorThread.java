@@ -14,8 +14,6 @@ public class FloorThread extends Thread {
 
     //private FloorBuffer floorEventBuffer; // buffer for holding floorEvent data
 
-    private final ElevatorBuffer elevatorPutBuffer;
-    private final ElevatorBuffer elevatorTakeBuffer;
 
     private int schedulerPort;
     private DatagramPacket sendPacket, receivePacket;
@@ -28,13 +26,11 @@ public class FloorThread extends Thread {
     /**
      * Constructor for the class.
      *
-     * @param elevatorPutBuffer,elevatorTakeBuffer buffer for communicating floor events between the floor and the scheduler.
      * @throws IOException floor data input is read from an input text file: "src/Floor_Input.txt"
      */
-    public FloorThread(ElevatorBuffer elevatorPutBuffer, ElevatorBuffer elevatorTakeBuffer) throws IOException {
+    public FloorThread() throws IOException {
         super("FLOOR");
-        this.elevatorPutBuffer = elevatorPutBuffer;
-        this.elevatorTakeBuffer = elevatorTakeBuffer;
+        schedulerPort = 1003;
         this.floorEventList = new ArrayList<>();
         this.populateFloorEventList(); // populate list of floor events from input text file
 
@@ -91,7 +87,7 @@ public class FloorThread extends Thread {
     }
 
 
-    private byte[] buildFloorByteMsg(ArrayList<FloorEvent> floorEventList) {
+    public byte[] buildFloorByteMsg(ArrayList<FloorEvent> floorEventList) {
 
         array[0] = (byte) 0;
         array[1] = (byte) 1;
@@ -120,10 +116,10 @@ public class FloorThread extends Thread {
             System.exit(1);
         }
 
-        int schedulerPort = recievePacket.getPort();
+     //TODO fix   int schedulerPort = recievePacket.getPort();
     }
 
-    private void sendPacket(byte[] bMsg) {
+    public void sendPacket(byte[] bMsg) {
         // Create the Datagram packet
         try {
             sendPacket = new DatagramPacket(bMsg, bMsg.length,
@@ -167,7 +163,6 @@ public class FloorThread extends Thread {
             FloorEvent currentFloorEvent = floorEventList.get(i);
 
             this.sendPacket(buildFloorByteMsg(floorEventList));
-            elevatorTakeBuffer.take();
 
 
             byte[] data = new byte[1024];
@@ -180,10 +175,7 @@ public class FloorThread extends Thread {
                 System.exit(1);
             }
 
-            elevatorPutBuffer.put(currentFloorEvent);
 
-
-            FloorEvent finishedFloorEvent = elevatorTakeBuffer.take();
             System.out.println("STEP 8");
             System.out.println("Finished Processing Use #" + i);
 

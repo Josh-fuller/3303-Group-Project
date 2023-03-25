@@ -15,6 +15,8 @@ public class SchedulerThread implements Runnable{
 
     SchedulerState state;
 
+    private DatagramSocket receiveSocket,sendSocket;
+
     //boolean emptyBuffer;
     // TODO Change thread call to have no buffers
     ElevatorThread elevatorThread = new ElevatorThread(ePutBuffer,eTakeBuffer, 1);
@@ -44,11 +46,18 @@ public class SchedulerThread implements Runnable{
     }
 
     public SchedulerThread(){
-        
-        this.schedulerTasks = new ArrayList<>();
         state = SchedulerState.IDLE;
 
         this.schedulerTasks = new ArrayList<>();
+
+        // Create a DatagramSocket on port 23
+        try {
+            receiveSocket = new DatagramSocket(1003);
+            sendSocket = new DatagramSocket();
+        } catch (SocketException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     public void idleState(){
@@ -217,6 +226,7 @@ public class SchedulerThread implements Runnable{
     @Override
     public void run() {
 
+
         //initialise everything as null to start, so it is inside scope in case IDLE is skipped, though that is not possible practically
         DatagramPacket receivePacket = null;
 
@@ -291,7 +301,11 @@ public class SchedulerThread implements Runnable{
 
                     DatagramPacket sendElevatorMovePacket = new DatagramPacket(destinationFloorMessage, destinationFloorMessage.length, IPAddress, 69);//SEND BACK TO ELEVATOR THAT MADE THE REQUEST
                     //TODO ACC SEND THE MESSAGE
-
+                    try {
+                        sendSocket.send(sendElevatorMovePacket);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                     idleState();
                     break;
 
@@ -310,7 +324,11 @@ public class SchedulerThread implements Runnable{
                     byte[] stopFloorMessage = intToByteArray(stopRequest);
 
                     DatagramPacket sendElevatorStopPacket = new DatagramPacket(stopFloorMessage, stopFloorMessage.length, IPAddress, 69);//SEND TO ELEVATOR TAT ASKED TO MOVE
-
+                    try {
+                        sendSocket.send(sendElevatorStopPacket);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                     //TODO ACC SEND THE MESSAGE
 
                     if(stopRequest == 0){
@@ -331,12 +349,20 @@ public class SchedulerThread implements Runnable{
 
                     DatagramPacket sendFloorPacket = new DatagramPacket(sendFloorData, sendFloorData.length, IPAddress, 2529);//SEND TO FLOOR
 
-                    sendSocket.send(sendFloorPacket);//SEND TO FLOOR
+                    try {
+                        sendSocket.send(sendFloorPacket);//SEND TO FLOOR
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
 
                     byte[] receivedFloorData = new byte[1024];
                     DatagramPacket receivedFloorPacket = new DatagramPacket(receivedFloorData, receivedFloorData.length); //Add error handling in future iterations
 
-                    receiveSocket.receive(receivedFloorPacket);//RECEIVE FROM FLOOR, just an ack rn but will be used for error hanndling in the future
+                    try {
+                        receiveSocket.receive(receivedFloorPacket);//RECEIVE FROM FLOOR, just an ack rn but will be used for error hanndling in the future
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                     System.out.println("RECEIVED ACK FROM FLOOR");
 
                     //go to idle state
