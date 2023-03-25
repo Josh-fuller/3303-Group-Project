@@ -1,11 +1,11 @@
 package Tests;
 
-import static org.junit.Assert.*;
 import Threads.FloorEvent;
 import Threads.FloorThread;
 import Threads.SchedulerThread;
 import org.junit.*;
 import java.io.IOException;
+import java.net.*;
 import java.util.ArrayList;
 
 public class SchedulerThreadTest {
@@ -17,26 +17,29 @@ public class SchedulerThreadTest {
     FloorEvent floorTest1 = new FloorEvent("01:00:00.000", 1, FloorEvent.FloorButton.UP, 2, 2);
     FloorEvent floorTest2 = new FloorEvent("01:00:00.000", 2, FloorEvent.FloorButton.UP, 3, 1);
     FloorEvent floorTest3 = new FloorEvent("01:00:00.000", 2, FloorEvent.FloorButton.DOWN, 4, 1);
-    ArrayList<FloorEvent> eventList;
+
+    DatagramSocket testSendSocket, testReceiveSocket;
+    DatagramPacket sendPacket;
 
 
 
 
 
-    public SchedulerThreadTest() throws IOException {
-        ArrayList<FloorEvent> eventList = new ArrayList();
-    }
+    public SchedulerThreadTest() throws IOException {}
 
     @Before
-    public void setup(){
-        eventList.add(floorTest1);
+    public void setup() throws SocketException, UnknownHostException {
+        testSendSocket = new DatagramSocket();
+        testReceiveSocket = new DatagramSocket(69);
+        byte[] message = floor.buildFloorByteMsg(floorTest1);
+       // sendPacket = new DatagramPacket(message, message.length,InetAddress.getLocalHost(), 1003);
     }
 
     @Test
-    public void testMessageSendFromFloor(){
-        //scheduler.run();
-        floor.sendPacket(floor.buildFloorByteMsg(eventList));
-        //System.out.println(scheduler.getState());
+    public void testMessageSendFromFloor() throws IOException {
+        scheduler.receivePacket();
+        testSendSocket.send(sendPacket);
+        System.out.println(scheduler.getState());
     }
     
     @Test

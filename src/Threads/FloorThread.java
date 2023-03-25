@@ -30,6 +30,7 @@ public class FloorThread extends Thread {
      */
     public FloorThread() throws IOException {
         super("FLOOR");
+        array = new byte[1024];
         schedulerPort = 1003;
         this.floorEventList = new ArrayList<>();
         this.populateFloorEventList(); // populate list of floor events from input text file
@@ -49,7 +50,7 @@ public class FloorThread extends Thread {
     // Populate floorEventList with input from Floor_Input text file.
     private void populateFloorEventList() throws IOException {
         // Read the text file containing floor input data.
-        File floorInputFile = new File("src/Floor_Input.txt");
+        File floorInputFile = new File("src/Threads/Floor_Input.txt");
         BufferedReader reader = new BufferedReader(new FileReader(floorInputFile));
         String inputLine;
         // Read the text file line by line. Each line contains the information for a separate floorEvent.
@@ -87,15 +88,15 @@ public class FloorThread extends Thread {
     }
 
 
-    public byte[] buildFloorByteMsg(ArrayList<FloorEvent> floorEventList) {
+    public byte[] buildFloorByteMsg(FloorEvent floorEvent) {
 
         array[0] = (byte) 0;
         array[1] = (byte) 1;
         array[2] = (byte) 3;
-        array[3] = (byte) floorEventList.get(3).getFloorNumber();
+        array[3] = (byte) floorEvent.getFloorNumber();
         array[4] = (byte) 3;
-        array[5] = (byte) floorEventList.get(5).getElevatorButton();
-        array[6] = (byte) floorEventList.get(6).getElevatorNum();
+        array[5] = (byte) floorEvent.getElevatorButton();
+        array[6] = (byte) floorEvent.getElevatorNum();
 
         byte[] bMsg = array;
         return bMsg;
@@ -136,6 +137,7 @@ public class FloorThread extends Thread {
             e.printStackTrace();
             System.exit(1);
         }
+
     }
 
 
@@ -162,7 +164,7 @@ public class FloorThread extends Thread {
         for (int i = 0; i < floorEventList.size(); i++) {
             FloorEvent currentFloorEvent = floorEventList.get(i);
 
-            this.sendPacket(buildFloorByteMsg(floorEventList));
+            this.sendPacket(buildFloorByteMsg(currentFloorEvent));
 
 
             byte[] data = new byte[1024];

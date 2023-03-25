@@ -61,13 +61,13 @@ public class ElevatorThread extends ElevatorStateMachine implements Runnable {
 
         while(true){
 
-            System.out.println("Elevator " + ElevatorNum + " is checking if any floor button has been pressed.");
+            //System.out.println("Elevator " + ElevatorNum + " is checking if any floor button has been pressed.");
 
             // Check if there is anything in the buffer
             if(elevatorTakeBuffer.getContentsOfBuffer().size() > 0 ){
-                System.out.println("Elevator " + ElevatorNum + " has found work.");
+                //System.out.println("Elevator " + ElevatorNum + " has found work.");
             }else{
-                System.out.println("Elevator " + ElevatorNum + " has found no work.");
+                //System.out.println("Elevator " + ElevatorNum + " has found no work.");
                 try{
                     Thread.sleep(1000);
                 }catch(InterruptedException e){}

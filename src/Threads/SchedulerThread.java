@@ -212,10 +212,24 @@ public class SchedulerThread implements Runnable{
     }
 
     public static int parseByteArrayForFloorNum(byte[] byteArray) {
-
         int floorNum = byteArray[3] & 0xff; // get 4th byte as int
         return floorNum;
+    }
 
+    public DatagramPacket receivePacket(){
+        DatagramPacket receivePacket = null;
+
+        // Create a DatagramPacket to receive data from client
+        byte[] receiveData = new byte[1024];
+        receivePacket = new DatagramPacket(receiveData, receiveData.length);
+
+        try {
+            receiveSocket.receive(receivePacket); //Receive from anywhere
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("Received packet");
+        return receivePacket;
     }
 
     /** *
@@ -225,7 +239,6 @@ public class SchedulerThread implements Runnable{
      */
     @Override
     public void run() {
-
 
         //initialise everything as null to start, so it is inside scope in case IDLE is skipped, though that is not possible practically
         DatagramPacket receivePacket = null;
@@ -239,19 +252,9 @@ public class SchedulerThread implements Runnable{
         }
 
         while(true){
-
             switch(state) {
                 case IDLE:
-
-                    // Create a DatagramPacket to receive data from client
-                    byte[] receiveData = new byte[1024];
-                    receivePacket = new DatagramPacket(receiveData, receiveData.length);
-
-                    try {
-                        receiveSocket.receive(receivePacket); //Receive from anywhere
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                    receivePacket = receivePacket();
 
                     messageType messageType = parseByteArrayForType(receivePacket.getData());
 
