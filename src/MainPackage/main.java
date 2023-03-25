@@ -32,7 +32,7 @@ public class main {
 
 
         floor = new Thread(new
-                FloorThread(fPutBuffer, fTakeBuffer), "Floor");
+                FloorThread(), "Floor");
         System.out.println("Floor Created");
 
         scheduler = new Thread(new

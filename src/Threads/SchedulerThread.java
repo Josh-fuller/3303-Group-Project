@@ -15,6 +15,8 @@ public class SchedulerThread implements Runnable{
 
     SchedulerState state;
 
+    private DatagramSocket receiveSocket,sendSocket;
+
     //boolean emptyBuffer;
     // TODO Change thread call to have no buffers
     ElevatorThread elevatorThread = new ElevatorThread(ePutBuffer,eTakeBuffer, 1);
@@ -33,8 +35,7 @@ public class SchedulerThread implements Runnable{
         PROCESSING_ARRIVAL_SENSOR,
         PROCESSING_MOVE_REQUEST,
         PROCESSING_ELEVATOR_EVENT,
-        DISPATCHING_TO_FLOOR,
-        SENDING_STOP_COMPLETE
+        DISPATCHING_TO_FLOOR
     }
 
     public enum messageType {
@@ -51,6 +52,15 @@ public class SchedulerThread implements Runnable{
         state = SchedulerState.IDLE;
 
         this.schedulerTasks = new ArrayList<>();
+
+        // Create a DatagramSocket on port 23
+        try {
+            receiveSocket = new DatagramSocket(1003);
+            sendSocket = new DatagramSocket();
+        } catch (SocketException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     public void idleState(){
@@ -84,20 +94,6 @@ public class SchedulerThread implements Runnable{
         return state;
     }
 
-    /** *
-     * Gets the translation number from current floor -> start floor [assuming up is positive]
-     * TODO Make current floor variable in elevator (Do we need this function after UDP changes?)
-     */
-    //private int getStartTranslation(){
-        //return eventTransferOne.getFloorNumber() - elevatorThread.getCurrentFloor;
-    //}
-
-    /** *
-     * Gets the translation number from start floor -> end floor [assuming up is positive]
-     */
-    //private int getEndTranslation(){
-        //return eventTransferOne.getElevatorButton() - eventTransferOne.getElevatorNum();
-    //}
 
     //TODO Make javadoc + fix up once elevatorThread is fixed
 
@@ -127,7 +123,12 @@ public class SchedulerThread implements Runnable{
     }
      */
 
-
+    /**
+     * Adds the destination floor to a list based on the schedulerTasks list. Also removes the added
+     * task from the schedulerTask list.
+     *
+     * @return the destination floor
+     */
     public int getDestinationFloor(){
         if(schedulerTasks.isEmpty()){
             return -1;
@@ -146,6 +147,15 @@ public class SchedulerThread implements Runnable{
         return false;
     }
 
+    /**
+     * Converts the floor event that was sent from the floor thread from a serialized object that
+     * was converted into a byteArray back into a floor event.
+     *
+     * @param event The floor event that was sent from the floor thread
+     * @return The floor event that was sent from the floor thread
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     public FloorEvent byteToFloorEvent(byte[] event) throws IOException, ClassNotFoundException {
         ObjectInputStream inputStream = new ObjectInputStream(new ByteArrayInputStream(event));
         return (FloorEvent) inputStream.readObject();
@@ -159,6 +169,11 @@ public class SchedulerThread implements Runnable{
         return bytes;
     }
 
+    /**
+     *
+     * @param byteArray
+     * @return
+     */
     public static messageType parseByteArrayForType(byte[] byteArray) {
 
         messageType type = messageType.ERROR; // default value
@@ -170,8 +185,6 @@ public class SchedulerThread implements Runnable{
             type = messageType.FLOOR_EVENT;
         } else if (byteArray.length >= 2 && byteArray[0] == 0x0 && byteArray[1] == 0x3) {
             type = messageType.MOVE_REQUEST;
-        } else if (byteArray.length >= 2 && byteArray[0] == 0x0 && byteArray[1] == 0x4) {
-            type = messageType.STOP_FINISHED;
         }
 
 
@@ -207,11 +220,37 @@ public class SchedulerThread implements Runnable{
         return type;
     }
 
+    /**
+     * Converts the packet data's floor number into an integer.
+     *
+     * @param byteArray the recieved packet data containing request information
+     * @return floorNum the floor number an elevator requests to go to
+     */
     public static int parseByteArrayForFloorNum(byte[] byteArray) {
 
         int floorNum = byteArray[3] & 0xff; // get 4th byte as int
         return floorNum;
+    }
 
+    /**
+     * Waits for the elevator or floor to send a packet to the scheduler and receives that packet.
+     *
+     * @return recievePacket A packet sent from the elevator or floor
+     */
+    public DatagramPacket receivePacket(){
+        DatagramPacket receivePacket = null;
+
+        // Create a DatagramPacket to receive data from client
+        byte[] receiveData = new byte[1024];
+        receivePacket = new DatagramPacket(receiveData, receiveData.length);
+
+        try {
+            receiveSocket.receive(receivePacket); //Receive from anywhere
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("Received packet");
+        return receivePacket;
     }
 
     /** *
@@ -237,16 +276,7 @@ public class SchedulerThread implements Runnable{
 
             switch(state) {
                 case IDLE:
-
-                    // Create a DatagramPacket to receive data from client
-                    byte[] receiveData = new byte[1024];
-                    receivePacket = new DatagramPacket(receiveData, receiveData.length);
-
-                    try {
-                        receiveSocket.receive(receivePacket); //Receive from anywhere
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                    receivePacket = receivePacket();
 
                     messageType messageType = parseByteArrayForType(receivePacket.getData());
 
@@ -298,8 +328,12 @@ public class SchedulerThread implements Runnable{
                     }
 
                     DatagramPacket sendElevatorMovePacket = new DatagramPacket(destinationFloorMessage, destinationFloorMessage.length, IPAddress, 69);//SEND BACK TO ELEVATOR THAT MADE THE REQUEST
-                    //TODO ACC SEND THE MESSAGE
 
+                    try {
+                        sendSocket.send(sendElevatorMovePacket);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                     idleState();
                     break;
 
@@ -318,8 +352,12 @@ public class SchedulerThread implements Runnable{
                     byte[] stopFloorMessage = intToByteArray(stopRequest);
 
                     DatagramPacket sendElevatorStopPacket = new DatagramPacket(stopFloorMessage, stopFloorMessage.length, IPAddress, 69);//SEND TO ELEVATOR TAT ASKED TO MOVE
+                    try {
+                        sendSocket.send(sendElevatorStopPacket);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
 
-                    //TODO ACC SEND THE MESSAGE
 
                     if(stopRequest == 0){
                         dispatchingToFloorState();
@@ -339,12 +377,20 @@ public class SchedulerThread implements Runnable{
 
                     DatagramPacket sendFloorPacket = new DatagramPacket(sendFloorData, sendFloorData.length, IPAddress, 2529);//SEND TO FLOOR
 
-                    sendSocket.send(sendFloorPacket);//SEND TO FLOOR
+                    try {
+                        sendSocket.send(sendFloorPacket);//SEND TO FLOOR
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
 
                     byte[] receivedFloorData = new byte[1024];
                     DatagramPacket receivedFloorPacket = new DatagramPacket(receivedFloorData, receivedFloorData.length); //Add error handling in future iterations
 
-                    receiveSocket.receive(receivedFloorPacket);//RECEIVE FROM FLOOR, just an ack rn but will be used for error handling in the future
+                    try {
+                        receiveSocket.receive(receivedFloorPacket);//RECEIVE FROM FLOOR, just an ack rn but will be used for error hanndling in the future
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                     System.out.println("RECEIVED ACK FROM FLOOR");
 
                     //TODO SEND MESSAGE BACK TO ELEVATOR CONFIRMING STOP AT ELEVATOR SUCCESS

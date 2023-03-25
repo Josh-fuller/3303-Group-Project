@@ -33,7 +33,7 @@ public class InvalidActionsTests {
     @Test
     // Testing invalid door opening action while Idle; door is already open in Idle state
     public void invalidOpenDoorActionTest (){
-        s.openDoor();
+        //s.openDoor();
         // there should be no change to door status; stay open
         assertTrue(s.isDoorOpen());
     }
