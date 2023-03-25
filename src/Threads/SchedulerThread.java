@@ -76,7 +76,6 @@ public class SchedulerThread implements Runnable{
         state = SchedulerState.PROCESSING_ARRIVAL_SENSOR;
     }
 
-
     public void processingElevatorEventState(){
         state = SchedulerState.PROCESSING_ELEVATOR_EVENT;
     }
@@ -89,20 +88,6 @@ public class SchedulerThread implements Runnable{
         return state;
     }
 
-    /** *
-     * Gets the translation number from current floor -> start floor [assuming up is positive]
-     * TODO Make current floor variable in elevator (Do we need this function after UDP changes?)
-     */
-    //private int getStartTranslation(){
-        //return eventTransferOne.getFloorNumber() - elevatorThread.getCurrentFloor;
-    //}
-
-    /** *
-     * Gets the translation number from start floor -> end floor [assuming up is positive]
-     */
-    //private int getEndTranslation(){
-        //return eventTransferOne.getElevatorButton() - eventTransferOne.getElevatorNum();
-    //}
 
     //TODO Make javadoc + fix up once elevatorThread is fixed
 
@@ -132,7 +117,12 @@ public class SchedulerThread implements Runnable{
     }
      */
 
-
+    /**
+     * Adds the destination floor to a list based on the schedulerTasks list. Also removes the added
+     * task from the schedulerTask list.
+     *
+     * @return the destination floor
+     */
     public int getDestinationFloor(){
         if(schedulerTasks.isEmpty()){
             return -1;
@@ -151,6 +141,15 @@ public class SchedulerThread implements Runnable{
         return false;
     }
 
+    /**
+     * Converts the floor event that was sent from the floor thread from a serialized object that
+     * was converted into a byteArray back into a floor event.
+     *
+     * @param event The floor event that was sent from the floor thread
+     * @return The floor event that was sent from the floor thread
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     public FloorEvent byteToFloorEvent(byte[] event) throws IOException, ClassNotFoundException {
         ObjectInputStream inputStream = new ObjectInputStream(new ByteArrayInputStream(event));
         return (FloorEvent) inputStream.readObject();
@@ -164,6 +163,11 @@ public class SchedulerThread implements Runnable{
         return bytes;
     }
 
+    /**
+     *
+     * @param byteArray
+     * @return
+     */
     public static messageType parseByteArrayForType(byte[] byteArray) {
 
         messageType type = messageType.ERROR; // default value
@@ -211,11 +215,22 @@ public class SchedulerThread implements Runnable{
         return type;
     }
 
+    /**
+     * Converts the packet data's floor number into an integer.
+     *
+     * @param byteArray the recieved packet data containing request information
+     * @return floorNum the floor number an elevator requests to go to
+     */
     public static int parseByteArrayForFloorNum(byte[] byteArray) {
         int floorNum = byteArray[3] & 0xff; // get 4th byte as int
         return floorNum;
     }
 
+    /**
+     * Waits for the elevator or floor to send a packet to the scheduler and receives that packet.
+     *
+     * @return recievePacket A packet sent from the elevator or floor
+     */
     public DatagramPacket receivePacket(){
         DatagramPacket receivePacket = null;
 
@@ -303,7 +318,7 @@ public class SchedulerThread implements Runnable{
                     }
 
                     DatagramPacket sendElevatorMovePacket = new DatagramPacket(destinationFloorMessage, destinationFloorMessage.length, IPAddress, 69);//SEND BACK TO ELEVATOR THAT MADE THE REQUEST
-                    //TODO ACC SEND THE MESSAGE
+
                     try {
                         sendSocket.send(sendElevatorMovePacket);
                     } catch (IOException e) {
@@ -332,7 +347,7 @@ public class SchedulerThread implements Runnable{
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
-                    //TODO ACC SEND THE MESSAGE
+
 
                     if(stopRequest == 0){
                         dispatchingToFloorState();
