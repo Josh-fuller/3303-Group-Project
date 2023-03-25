@@ -24,13 +24,16 @@ public class ElevatorStateMachine {
     public enum Direction{UP, DOWN, NONE}   // enum type for direction of moving elevator. NONE if elevator is stationary
     private Direction movingDirection;      // current moving direction of the elevator. NONE if elevator is stationary
 
+    private int port;
+
 
     private List<FloorEvent> elevatorEvents; // list of input events from user pressing buttons inside elevator
 
     /**
      * Constructor for the class.
      */
-    public ElevatorStateMachine() {
+    public ElevatorStateMachine(int port) {
+        this.port = port;
         this.cartStationary = true; // elevator is initially stationary
         this.doorOpen = true;   // the elevator door is initially open
         this.lampSet = new HashSet<Integer>();
