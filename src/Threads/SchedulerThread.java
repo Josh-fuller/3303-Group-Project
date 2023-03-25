@@ -344,7 +344,7 @@ public class SchedulerThread implements Runnable{
                     byte[] receivedFloorData = new byte[1024];
                     DatagramPacket receivedFloorPacket = new DatagramPacket(receivedFloorData, receivedFloorData.length); //Add error handling in future iterations
 
-                    receiveSocket.receive(receivedFloorPacket);//RECEIVE FROM FLOOR, just an ack rn but will be used for error hanndling in the future
+                    receiveSocket.receive(receivedFloorPacket);//RECEIVE FROM FLOOR, just an ack rn but will be used for error handling in the future
                     System.out.println("RECEIVED ACK FROM FLOOR");
 
                     //TODO SEND MESSAGE BACK TO ELEVATOR CONFIRMING STOP AT ELEVATOR SUCCESS
