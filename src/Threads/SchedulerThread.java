@@ -2,6 +2,7 @@ package Threads;
 
 import java.io.*;
 import java.net.*;
+import java.nio.ByteBuffer;
 import java.util.*;
 
 /** *
@@ -254,6 +255,33 @@ public class SchedulerThread implements Runnable{
         return receivePacket;
     }
 
+    public DatagramPacket createPacket(byte type){
+        // Create data to send to server
+        byte[] readReq = new byte[] { 0x0, 0x1 };
+        byte[] writeReq = new byte[] { 0x0, 0x2 };
+        byte[] invalidReq = new byte[] { 0x1, 0x1 };
+        byte[] filler = new byte[] { 0x0};
+        String modeText = "octet";
+        String sentence = "test.txt";
+        byte[] sendData = sentence.getBytes();
+        byte[] mode = modeText.getBytes();
+
+
+
+        //make combined data msg buffer for send/rcv
+        ByteBuffer bb1 = ByteBuffer.allocate(readReq.length + sendData.length + filler.length + mode.length + filler.length);
+        ByteBuffer bb2 = ByteBuffer.allocate(writeReq.length + sendData.length + filler.length + mode.length + filler.length);
+
+
+        //make read request
+        bb1.put(readReq);
+        bb1.put(sendData);
+        bb1.put(filler);
+        bb1.put(mode);
+        bb1.put(filler);
+        byte[] readRequest = bb1.array();
+    }
+
     /** *
      * The runnable portion of scheduler, responsible for acting as the translator from floor/elevator and back
      *
@@ -401,7 +429,7 @@ public class SchedulerThread implements Runnable{
                 case SENDING_STOP_COMPLETE:
                     // A stop was completed at a floor, make sure the floor acknowledges to stop timer
 
-                    byte[] stopCompleteMessage = new byte[] {0x1};
+                    byte[] stopCompleteMessage = new byte[] {0x0}, {0x6};
 
                     DatagramPacket sendFloorSecondPacket = new DatagramPacket(stopCompleteMessage, stopCompleteMessage.length, IPAddress, 2529);
 
