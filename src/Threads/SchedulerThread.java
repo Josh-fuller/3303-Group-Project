@@ -17,7 +17,7 @@ public class SchedulerThread implements Runnable{
 
     //boolean emptyBuffer;
     // TODO Change thread call to have no buffers
-    ElevatorThread elevatorThread = new ElevatorThread(ePutBuffer,eTakeBuffer, 1);
+    //ElevatorThread elevatorThread = new ElevatorThread( 1);
 
     public ArrayList<FloorEvent> getSchedulerTasks() {
         return schedulerTasks;
@@ -25,6 +25,9 @@ public class SchedulerThread implements Runnable{
 
     ArrayList<FloorEvent> schedulerTasks, destinationList;
     Set<Integer> elevatorStops = new TreeSet<>();
+
+    DatagramSocket elevatorSendSocket,floorSendSocket,recieveSocket;
+
 
 
     public enum SchedulerState {
@@ -44,11 +47,18 @@ public class SchedulerThread implements Runnable{
     }
 
     public SchedulerThread(){
-        
-        this.schedulerTasks = new ArrayList<>();
         state = SchedulerState.IDLE;
 
         this.schedulerTasks = new ArrayList<>();
+
+        try {
+            elevatorSendSocket = new DatagramSocket();
+            floorSendSocket = new DatagramSocket();
+            recieveSocket = new DatagramSocket(1003);
+        } catch (SocketException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     public void idleState(){
@@ -236,12 +246,12 @@ public class SchedulerThread implements Runnable{
                     // Create a DatagramPacket to receive data from client
                     byte[] receiveData = new byte[1024];
                     receivePacket = new DatagramPacket(receiveData, receiveData.length);
-
                     try {
-                        receiveSocket.receive(receivePacket); //Receive from anywhere
+                        recieveSocket.receive(receivePacket);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
+
 
                     messageType messageType = parseByteArrayForType(receivePacket.getData());
 
@@ -292,6 +302,11 @@ public class SchedulerThread implements Runnable{
                     DatagramPacket sendElevatorMovePacket = new DatagramPacket(destinationFloorMessage, destinationFloorMessage.length, IPAddress, 69);//SEND BACK TO ELEVATOR THAT MADE THE REQUEST
                     //TODO ACC SEND THE MESSAGE
 
+                    try {
+                        elevatorSendSocket.send(sendElevatorMovePacket);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                     idleState();
                     break;
 
@@ -312,6 +327,11 @@ public class SchedulerThread implements Runnable{
                     DatagramPacket sendElevatorStopPacket = new DatagramPacket(stopFloorMessage, stopFloorMessage.length, IPAddress, 69);//SEND TO ELEVATOR TAT ASKED TO MOVE
 
                     //TODO ACC SEND THE MESSAGE
+                    try {
+                        floorSendSocket.send(sendElevatorStopPacket);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
 
                     if(stopRequest == 0){
                         dispatchingToFloorState();
@@ -331,12 +351,15 @@ public class SchedulerThread implements Runnable{
 
                     DatagramPacket sendFloorPacket = new DatagramPacket(sendFloorData, sendFloorData.length, IPAddress, 2529);//SEND TO FLOOR
 
-                    sendSocket.send(sendFloorPacket);//SEND TO FLOOR
 
                     byte[] receivedFloorData = new byte[1024];
                     DatagramPacket receivedFloorPacket = new DatagramPacket(receivedFloorData, receivedFloorData.length); //Add error handling in future iterations
+                    try {
+                        floorSendSocket.send(receivedFloorPacket);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
 
-                    receiveSocket.receive(receivedFloorPacket);//RECEIVE FROM FLOOR, just an ack rn but will be used for error hanndling in the future
                     System.out.println("RECEIVED ACK FROM FLOOR");
 
                     //go to idle state
