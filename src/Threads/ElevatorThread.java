@@ -19,7 +19,7 @@ public class ElevatorThread implements Runnable {
     }
 
     private int elevatorNumber;     // Elevator identifier number
-    private ElevatorStateMachine.ElevatorThread.ElevatorState state;    // Elevator's current state
+    private ElevatorState state;    // Elevator's current state
     private boolean doorOpen;       // true if door is open, false if closed
     private int currentFloor;       // Elevator's current floor as signalled by the arrival sensor
     private List<Integer> floors;   // list of 5 floors that have access to the elevator
@@ -42,7 +42,7 @@ public class ElevatorThread implements Runnable {
         this.arrivalSignal = 1;
         this.floors = new ArrayList<Integer>();
         this.stopSignal = false;
-        this.state = ElevatorStateMachine.ElevatorThread.ElevatorState.IDLE;
+        this.state = ElevatorState.IDLE;
         this.populateFloors();
         // Create a Datagram socket for both sending and receiving messages via UDP communication
         try {
@@ -144,16 +144,16 @@ public class ElevatorThread implements Runnable {
         this.destination = Integer.valueOf(destFloorMessage);
         if (destination == currentFloor) {
             System.out.println("The elevator is already at destination floor " + destination + ".");
-            state = ElevatorStateMachine.ElevatorThread.ElevatorState.IDLE;
+            state = ElevatorState.IDLE;
         } else if (destination > currentFloor) {
             System.out.println("Initiating move up from floor " + currentFloor + " to " + destination + "...");
-            state = ElevatorStateMachine.ElevatorThread.ElevatorState.MOVING_UP;
+            state = ElevatorState.MOVING_UP;
         } else if (destination < currentFloor) {
             System.out.println("Initiating move down from floor " + currentFloor + " to " + destination + "...");
-            state = ElevatorStateMachine.ElevatorThread.ElevatorState.MOVING_DOWN;
+            state = ElevatorState.MOVING_DOWN;
         } else {
             destination = -20; // invalid destination
-            state = ElevatorStateMachine.ElevatorThread.ElevatorState.IDLE;
+            state = ElevatorState.IDLE;
         }
     }
 
@@ -350,4 +350,3 @@ public class ElevatorThread implements Runnable {
         }
     }
 }
-
