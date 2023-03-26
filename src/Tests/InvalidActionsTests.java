@@ -25,7 +25,7 @@ public class InvalidActionsTests {
 
     @Before
     public void setup(){
-        s = new ElevatorStateMachine();
+        s = new ElevatorStateMachine(77777);
     }
 
 

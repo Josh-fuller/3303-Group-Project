@@ -174,8 +174,9 @@ public class SchedulerThread implements Runnable{
             type = messageType.FLOOR_EVENT;
         } else if (byteArray.length >= 2 && byteArray[0] == 0x0 && byteArray[1] == 0x3) {
             type = messageType.MOVE_REQUEST;
+        } else if (byteArray.length >= 2 && byteArray[0] == 0x0 && byteArray[1] == 0x4) {
+            type = messageType.STOP_FINISHED;
         }
-
 
         // find first 0
         int firstZeroIndex = -1;
