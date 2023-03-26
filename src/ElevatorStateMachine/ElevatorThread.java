@@ -19,6 +19,7 @@ public class ElevatorThread implements Runnable {
         MOVING_DOWN,
     }
 
+    private int elevatorNumber;     // Elevator identifier number
     private ElevatorState state;    // Elevator's current state
     private boolean doorOpen;       // true if door is open, false if closed
     private int currentFloor;       // Elevator's current floor as signalled by the arrival sensor
@@ -35,7 +36,8 @@ public class ElevatorThread implements Runnable {
     /**
      * Constructor for the class.
      */
-    public ElevatorThread() {
+    public ElevatorThread(int elevatorNumber) {
+        this.elevatorNumber = elevatorNumber;
         this.doorOpen = true;   // the elevator door is initially open
         this.currentFloor = 1;  // elevator starts at floor #1
         this.arrivalSignal = 1;
