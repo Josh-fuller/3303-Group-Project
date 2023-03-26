@@ -172,6 +172,7 @@ public class SchedulerThread implements Runnable{
     }
 
     /**
+     * Parses through received messages to get their type, for easy switch statement implementation
      *
      * @param byteArray
      * @return
@@ -255,31 +256,36 @@ public class SchedulerThread implements Runnable{
         return receivePacket;
     }
 
-    public DatagramPacket createPacket(byte type){
+    /** *
+     * Creates a byte array based on the message type and floor number provided, to send to floor. Typically 05 to indicate
+     * that the elevator is about to stop, and 06 to indicate a stop has been completed
+     *
+     * @param type what type of message to send
+     * @param floorNum the floor number to which the message is tied
+     *
+     * @return byteArrayToSend The finished byte array
+     *
+     * @author Josh Fuller
+     */
+    public byte[] createByteArray(byte type, byte floorNum){
         // Create data to send to server
-        byte[] readReq = new byte[] { 0x0, 0x1 };
-        byte[] writeReq = new byte[] { 0x0, 0x2 };
-        byte[] invalidReq = new byte[] { 0x1, 0x1 };
-        byte[] filler = new byte[] { 0x0};
-        String modeText = "octet";
-        String sentence = "test.txt";
-        byte[] sendData = sentence.getBytes();
-        byte[] mode = modeText.getBytes();
+        byte[] msgType = new byte[] { 0x0, type };
+        byte[] floorNumInMsg = new byte[] {floorNum};
 
 
 
         //make combined data msg buffer for send/rcv
-        ByteBuffer bb1 = ByteBuffer.allocate(readReq.length + sendData.length + filler.length + mode.length + filler.length);
-        ByteBuffer bb2 = ByteBuffer.allocate(writeReq.length + sendData.length + filler.length + mode.length + filler.length);
+        ByteBuffer bb1 = ByteBuffer.allocate(msgType.length + floorNumInMsg.length);
+        ByteBuffer bb2 = ByteBuffer.allocate(msgType.length + floorNumInMsg.length);
 
 
         //make read request
-        bb1.put(readReq);
-        bb1.put(sendData);
-        bb1.put(filler);
-        bb1.put(mode);
-        bb1.put(filler);
-        byte[] readRequest = bb1.array();
+        bb1.put(msgType);
+        bb1.put(floorNumInMsg);
+
+        byte[] byteArrayToSend = bb1.array();
+
+        return byteArrayToSend;
     }
 
     /** *
@@ -397,14 +403,15 @@ public class SchedulerThread implements Runnable{
 
                     break;
 
-                case DISPATCHING_TO_FLOOR:
-                    // A stop was made at a floor, make sure the floor acknowledges
+                case DISPATCHING_TO_FLOOR: //Case where the elevator is about to stop (the floor should start its timer)
 
                     int floorNumber = parseByteArrayForFloorNum(receivePacket.getData()); //the floor it stopped at, have to do it again might not be init
 
-                    byte[] sendFloorData = intToByteArray(floorNumber); //the data to send to the floor
+                    byte sendFloorData = (byte) floorNumber; //the floor data to send to the floor
 
-                    DatagramPacket sendFloorPacket = new DatagramPacket(sendFloorData, sendFloorData.length, IPAddress, 2529);//SEND TO FLOOR
+                    byte[] aboutToStopMessage = createByteArray((byte) 5, sendFloorData); //msg type + floor num
+
+                    DatagramPacket sendFloorPacket = new DatagramPacket(aboutToStopMessage, aboutToStopMessage.length, IPAddress, 2529);//SEND TO FLOOR
 
                     try {
                         sendSocket.send(sendFloorPacket);//SEND TO FLOOR
@@ -416,7 +423,7 @@ public class SchedulerThread implements Runnable{
                     DatagramPacket receivedFloorPacket = new DatagramPacket(receivedFloorData, receivedFloorData.length); //Add error handling in future iterations
 
                     try {
-                        receiveSocket.receive(receivedFloorPacket);//RECEIVE FROM FLOOR, just an ack rn but will be used for error hanndling in the future
+                        receiveSocket.receive(receivedFloorPacket);//RECEIVE FROM FLOOR, just an ack rn but will be used for error handling in the future
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -426,12 +433,15 @@ public class SchedulerThread implements Runnable{
                     idleState();
                     break;
 
-                case SENDING_STOP_COMPLETE:
-                    // A stop was completed at a floor, make sure the floor acknowledges to stop timer
+                case SENDING_STOP_COMPLETE:// the case where the elevator successfully let passengers on/off (the floor should stop its timer)
 
-                    byte[] stopCompleteMessage = new byte[] {0x0}, {0x6};
+                    int floorNumberStoppedAt = parseByteArrayForFloorNum(receivePacket.getData()); //the floor it stopped at, have to do it again might not be init
 
-                    DatagramPacket sendFloorSecondPacket = new DatagramPacket(stopCompleteMessage, stopCompleteMessage.length, IPAddress, 2529);
+                    byte byteEq = (byte) floorNumberStoppedAt;
+
+                    byte[] completeStopMessage = createByteArray((byte) 6, byteEq);
+
+                    DatagramPacket sendFloorSecondPacket = new DatagramPacket(completeStopMessage, completeStopMessage.length, IPAddress, 2529);
 
                     sendSocket.send(sendFloorSecondPacket);//SEND TO FLOOR
 
