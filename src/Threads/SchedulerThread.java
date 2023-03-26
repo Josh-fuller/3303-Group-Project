@@ -12,21 +12,19 @@ import java.util.*;
  */
 public class SchedulerThread implements Runnable{
 
-    ElevatorBuffer ePutBuffer,eTakeBuffer;
 
     SchedulerState state;
 
-    private DatagramSocket receiveSocket,sendSocket;
+    private final DatagramSocket receiveSocket;
+    private DatagramSocket sendSocket;
 
-    //boolean emptyBuffer;
-    // TODO Change thread call to have no buffers
-    ElevatorThread elevatorThread = new ElevatorThread(ePutBuffer,eTakeBuffer, 1);
+    ElevatorThread elevatorThread = new ElevatorThread( 1);
 
     public ArrayList<FloorEvent> getSchedulerTasks() {
         return schedulerTasks;
     }
 
-    ArrayList<FloorEvent> schedulerTasks, destinationList;
+    ArrayList<FloorEvent> schedulerTasks;
     Set<Integer> elevatorStops = new TreeSet<>();
 
 
@@ -49,8 +47,6 @@ public class SchedulerThread implements Runnable{
     }
 
     public SchedulerThread(){
-        
-        this.schedulerTasks = new ArrayList<>();
         state = SchedulerState.IDLE;
 
         this.schedulerTasks = new ArrayList<>();
@@ -99,31 +95,14 @@ public class SchedulerThread implements Runnable{
 
     //TODO Make javadoc + fix up once elevatorThread is fixed
 
+    /**
+     * Getter for the elevator stops
+     *
+     * @return floor numbers the elevators should stop at
+     */
     public Set<Integer> getElevatorStops() {
         return elevatorStops;
     }
-
-    /**
-    private void translateCar(int distance){
-
-        boolean direction = true;
-
-        if(distance < 0){
-            direction = false;
-        }
-
-        for(int i = 0;i < distance; i++){
-            if(direction){
-                elevatorThread.moveUp();
-            }
-            else{
-                elevatorThread.moveDown();
-            }
-            elevatorThread.openDoor();
-            elevatorThread.closeDoor();
-        }
-    }
-     */
 
     /**
      * Adds the destination floor to a list based on the schedulerTasks list. Also removes the added
@@ -140,6 +119,13 @@ public class SchedulerThread implements Runnable{
         schedulerTasks.remove(0);
         return destinationFloor;
     }
+
+    /**
+     * Checks if the currentFloor the elevator is going to stop at is one of the stops that has been requested.
+     *
+     * @param currentFloor the floor to check
+     * @return true if currentFloor is in the stop list and false if not
+     */
     public boolean processStopRequest(int currentFloor){
         for(int i = 0;i < elevatorStops.size(); i++) {
             if (elevatorStops.contains(currentFloor)) {
@@ -174,8 +160,8 @@ public class SchedulerThread implements Runnable{
     /**
      * Parses through received messages to get their type, for easy switch statement implementation
      *
-     * @param byteArray
-     * @return
+     * @param byteArray The messageType in byte[]
+     * @return What message has been received
      */
     public static messageType parseByteArrayForType(byte[] byteArray) {
 
@@ -217,7 +203,7 @@ public class SchedulerThread implements Runnable{
 
         // if no second 0 found, set type to 2
         if (secondZeroIndex == -1) {
-            type = messageType.ERROR;;
+            type = messageType.ERROR;
         }
 
         return type;
@@ -226,22 +212,20 @@ public class SchedulerThread implements Runnable{
     /**
      * Converts the packet data's floor number into an integer.
      *
-     * @param byteArray the recieved packet data containing request information
+     * @param byteArray the received packet data containing request information
      * @return floorNum the floor number an elevator requests to go to
      */
     public static int parseByteArrayForFloorNum(byte[] byteArray) {
-
-        int floorNum = byteArray[3] & 0xff; // get 4th byte as int
-        return floorNum;
+        return byteArray[3] & 0xff; // get 4th byte as int
     }
 
     /**
      * Waits for the elevator or floor to send a packet to the scheduler and receives that packet.
      *
-     * @return recievePacket A packet sent from the elevator or floor
+     * @return receivePacket A packet sent from the elevator or floor
      */
     public DatagramPacket receivePacket(){
-        DatagramPacket receivePacket = null;
+        DatagramPacket receivePacket;
 
         // Create a DatagramPacket to receive data from client
         byte[] receiveData = new byte[1024];
@@ -257,7 +241,7 @@ public class SchedulerThread implements Runnable{
     }
 
     /** *
-     * Creates a byte array based on the message type and floor number provided, to send to floor. Typically 05 to indicate
+     * Creates a byte array based on the message type and floor number provided, to send to floor. Typically, 05 to indicate
      * that the elevator is about to stop, and 06 to indicate a stop has been completed
      *
      * @param type what type of message to send
@@ -272,12 +256,8 @@ public class SchedulerThread implements Runnable{
         byte[] msgType = new byte[] { 0x0, type };
         byte[] floorNumInMsg = new byte[] {floorNum};
 
-
-
         //make combined data msg buffer for send/rcv
         ByteBuffer bb1 = ByteBuffer.allocate(msgType.length + floorNumInMsg.length);
-        ByteBuffer bb2 = ByteBuffer.allocate(msgType.length + floorNumInMsg.length);
-
 
         //make read request
         bb1.put(msgType);
@@ -300,7 +280,7 @@ public class SchedulerThread implements Runnable{
         DatagramPacket receivePacket = null;
 
         // Get server IP address
-        InetAddress IPAddress = null;
+        InetAddress IPAddress;
         try {
             IPAddress = InetAddress.getByName("localhost"); //edit with ip
         } catch (UnknownHostException e) {
@@ -338,9 +318,7 @@ public class SchedulerThread implements Runnable{
 
                     try {
                         tempFloorEvent = byteToFloorEvent(receivePacket.getData());
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    } catch (ClassNotFoundException e) {
+                    } catch (IOException | ClassNotFoundException e) {
                         throw new RuntimeException(e);
                     }
 
@@ -443,7 +421,11 @@ public class SchedulerThread implements Runnable{
 
                     DatagramPacket sendFloorSecondPacket = new DatagramPacket(completeStopMessage, completeStopMessage.length, IPAddress, 2529);
 
-                    sendSocket.send(sendFloorSecondPacket);//SEND TO FLOOR
+                    try {
+                        sendSocket.send(sendFloorSecondPacket);//SEND TO FLOOR
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
 
                     //go to idle state
                     idleState();

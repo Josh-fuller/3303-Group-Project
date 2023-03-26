@@ -1,6 +1,5 @@
 package MainPackage;
 
-import Threads.ElevatorBuffer;
 import Threads.ElevatorThread;
 import Threads.FloorThread;
 import Threads.SchedulerThread;
@@ -13,21 +12,14 @@ public class main {
 
         //declare and initialise everything
 
-        ElevatorBuffer ePutBuffer,eTakeBuffer,fPutBuffer,fTakeBuffer;
-
         Thread elevator, floor, scheduler;
-
-        ePutBuffer = new ElevatorBuffer();
-        eTakeBuffer = new ElevatorBuffer();
-        fPutBuffer = new ElevatorBuffer();
-        fTakeBuffer = new ElevatorBuffer();
 
 
         // Create the floor,scheduler and elevator threads,
         // passing each thread a reference to the
 
         elevator = new Thread(new
-                ElevatorThread(ePutBuffer, eTakeBuffer,1),"Elevator 1");
+                ElevatorThread(1),"Elevator 1");
         System.out.println("Elevator Created");
 
 
