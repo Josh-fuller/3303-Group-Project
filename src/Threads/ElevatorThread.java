@@ -27,7 +27,7 @@ public class ElevatorThread extends ElevatorStateMachine implements Runnable {
      * @param ElevatorNum the current elevators number
      */
     public ElevatorThread(ElevatorBuffer elevatorPutBuffer, ElevatorBuffer elevatorTakeBuffer, int ElevatorNum){
-        //super("Elevator");
+        super(7777);
         this.elevatorPutBuffer = elevatorPutBuffer;
         this.elevatorTakeBuffer = elevatorTakeBuffer;
         this.ElevatorNum = ElevatorNum;

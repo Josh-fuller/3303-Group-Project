@@ -23,7 +23,7 @@ public class ApproachingFloorTests {
 
     @Before
     public void setup() throws InterruptedException {
-        s = new ElevatorStateMachine();
+        s = new ElevatorStateMachine(7777);
         s.closeDoor(); // To change the current state from Idle to Stopped
         s.moveDown(); // To change the current state from Stopped to ApproachingFloor
     }

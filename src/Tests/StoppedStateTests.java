@@ -26,7 +26,7 @@ public class StoppedStateTests {
 
     @Before
     public void setup(){
-        s = new ElevatorStateMachine();
+        s = new ElevatorStateMachine(77777);
         s.closeDoor(); // To change the current state from Idle to Stopped
     }
 

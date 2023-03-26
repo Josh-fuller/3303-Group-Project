@@ -23,7 +23,7 @@ public class IdleStateTests {
     @Before
     public void setup(){
         // Initial state is Idle, so there is no need to change it for this test
-        s = new ElevatorStateMachine();
+        s = new ElevatorStateMachine(7777);
 
     }
 
