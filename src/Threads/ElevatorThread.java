@@ -216,7 +216,7 @@ public class ElevatorThread implements Runnable {
                         // Wait for a response from the scheduler for the destination floor to move to
                         byte[] responseBytes = new byte[1024];
                         DatagramPacket moveRequestReceivePacket = new DatagramPacket(responseBytes, responseBytes.length);
-                        sendReceiveSocket.receive(receivePacket);
+                        sendReceiveSocket.receive(moveRequestReceivePacket);
                         String destinationFloorMessage = new String(responseBytes, 0, moveRequestReceivePacket.getLength());
                         System.out.println("Scheduler response to move request: " + destinationFloorMessage);
                         this.processDestinationFloorMessage(destinationFloorMessage);
