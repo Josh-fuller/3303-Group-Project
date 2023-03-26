@@ -6,11 +6,10 @@ import java.util.*;
 
 
 /**
- * ElevatorThread
- * The concrete states of the machine are: IdleState, StoppedState, MovingUpState, MovingDownState, ApproachingFloorState
+ * ElevatorThread implements the elevator state machine. The states are IDLE, STOPPED, MOVING_UP, MOVING_DOWN.
  *
  * @author  Mahtab Ameli
- * @version Iteration 2
+ * @version Iteration 4
  */
 public class ElevatorThread implements Runnable {
     public enum ElevatorState {
