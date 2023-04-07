@@ -183,12 +183,16 @@ public class SchedulerThread implements Runnable{
 
         // check first two bytes
         if (byteArray.length >= 2 && byteArray[0] == 0x0 && byteArray[1] == 0x1) {
+            System.out.println("MESSAGE TYPE: ARRIVAL SENSOR");
             type = messageType.ARRIVAL_SENSOR;
         } else if (byteArray.length >= 2 && byteArray[0] == 0x0 && byteArray[1] == 0x2) {
+            System.out.println("MESSAGE TYPE: FLOOR EVENT");
             type = messageType.FLOOR_EVENT;
         } else if (byteArray.length >= 2 && byteArray[0] == 0x0 && byteArray[1] == 0x3) {
+            System.out.println("MESSAGE TYPE: MOVE REQUEST");
             type = messageType.MOVE_REQUEST;
         } else if (byteArray.length >= 2 && byteArray[0] == 0x0 && byteArray[1] == 0x4) {
+            System.out.println("MESSAGE TYPE: STOP FINISHED");
             type = messageType.STOP_FINISHED;
         }
 
@@ -253,7 +257,7 @@ public class SchedulerThread implements Runnable{
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        System.out.println("Received packet");
+        System.out.println("Received packet containing: " + receivePacket.getData().toString());
         return receivePacket;
     }
 
@@ -314,6 +318,8 @@ public class SchedulerThread implements Runnable{
                 case IDLE:
                     receivePacket = receivePacket();
 
+
+                    System.out.println("Parsing Message: ");
                     messageType messageType = parseByteArrayForType(receivePacket.getData());
 
                     //based on message type, go to state
@@ -374,6 +380,8 @@ public class SchedulerThread implements Runnable{
                     break;
 
                 case PROCESSING_ARRIVAL_SENSOR:
+
+                    System.out.println("ENTERING ARRIVAL SENSOR STATE");
 
                     int stopRequest; //0 is affirmative, 1 is negative
 

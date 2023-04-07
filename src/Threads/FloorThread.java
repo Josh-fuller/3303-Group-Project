@@ -91,7 +91,7 @@ public class FloorThread extends Thread {
     public byte[] buildFloorByteMsg(FloorEvent floorEvent) {
 
         array[0] = (byte) 0;
-        array[1] = (byte) 1;
+        array[1] = (byte) 2;
         array[2] = (byte) 3;
         array[3] = (byte) floorEvent.getFloorNumber();
         array[4] = (byte) 3;
