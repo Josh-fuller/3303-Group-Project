@@ -1,6 +1,5 @@
 package Tests;
 
-import Threads.ElevatorBuffer;
 import Threads.FloorEvent;
 import Threads.SchedulerThread;
 import org.junit.Assert;
@@ -11,16 +10,11 @@ import static org.junit.Assert.assertEquals;
 public class SchedulerStateMachineTests {
 
     SchedulerThread scheduler;
-    ElevatorBuffer ePutBuffer, eTakeBuffer, fPutBuffer, fTakeBuffer;
     FloorEvent floorEvent;
     FloorEvent.FloorButton button;
 
     @Before
     public void setUp(){
-        ePutBuffer = new ElevatorBuffer();
-        eTakeBuffer = new ElevatorBuffer();
-        fPutBuffer = new ElevatorBuffer();
-        fTakeBuffer = new ElevatorBuffer();
         button = FloorEvent.FloorButton.UP;
         floorEvent = new FloorEvent("01:00:00.000",1,button,1,1);
 
@@ -35,7 +29,6 @@ public class SchedulerStateMachineTests {
 
     @Test
     public void testProcessingFloorState() {
-        fPutBuffer.put(floorEvent);
         scheduler.processingFloorState();
         Assert.assertEquals(SchedulerThread.SchedulerState.PROCESSING_FLOOR_EVENT, scheduler.getState());
     }

@@ -12,9 +12,6 @@ import java.util.*;
  */
 public class SchedulerThread implements Runnable{
 
-    private static final int BUFFER_SIZE = 1024;
-    private static final int SERVER_PORT = 1003;
-
     ElevatorBuffer ePutBuffer,eTakeBuffer;
 
     SchedulerState state;
@@ -96,31 +93,14 @@ public class SchedulerThread implements Runnable{
 
     //TODO Make javadoc + fix up once elevatorThread is fixed
 
+    /**
+     * Getter for the elevator stops
+     *
+     * @return floor numbers the elevators should stop at
+     */
     public Set<Integer> getElevatorStops() {
         return elevatorStops;
     }
-
-    /**
-    private void translateCar(int distance){
-
-        boolean direction = true;
-
-        if(distance < 0){
-            direction = false;
-        }
-
-        for(int i = 0;i < distance; i++){
-            if(direction){
-                elevatorThread.moveUp();
-            }
-            else{
-                elevatorThread.moveDown();
-            }
-            elevatorThread.openDoor();
-            elevatorThread.closeDoor();
-        }
-    }
-     */
 
     /**
      * Adds the destination floor to a list based on the schedulerTasks list. Also removes the added
@@ -137,6 +117,13 @@ public class SchedulerThread implements Runnable{
         schedulerTasks.remove(0);
         return destinationFloor;
     }
+
+    /**
+     * Checks if the currentFloor the elevator is going to stop at is one of the stops that has been requested.
+     *
+     * @param currentFloor the floor to check
+     * @return true if currentFloor is in the stop list and false if not
+     */
     public boolean processStopRequest(int currentFloor){
         for(int i = 0;i < elevatorStops.size(); i++) {
             if (elevatorStops.contains(currentFloor)) {
@@ -171,8 +158,8 @@ public class SchedulerThread implements Runnable{
     /**
      * Parses through received messages to get their type, for easy switch statement implementation
      *
-     * @param byteArray
-     * @return
+     * @param byteArray The messageType in byte[]
+     * @return What message has been received
      */
     public static messageType parseByteArrayForType(byte[] byteArray) {
 
@@ -180,16 +167,12 @@ public class SchedulerThread implements Runnable{
 
         // check first two bytes
         if (byteArray.length >= 2 && byteArray[0] == 0x0 && byteArray[1] == 0x1) {
-            System.out.println("MESSAGE TYPE: ARRIVAL SENSOR");
             type = messageType.ARRIVAL_SENSOR;
         } else if (byteArray.length >= 2 && byteArray[0] == 0x0 && byteArray[1] == 0x2) {
-            System.out.println("MESSAGE TYPE: FLOOR EVENT");
             type = messageType.FLOOR_EVENT;
         } else if (byteArray.length >= 2 && byteArray[0] == 0x0 && byteArray[1] == 0x3) {
-            System.out.println("MESSAGE TYPE: MOVE REQUEST");
             type = messageType.MOVE_REQUEST;
         } else if (byteArray.length >= 2 && byteArray[0] == 0x0 && byteArray[1] == 0x4) {
-            System.out.println("MESSAGE TYPE: STOP FINISHED");
             type = messageType.STOP_FINISHED;
         }
 
@@ -219,7 +202,7 @@ public class SchedulerThread implements Runnable{
 
         // if no second 0 found, set type to 2
         if (secondZeroIndex == -1) {
-            type = messageType.ERROR;;
+            type = messageType.ERROR;
         }
 
         return type;
@@ -228,22 +211,20 @@ public class SchedulerThread implements Runnable{
     /**
      * Converts the packet data's floor number into an integer.
      *
-     * @param byteArray the recieved packet data containing request information
+     * @param byteArray the received packet data containing request information
      * @return floorNum the floor number an elevator requests to go to
      */
     public static int parseByteArrayForFloorNum(byte[] byteArray) {
-
-        int floorNum = byteArray[3] & 0xff; // get 4th byte as int
-        return floorNum;
+        return byteArray[3] & 0xff; // get 4th byte as int
     }
 
     /**
      * Waits for the elevator or floor to send a packet to the scheduler and receives that packet.
      *
-     * @return recievePacket A packet sent from the elevator or floor
+     * @return receivePacket A packet sent from the elevator or floor
      */
     public DatagramPacket receivePacket(){
-        DatagramPacket receivePacket = null;
+        DatagramPacket receivePacket;
 
         // Create a DatagramPacket to receive data from client
         byte[] receiveData = new byte[1024];
@@ -254,7 +235,7 @@ public class SchedulerThread implements Runnable{
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        System.out.println("Received packet containing: " + receivePacket.getData().toString());
+        System.out.println("Received packet");
         return receivePacket;
     }
 
@@ -363,9 +344,7 @@ public class SchedulerThread implements Runnable{
 
                     try {
                         tempFloorEvent = byteToFloorEvent(receivePacket.getData());
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    } catch (ClassNotFoundException e) {
+                    } catch (IOException | ClassNotFoundException e) {
                         throw new RuntimeException(e);
                     }
 
@@ -470,7 +449,11 @@ public class SchedulerThread implements Runnable{
 
                     DatagramPacket sendFloorSecondPacket = new DatagramPacket(completeStopMessage, completeStopMessage.length, IPAddress, 2529);
 
-                    sendSocket.send(sendFloorSecondPacket);//SEND TO FLOOR
+                    try {
+                        sendSocket.send(sendFloorSecondPacket);//SEND TO FLOOR
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
 
                     //go to idle state
                     idleState();

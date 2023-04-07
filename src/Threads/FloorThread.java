@@ -12,9 +12,6 @@ import java.net.DatagramPacket;
  */
 public class FloorThread extends Thread {
 
-    //private FloorBuffer floorEventBuffer; // buffer for holding floorEvent data
-
-
     private int schedulerPort;
     private DatagramPacket sendPacket, receivePacket;
     private DatagramSocket sendReceiveSocket;
