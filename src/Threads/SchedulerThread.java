@@ -12,15 +12,12 @@ import java.util.*;
  */
 public class SchedulerThread implements Runnable{
 
+    private static final int BUFFER_SIZE = 1024;
+    private static final int SERVER_PORT = 1003;
+
     ElevatorBuffer ePutBuffer,eTakeBuffer;
 
     SchedulerState state;
-
-    private DatagramSocket receiveSocket,sendSocket;
-
-    //boolean emptyBuffer;
-    // TODO Change thread call to have no buffers
-    ElevatorThread elevatorThread = new ElevatorThread(ePutBuffer,eTakeBuffer, 1);
 
     public ArrayList<FloorEvent> getSchedulerTasks() {
         return schedulerTasks;
@@ -272,25 +269,46 @@ public class SchedulerThread implements Runnable{
      *
      * @author Josh Fuller
      */
-    public byte[] createByteArray(byte type, byte floorNum){
-        // Create data to send to server
-        byte[] msgType = new byte[] { 0x0, type };
-        byte[] floorNumInMsg = new byte[] {floorNum};
+    public static byte[] createByteArray(int type, int floorNum) {
+        byte[] bytes = new byte[3];
+        bytes[0] = 0;
+        bytes[1] = (byte) type;
+        bytes[2] = (byte) floorNum;
+        return bytes;
+    }
 
+    public static DatagramPacket receiveByteArray(int port, int bufferSize) {
+        DatagramSocket socket = null;
+        try {
+            socket = new DatagramSocket(port);
+            byte[] buffer = new byte[bufferSize];
+            DatagramPacket packet = new DatagramPacket(buffer, bufferSize);
+            socket.receive(packet);
+            return packet;
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (socket != null) {
+                socket.close();
+            }
+        }
+        return null;
+    }
 
+    public static void sendByteArray(byte[] byteArray, int port) throws IOException {
+        DatagramSocket socket = new DatagramSocket(port);
+        InetAddress address = InetAddress.getLocalHost();
+        DatagramPacket packet = new DatagramPacket(byteArray, byteArray.length, address, port);
+        socket.send(packet);
+        socket.close();
+    }
 
-        //make combined data msg buffer for send/rcv
-        ByteBuffer bb1 = ByteBuffer.allocate(msgType.length + floorNumInMsg.length);
-        ByteBuffer bb2 = ByteBuffer.allocate(msgType.length + floorNumInMsg.length);
+    public static int readTypeFromByteArray(byte[] byteArray) {
+        return byteArray[1];
+    }
 
-
-        //make read request
-        bb1.put(msgType);
-        bb1.put(floorNumInMsg);
-
-        byte[] byteArrayToSend = bb1.array();
-
-        return byteArrayToSend;
+    public static int readFloorFromByteArray(byte[] byteArray) {
+        return byteArray[2];
     }
 
     /** *
