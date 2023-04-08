@@ -296,7 +296,7 @@ public class SchedulerThread implements Runnable{
                     receivePacket = receivePacket();
 
                     messageType messageType = parseByteArrayForType(receivePacket.getData());
-
+                    System.out.println(messageType);
                     //based on message type, go to state
                     if (messageType == SchedulerThread.messageType.FLOOR_EVENT) {
                         processingFloorState();
@@ -326,7 +326,7 @@ public class SchedulerThread implements Runnable{
                     }
 
                     schedulerTasks.add(tempFloorEvent);
-*/
+*/                  System.out.println(Arrays.toString(receivePacket.getData()));
                     idleState();
                     break;
 

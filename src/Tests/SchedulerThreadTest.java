@@ -31,7 +31,7 @@ public class SchedulerThreadTest {
     public void setup() throws SocketException, UnknownHostException {
         testSendSocket = new DatagramSocket();
         testReceiveSocket = new DatagramSocket(69);
-        byte[] message = floor.buildFloorByteMsg(floorTest1);
+        byte[] message = floor.buildFloorByteMsg();
        // sendPacket = new DatagramPacket(message, message.length,InetAddress.getLocalHost(), 1003);
     }
 

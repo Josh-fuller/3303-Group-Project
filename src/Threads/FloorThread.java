@@ -85,12 +85,16 @@ public class FloorThread extends Thread {
     }
 
 
-    public byte[] buildFloorByteMsg(FloorEvent floorEvent) {
+    public byte[] buildFloorByteMsg() {
 
-        array[0] = (byte) 0;
-        array[1] = (byte) 2;
-        array[3] = (byte) floorEvent.getFloorNumber();
-        array[5] = (byte) floorEvent.getElevatorButton();
+        int arrayCounter = 0;
+        for(int i = 0; i < floorEventList.size();i++){
+            array[arrayCounter] = (byte) 0;
+            array[arrayCounter + 1] = (byte) 2;
+            array[arrayCounter + 2] = (byte) floorEventList.get(i).getFloorNumber();
+            array[arrayCounter + 3] = (byte) floorEventList.get(i).getElevatorButton();
+            arrayCounter += 3;
+        }
 
         byte[] bMsg = array;
         return bMsg;
@@ -138,9 +142,9 @@ public class FloorThread extends Thread {
     // Put each event from floorEventList in the floorEventBuffer for communication to the scheduler.
     public void run() {
         for (int i = 0; i < floorEventList.size(); i++) {
-            FloorEvent currentFloorEvent = floorEventList.get(i);
 
-            this.sendPacket(buildFloorByteMsg(currentFloorEvent));
+
+            this.sendPacket(buildFloorByteMsg());
 
 
             byte[] data = new byte[1024];
