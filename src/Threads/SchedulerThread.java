@@ -136,6 +136,7 @@ public class SchedulerThread implements Runnable{
     }
 
     /**
+     * TODO Possibly delete this method
      * Converts the floor event that was sent from the floor thread from a serialized object that
      * was converted into a byteArray back into a floor event.
      *
@@ -314,6 +315,7 @@ public class SchedulerThread implements Runnable{
                     break;
 
                 case PROCESSING_FLOOR_EVENT:
+/*              //TODO Add new way of processing floor
 
                     FloorEvent tempFloorEvent;
 
@@ -324,7 +326,7 @@ public class SchedulerThread implements Runnable{
                     }
 
                     schedulerTasks.add(tempFloorEvent);
-
+*/
                     idleState();
                     break;
 
