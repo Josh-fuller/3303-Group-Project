@@ -1,8 +1,9 @@
-package Threads;
+package ElevatorStateMachine;
 import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.util.*;
+
 
 /**
  * ElevatorThread implements the elevator state machine. The states are IDLE, STOPPED, MOVING_UP, MOVING_DOWN.
@@ -216,7 +217,7 @@ public class ElevatorThread implements Runnable {
                         // Wait for a response from the scheduler for the destination floor to move to
                         byte[] responseBytes = new byte[1024];
                         DatagramPacket moveRequestReceivePacket = new DatagramPacket(responseBytes, responseBytes.length);
-                        sendReceiveSocket.receive(moveRequestReceivePacket);
+                        sendReceiveSocket.receive(receivePacket);
                         String destinationFloorMessage = new String(responseBytes, 0, moveRequestReceivePacket.getLength());
                         System.out.println("Scheduler response to move request: " + destinationFloorMessage);
                         this.processDestinationFloorMessage(destinationFloorMessage);
@@ -272,15 +273,15 @@ public class ElevatorThread implements Runnable {
                             }
                             this.doorOpen = false;
                             // send a message to scheduler communicating that the door was open and closed
-                            try {
-                                //create door opening and closing (after stopping at a new floor) to scheduler
-                                String stringMessage = "The door has opened and closed.";
-                                DatagramPacket doorClosedSendPacket = createMessagePacket((byte) 0x04, currentFloor, stringMessage);
-                                // Send door closed message to the scheduler
-                                sendReceiveSocket.send(doorClosedSendPacket);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
+                                try {
+                                    //create door opening and closing (after stopping at a new floor) to scheduler
+                                    String stringMessage = "The door has opened and closed.";
+                                    DatagramPacket doorClosedSendPacket = createMessagePacket((byte) 0x04, currentFloor, stringMessage);
+                                    // Send door closed message to the scheduler
+                                    sendReceiveSocket.send(doorClosedSendPacket);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
                             // reset stop signal to false until scheduler sets it to true again
                             stopSignal = false;
                         }
