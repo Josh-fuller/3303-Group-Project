@@ -7,7 +7,8 @@ import java.net.DatagramPacket;
 import java.util.Arrays;
 
 /**
- * Class Threads.FloorThread represents the floor subsystem of the elevator scheduling system.
+ * Class Threads.FloorThread represents the floor subsystem of the elevator scheduling system which communicates with
+ * the scheduler via UDP.
  *
  * @author Mahtab Ameli
  */
@@ -28,8 +29,9 @@ public class FloorThread extends Thread {
         COMPLETED_STOP,
         ERROR
     }
-//TODO What is the actual starting state?
-    FloorStatus status = FloorStatus.PROCESSING_STARTING_STOP;
+
+    // IDLE is the default floor status
+    FloorStatus status = FloorStatus.IDLE;
 
     public enum FloorStatus {
         IDLE,
@@ -37,6 +39,7 @@ public class FloorThread extends Thread {
         PROCESSING_COMPLETED_STOP,
     }
 
+    // Flag used for fault handling in run()
     boolean timedOut;
 
     /**
@@ -63,7 +66,11 @@ public class FloorThread extends Thread {
     }
 
 
-    // Populate floorEventList with input from Floor_Input text file.
+
+    /**
+     * Populate floorEventList with input from Floor_Input text file.
+     *
+     */
     private void populateFloorEventList() throws IOException {
         // Read the text file containing floor input data.
         File floorInputFile = new File("src/Threads/Floor_Input.txt");
@@ -78,7 +85,13 @@ public class FloorThread extends Thread {
     }
 
 
-    // Create a Threads.FloorEvent from a line of information retrieved from "Floor_Input.txt".
+
+    /**
+     * Create a Threads.FloorEvent from a line of information retrieved from "Floor_Input.txt".
+     *
+     * @param inputLine is a line from "Floor_Input.txt" containing data of a FloorEvent
+     * @return event
+     */
     private FloorEvent createFloorEvent(String inputLine) {
         // Split the line into words separated by spaces.
         String[] words = inputLine.split("\\s");
@@ -92,18 +105,22 @@ public class FloorThread extends Thread {
         carButtonInput = words[3];
         elevatorNumInput = words[4];
 
-        // Cast each string input to the corresponding parameter type of Threads.FloorEvent. Create an object of Threads.FloorEvent.
+        // Cast each string input to the corresponding parameter type of Threads.FloorEvent.
+        // Create an object of Threads.FloorEvent.
         FloorEvent event = new FloorEvent(timeInput,
                 Integer.parseInt(floorNumberInput),
                 FloorEvent.FloorButton.valueOf(floorButtonInput),
                 Integer.parseInt(carButtonInput), Integer.parseInt(elevatorNumInput));
-        //System.out.println(event);
-
 
         return event;
     }
 
-
+    /**
+     * Generate a byte array message from a floor event to prepare it for transfer to scheduler via a
+     * datagram packet.
+     *
+     * @return bMsg
+     */
     public byte[] buildFloorByteMsg() {
         int arrayCounter = 2;
         array[0] = (byte) 0;
@@ -118,8 +135,12 @@ public class FloorThread extends Thread {
         return bMsg;
     }
 
-    // Receive a Datagram packet on the sendReceive socket
-    // and print out the packets details
+
+    /**
+     * Method for receiving datagram packets from scheduler via sendReceiveSocket.
+     *
+     * @return receivedPacket
+     */
     private DatagramPacket receivePacket() {
         // Wait for incoming Datagram packet
         byte[] data = new byte[1024];
@@ -134,10 +155,15 @@ public class FloorThread extends Thread {
         }
 
         return receivePacket;
-
-
     }
 
+
+    /**
+     * Method for sending datagram packets to scheduler via sendReceiveSocket.
+     *
+     * @param bMsg is the byte array message being sent
+     * @return receivedPacket
+     */
     public void sendPacket(byte[] bMsg) {
         // Create the Datagram packet
         try {
@@ -148,49 +174,60 @@ public class FloorThread extends Thread {
             System.exit(1);
         }
 
-        // Send the Datagram packet to the server
+        // Send the Datagram packet to the scheduler
         try {
             sendReceiveSocket.send(sendPacket);
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
         }
-
     }
 
-    public synchronized void waitForPacketWithTimeout(int timeout) throws SocketTimeoutException{
-        // Wait for incoming Datagram packet with a timeout
-        byte[] data = new byte[1024];
 
+    /**
+     * This method is used to detect a fault in the elevator's door. It implements a socket with timeout that's used
+     * to detect if the door is open for too long, thus indicating a fault. If a packet is received before the
+     * specified timeout period, then we know everything is functioning as expected. However, if no packet is
+     * received within the set timeout period, it indicates there is a fault, then the method throws a
+     * SocketTimeoutException, which gets caught and handled accordingly in the runnable part below.
+     *
+     * @param timeout is the period we wish to set as the maximum time the method shall wait for
+     * @throws SocketTimeoutException
+     */
+    public synchronized void waitForPacketWithTimeout(int timeout) throws SocketTimeoutException{
+
+        byte[] data = new byte[1024];
         receiveTimedPacket = new DatagramPacket(data, data.length);
+
         try {
             // Build a Datagram socket and associate it with
             // an available port so that it can
             // receive UDP Datagrams and have a timeout.
             TimedSocket = new DatagramSocket(2530);
+
             TimedSocket.setSoTimeout(timeout); // Timeout for socket in milliseconds
-        } catch (SocketException se) {   // Incase a socket can't be created.
+
+        } catch (SocketException se) {   // In case a socket can't be created.
             se.printStackTrace();
             System.exit(1);
         }
 
         try {
-            // Block until a packet is received via TimedSocket.
+            // Block until a packet is received within the specified timeout or until the timer runs out.
             TimedSocket.receive(receiveTimedPacket);
 
         } catch (IOException e) {
-            throw new SocketTimeoutException(); // we throw a new socketTimeout exception to indicate
-            // the socket timer ran out
-
+            // we throw a new socketTimeout exception to indicate the socket timer ran out.
+            throw new SocketTimeoutException();
         }
-
     }
 
     /**
-     * Parses through received messages to get their type, for easy switch statement implementation
+     * Parses the received messages for its type; which is then used for the switch statements in the runnable
+     * part below.
      *
-     * @param byteArray
-     * @return
+     * @param byteArray the received packet passed to the method as an argument
+     * @return type
      */
     public static MsgType parseByteArrayForType(byte[] byteArray) {
 
@@ -199,113 +236,92 @@ public class FloorThread extends Thread {
         // check first two bytes
         if (byteArray.length >= 1 && byteArray[0] == 0x0 && byteArray[1] == 0x5) {
             type = MsgType.STARTING_STOP; // start timer
+
         } else if (byteArray.length >= 1 && byteArray[0] == 0x0 && byteArray[1] == 0x6) {
             type = MsgType.COMPLETED_STOP; // stop timer
         }
 
-
-        // find first 0
-        int firstZeroIndex = -1;
-        for (int i = 2; i < byteArray.length; i++) {
-            if (byteArray[i] == 0x0) {
-                firstZeroIndex = i;
-                break;
-            }
-        }
-
-        // if no 0 found, set type to error and return
-        if (firstZeroIndex == -1) {
-            type = MsgType.ERROR;
-            return type;
-        }
         return type;
     }
 
-    private void idleStatus() {
-        status = FloorStatus.IDLE;
-    }
 
-    public void handleStaringStopStatus() {
-        status = FloorStatus.PROCESSING_STARTING_STOP;
-    }
+    /**
+     * The following three methods are used to set the "status" based on the message received from scheduler,
+     * so that we can proceed accordingly in the runnable part below.
+     *
+     */
+    private void idleStatus() {status = FloorStatus.IDLE;}
 
-    public void handleCompletedStopStatus() {
-        status = FloorStatus.PROCESSING_COMPLETED_STOP;
-    }
+    public void handleStaringStopStatus() {status = FloorStatus.PROCESSING_STARTING_STOP;}
+
+    public void handleCompletedStopStatus() {status = FloorStatus.PROCESSING_COMPLETED_STOP;}
 
 
-    // Put each event from floorEventList in the floorEventBuffer for communication to the scheduler.
+    /**
+     * This is the runnable portion of this class that handles all the delegation to methods instantiated above.
+     */
     public void run() {
-
-        //TODO Where is this line actually supposed to be?
-        this.sendPacket(buildFloorByteMsg());
 
         while (!timedOut) {
 
             switch(status) {
-                case IDLE:
-                    receivePacket = receivePacket();
 
+                case IDLE: // Default floor status
+                    // TODO When and how often should the floor send FloorEvents to the Scheduler? because I think
+                    // TODO     currently it will only send 1 floorEvent.
+                    this.sendPacket(buildFloorByteMsg()); // Send FloorEvent to scheduler.
+
+                    // Receive a message from scheduler and parse it for message type.
+                    receivePacket = receivePacket();
                     MsgType messageType = parseByteArrayForType(receivePacket.getData());
 
-                    //based on message type, go to state
+                    // TODO change to "Elevator Stopped" because it handles both.
+                    // Based on message type, go to status.
                     if (messageType == MsgType.STARTING_STOP) {
                         handleStaringStopStatus();
+
+                        // TODO I might delete this cuz it's not used; the [06] is now sent to a specific socket with timeout.
                     } else if (messageType == MsgType.COMPLETED_STOP) {
                         handleCompletedStopStatus();
+
                     } else if (messageType == MsgType.ERROR) {
                         System.out.println("ERROR DETECTED IN SCHEDULER MESSAGE");
-                    }
-                    break;
 
-                case PROCESSING_STARTING_STOP:
+                    } break;
+
+
+
+                // TODO Change to "PROCESSING_STOP" because it handles both "starting" and "completed" stop.
+                case PROCESSING_STARTING_STOP: //Scheduler tells floor elevator has stopped, floor starts timer
                     try {
-                        waitForPacketWithTimeout(8000);
-                        // TODO 1 refactor + comments
+                        // Create an acknowledgement message then send it to scheduler.
+                        byte[] ackMessage = "ACK".getBytes();
+                        this.sendPacket(ackMessage);
+
+                        // The called method will wait for 8 seconds to receive a packet from scheduler, otherwise
+                        // an exception will be thrown, implying there is a fault and the door didn't close.
+                        waitForPacketWithTimeout(8*1000);
 
                     } catch (SocketTimeoutException e) {
-                        System.out.println("Timer ran out while waiting to receive a packet from scheduler!");
+                        // Socket timeout exception is caught, an error statement is printed,
+                        // timedOut flag is set to true and the floorThread is halted.
+                        System.out.println("ERROR: Timer ran out while waiting to receive a packet from scheduler!");
                         timedOut= true;
                         break;
-                        // TODO 2 refactor
                     }
+                    // go back to idle status
                     idleStatus();
                     break;
 
-
-                // Not really needed, TODO 3 refactor
-                /*case PROCESSING_COMPLETED_STOP:
-                    try {
-                        sendSocket.send(sendElevatorMovePacket);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                    idleStatus();
-                    break;*/
             }
-            //TODO What of this is still needed?(sendPacket is above)
-            this.sendPacket(buildFloorByteMsg());
 
-            for (int i = 0; i < floorEventList.size(); i++) {
-                
-                byte[] data = new byte[1024];
-                receivePacket = new DatagramPacket(data, data.length);
-                try {
-                    // Block until a Datagram is received via sendReceiveSocket.
-                    sendReceiveSocket.receive(receivePacket);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    System.exit(1);
-                }
 
-                System.out.println("STEP 8");
-                System.out.println("Finished Processing Use #" + i);
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
 
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                }
             }
+
         }
     }
 }
