@@ -18,8 +18,6 @@ public class SchedulerThread implements Runnable{
     private final DatagramSocket receiveSocket;
     private DatagramSocket sendSocket;
 
-    ElevatorThread elevatorThread = new ElevatorThread( 1);
-
     public ArrayList<FloorEvent> getSchedulerTasks() {
         return schedulerTasks;
     }
@@ -92,19 +90,7 @@ public class SchedulerThread implements Runnable{
         return state;
     }
 
-
-    //TODO Make javadoc + fix up once elevatorThread is fixed
-
-    /**
-     * Getter for the elevator stops
-     *
-     * @return floor numbers the elevators should stop at
-     */
-    public Set<Integer> getElevatorStops() {
-        return elevatorStops;
-    }
-
-    /**
+    /** TODO Delete this once I have the getElevatorStops method
      * Adds the destination floor to a list based on the schedulerTasks list. Also removes the added
      * task from the schedulerTask list.
      *
@@ -120,7 +106,12 @@ public class SchedulerThread implements Runnable{
         return destinationFloor;
     }
 
-    /**
+    //TODO return int[]
+    public void getElevatorStops(){
+        return ;
+    }
+
+    /** TODO Change method to be able to handle multiple elevators and
      * Checks if the currentFloor the elevator is going to stop at is one of the stops that has been requested.
      *
      * @param currentFloor the floor to check
@@ -167,7 +158,8 @@ public class SchedulerThread implements Runnable{
     public static messageType parseByteArrayForType(byte[] byteArray) {
 
         messageType type = messageType.ERROR; // default value
-
+        System.out.println(byteArray[0]);
+        System.out.println(byteArray[1]);
         // check first two bytes
         if (byteArray.length >= 2 && byteArray[0] == 0x0 && byteArray[1] == 0x1) {
             type = messageType.ARRIVAL_SENSOR;
@@ -297,6 +289,7 @@ public class SchedulerThread implements Runnable{
 
                     messageType messageType = parseByteArrayForType(receivePacket.getData());
                     System.out.println(messageType);
+                    System.out.println(receivePacket.getPort());
                     //based on message type, go to state
                     if (messageType == SchedulerThread.messageType.FLOOR_EVENT) {
                         processingFloorState();
@@ -422,7 +415,7 @@ public class SchedulerThread implements Runnable{
 
                     byte[] completeStopMessage = createByteArray((byte) 6, byteEq);
 
-                    DatagramPacket sendFloorSecondPacket = new DatagramPacket(completeStopMessage, completeStopMessage.length, IPAddress, 2529);
+                    DatagramPacket sendFloorSecondPacket = new DatagramPacket(completeStopMessage, completeStopMessage.length, IPAddress, 2530);
 
                     try {
                         sendSocket.send(sendFloorSecondPacket);//SEND TO FLOOR

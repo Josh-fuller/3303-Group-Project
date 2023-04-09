@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.net.*;
 import java.net.DatagramPacket;
+import java.util.Arrays;
 
 /**
  * Class Threads.FloorThread represents the floor subsystem of the elevator scheduling system.
@@ -27,8 +28,8 @@ public class FloorThread extends Thread {
         COMPLETED_STOP,
         ERROR
     }
-
-    FloorStatus status;
+//TODO What is the actual starting state?
+    FloorStatus status = FloorStatus.PROCESSING_STARTING_STOP;
 
     public enum FloorStatus {
         IDLE,
@@ -104,16 +105,15 @@ public class FloorThread extends Thread {
 
 
     public byte[] buildFloorByteMsg() {
-
-        int arrayCounter = 0;
+        int arrayCounter = 2;
+        array[0] = (byte) 0;
+        array[1] = (byte) 2;
         for(int i = 0; i < floorEventList.size();i++){
-            array[arrayCounter] = (byte) 0;
-            array[arrayCounter + 1] = (byte) 2;
-            array[arrayCounter + 2] = (byte) floorEventList.get(i).getFloorNumber();
-            array[arrayCounter + 3] = (byte) floorEventList.get(i).getElevatorButton();
-            arrayCounter += 3;
+            array[arrayCounter] = (byte) floorEventList.get(i).getFloorNumber();
+            array[arrayCounter + 1] = (byte) floorEventList.get(i).getElevatorButton();
+            arrayCounter += 2;
         }
-
+        //System.out.println(Arrays.toString(array));
         byte[] bMsg = array;
         return bMsg;
     }
@@ -237,6 +237,9 @@ public class FloorThread extends Thread {
     // Put each event from floorEventList in the floorEventBuffer for communication to the scheduler.
     public void run() {
 
+        //TODO Where is this line actually supposed to be?
+        this.sendPacket(buildFloorByteMsg());
+
         while (!timedOut) {
 
             switch(status) {
@@ -280,7 +283,7 @@ public class FloorThread extends Thread {
                     idleStatus();
                     break;*/
             }
-
+            //TODO What of this is still needed?(sendPacket is above)
             this.sendPacket(buildFloorByteMsg());
 
             for (int i = 0; i < floorEventList.size(); i++) {
