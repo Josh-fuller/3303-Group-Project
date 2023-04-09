@@ -130,10 +130,9 @@ public class ElevatorThread implements Runnable {
     /**
      * Creates and returns a Datagram Packet using given input parameters.
      */
-    public DatagramPacket createMessagePacket(byte typeByte, int floorNumber, String sentence) throws UnknownHostException {
-        byte[] messageTypeBytes = new byte[] {0x0, typeByte};
+    public DatagramPacket createMessagePacket(byte typeByte, int floorNumber) throws UnknownHostException {
+        byte[] messageTypeBytes = new byte[] {0x0, typeByte, 0x0};
         byte[] floorNumberBytes = new byte[] {(byte) (floorNumber & 0xFF)};
-        //byte[] sentenceBytes = sentence.getBytes();
 
         //ByteBuffer bb = ByteBuffer.allocate(messageTypeBytes.length + floorNumberBytes.length + sentenceBytes.length);
         ByteBuffer bb = ByteBuffer.allocate(messageTypeBytes.length + floorNumberBytes.length);
@@ -141,7 +140,6 @@ public class ElevatorThread implements Runnable {
         //make read request
         bb.put(messageTypeBytes);
         bb.put(floorNumberBytes);
-        //bb.put(sentenceBytes);
 
         byte[] message = bb.array();
         InetAddress schedulerAddress = InetAddress.getByName("localhost");
@@ -253,7 +251,9 @@ public class ElevatorThread implements Runnable {
 
             switch (state) {
 
-            //Elevator state: IDLE
+                /**
+                 * Elevator state: IDLE
+                 */
 
                 case IDLE:
 
@@ -262,29 +262,22 @@ public class ElevatorThread implements Runnable {
 
                     try {
                         // Create move request datagram packet
-                        DatagramPacket moveRequestPacket = createMessagePacket((byte) 0x03, currentFloor, "");
+                        DatagramPacket moveRequestPacket = createMessagePacket((byte) 0x03, currentFloor);
                         // Send message to scheduler
                         sendReceiveSocket.send(moveRequestPacket);
                         // Wait for a response from the scheduler for the destination floor to move to
-                        byte[] responseBytes = new byte[1024];
-                        //DatagramPacket moveRequestReceivePacket = new DatagramPacket(responseBytes, responseBytes.length); // todo remove
-                        //sendReceiveSocket.receive(moveRequestReceivePacket); // todo remove
                         DatagramPacket moveRequestReceivePacket = receivePacket();
-                        //responseBytes = moveRequestReceivePacket.getData();
-                        //String destinationFloorMessage = new String(responseBytes, 0, moveRequestReceivePacket.getLength());
-                        //System.out.println("Scheduler response to move request: " + destinationFloorMessage);
-                        System.out.println("Scheduler's response back to elevator's move request: " + byteArrayToInt(moveRequestPacket.getData()));
-                        //this.processDestinationFloorMessage(destinationFloorMessage);
+                        System.out.println("Scheduler's response back to elevator's move request: " + byteArrayToInt(moveRequestReceivePacket.getData()));
                         this.processDestinationFloorMessage(moveRequestReceivePacket.getData());
-                        // close port
-                        //sendReceiveSocket.close();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                     break;
 
 
-                    //Elevator state: MOVING_UP
+                /**
+                 * Elevator state: MOVING_UP
+                 */
 
                 case MOVING_UP:
 
@@ -297,23 +290,16 @@ public class ElevatorThread implements Runnable {
                         incrementFloor(); // go up 1 floor
                         try {
                             // Create arrival sensor message as elevator approaches next floor up
-                            //DatagramPacket arriveUpSignalPacket = this.createMessagePacket((byte) 0x01, arrivalSignal, "");
-                            DatagramPacket arriveUpSignalPacket = this.createMessagePacket((byte) 0x01, currentFloor, "");
+                            DatagramPacket arriveUpSignalPacket = this.createMessagePacket((byte) 0x01, currentFloor);
                             // Send arrival sensor message to scheduler
                             // start timer
                             //handleTimeout(10000);
                             sendReceiveSocket.send(arriveUpSignalPacket);
                             // Wait for a response from the scheduler on whether to stop at this floor
-                            //byte[] responseBytes = new byte[1024];
-                            //DatagramPacket arriveUpReceivePacket = new DatagramPacket(responseBytes, responseBytes.length);
                             DatagramPacket arriveUpReceivePacket = receivePacket();
-                            //sendReceiveSocket.receive(arriveUpReceivePacket);
-
 
                             //floor transition timer was interrupted
                             //timerInterrupted = true;
-                            //String stopSignalMessage = new String(responseBytes, 0, receivePacket.getLength());
-                            //System.out.println("Scheduler response to arrival sensor: " + stopSignalMessage);
                             System.out.println("Scheduler response to arrival sensor: " + arriveUpReceivePacket.getData()[0]);
 
                             //this.stopSignal = processStopSignalMessage(stopSignalMessage);
@@ -321,7 +307,6 @@ public class ElevatorThread implements Runnable {
 
                             // if stop is not requested, keep moving up. else, stop the elevator
                             if (!stopSignal) {continue;}
-
 
                             // if stop is requested
                             this.doorOpen = true;
@@ -337,8 +322,8 @@ public class ElevatorThread implements Runnable {
                             // send a message to scheduler communicating that the door was open and closed
                             try {
                                 //create door opening and closing (after stopping at a new floor) to scheduler
-                                String stringMessage = "The door has opened and closed.";
-                                DatagramPacket doorClosedSendPacket = createMessagePacket((byte) 0x04, currentFloor, stringMessage);
+                                //String stringMessage = "The door has opened and closed.";
+                                DatagramPacket doorClosedSendPacket = createMessagePacket((byte) 0x04, currentFloor);
                                 // Send door closed message to the scheduler
                                 sendReceiveSocket.send(doorClosedSendPacket);
                             } catch (IOException e) {
@@ -352,7 +337,9 @@ public class ElevatorThread implements Runnable {
                     }
                     break;
 
-                    //Elevator state: MOVING_DOWN
+                /**
+                 * Elevator state: MOVING_DOWN
+                 */
 
                 case MOVING_DOWN:
                     System.out.println("Elevator State: MOVING DOWN");
@@ -361,7 +348,7 @@ public class ElevatorThread implements Runnable {
                         decrementFloor();
                         try {
                             // Create arrival sensor message
-                            DatagramPacket arriveDownSendPacket = createMessagePacket((byte) 0x01, arrivalSignal, "");
+                            DatagramPacket arriveDownSendPacket = createMessagePacket((byte) 0x01, arrivalSignal);
                             // Send arrival sensor message to scheduler
                             // start timer
                             //handleTimeout(5000);
@@ -397,7 +384,7 @@ public class ElevatorThread implements Runnable {
                             try {
                                 //create door opening and closing (after stopping at a new floor) to scheduler
                                 String stringMessage = "The door has opened and closed.";
-                                DatagramPacket doorClosedSendPacket = createMessagePacket((byte) 0x06, currentFloor, stringMessage);
+                                DatagramPacket doorClosedSendPacket = createMessagePacket((byte) 0x06, currentFloor);
                                 // Send door closed message to the scheduler
                                 sendReceiveSocket.send(doorClosedSendPacket);
                             } catch (IOException e) {
