@@ -8,7 +8,7 @@ import java.util.*;
  * ElevatorThread implements the elevator state machine. The states are IDLE, STOPPED, MOVING_UP, MOVING_DOWN.
  *
  * @author  Mahtab Ameli
- * @version Iteration 4
+ * @version Iteration 5
  */
 public class ElevatorThread implements Runnable {
     public enum ElevatorState {
@@ -25,7 +25,7 @@ public class ElevatorThread implements Runnable {
     private int currentFloor;       // Elevator's current floor as signalled by the arrival sensor
     private List<Integer> floors;   // list of 5 floors that have access to the elevator
     private boolean stopSignal;     // signal set to true when scheduler makes a command to stop at approaching floor
-    private int arrivalSignal;      // integer indicates the floor number being approached by the elevator
+    //private int arrivalSignal;      // integer indicates the floor number being approached by the elevator
     private int destination = 0;    // destination floor requested by the scheduler
     DatagramPacket sendPacket, receivePacket; // Datagram Packets for UDP communication with the scheduler thread
     DatagramSocket sendReceiveSocket;         // Datagram socket for sending and receiving UDP communication to/from the scheduler thread
@@ -43,7 +43,7 @@ public class ElevatorThread implements Runnable {
         this.portNumber = portNumber;
         this.doorOpen = true;   // the elevator door is initially open
         this.currentFloor = 1;  // elevator starts at floor #1
-        this.arrivalSignal = 1;
+        //this.arrivalSignal = 1;
         this.floors = new ArrayList<Integer>();
         this.stopSignal = false;
         this.state = ElevatorState.IDLE;
@@ -65,10 +65,10 @@ public class ElevatorThread implements Runnable {
      */
     private void populateFloors() {
         floors.clear();
-/*        for (int i = 0; i < 23; i++) {
+        for (int i = 0; i < 22; i++) {
             floors.add(i);
-        }*/
-        floors.addAll(Arrays.asList(new Integer[]{1, 2, 3, 4, 5}));
+        }
+        //floors.addAll(Arrays.asList(new Integer[]{1, 2, 3, 4, 5}));
     }
 
 
@@ -82,11 +82,10 @@ public class ElevatorThread implements Runnable {
         if (i < topFloor) {
             i++;
             currentFloor = i;
-            arrivalSignal = i;
+            //arrivalSignal = i;
             System.out.println("\nCURRENT FLOOR: " + currentFloor);
         }
     }
-
 
 
     /**
@@ -97,7 +96,7 @@ public class ElevatorThread implements Runnable {
         int i = currentFloor;
         if (i > bottomFloor) {
             i--;
-            arrivalSignal = i;
+            //arrivalSignal = i;
             currentFloor = i;
             System.out.println("\nCURRENT FLOOR: " + currentFloor);
         }
@@ -111,18 +110,14 @@ public class ElevatorThread implements Runnable {
      */
     public DatagramPacket receivePacket(){
         DatagramPacket receivePacket;
-
         // Create a DatagramPacket to receive data from client
         byte[] receiveData = new byte[1024];
         receivePacket = new DatagramPacket(receiveData, receiveData.length);
-
         try {
             sendReceiveSocket.receive(receivePacket); //Receive from anywhere
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        //System.out.println("Received packet"); // todo ask group why receiveData[3] originally
-        //System.out.println("Scheduler received packet: " + receiveData[2]);
         return receivePacket;
     }
 
@@ -152,7 +147,7 @@ public class ElevatorThread implements Runnable {
 
 
     /**
-     * Process string message from scheduler containing stop signal.
+     * Process byte array message from scheduler containing stop signal.
      * @param stopSignalBytes
      */
     private boolean processStopSignalMessage (byte[] stopSignalBytes){
@@ -163,17 +158,6 @@ public class ElevatorThread implements Runnable {
         }
         return false;
     }
-/*    *//**
-     * Process string message from scheduler containing stop signal.
-     * @param stopSignalMessage
-     *//*
-    private boolean processStopSignalMessage (String stopSignalMessage){
-        int signal = Integer.valueOf(stopSignalMessage);
-        if (signal == 0) { // if signal is 0, return true.
-            return true;
-        }
-        return false;
-    }*/
 
 
 
@@ -184,6 +168,8 @@ public class ElevatorThread implements Runnable {
     private void processDestinationFloorMessage (byte[] destFloorBytes) {
         //this.destination = Integer.valueOf(String.valueOf(destFloorBytes));
         this.destination = byteArrayToInt(destFloorBytes);
+        if (destination > 22) {destination = 22;}
+        else if (destination < 0) {destination = 0;}
         if (destination == currentFloor) {
             System.out.println("The elevator is already at destination floor " + destination + ".");
             state = ElevatorState.IDLE;
@@ -194,7 +180,7 @@ public class ElevatorThread implements Runnable {
             System.out.println("Initiating move down from floor " + currentFloor + " to " + destination + "...");
             state = ElevatorState.MOVING_DOWN;
         } else {
-            destination = -20; // invalid destination
+            destination = -1; // invalid destination
             state = ElevatorState.IDLE;
         }
     }
@@ -212,6 +198,36 @@ public class ElevatorThread implements Runnable {
         return result;
     }
 
+    /**
+     * Makes elevator wait a constant amount of time for loading/unloading passengers.
+     */
+    private void loadUnload() {
+        try {
+            Thread.sleep(LOAD_UNLOAD_TIME); // elevator door stays open for 5 seconds
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Handles stops requested by the scheduler. Communicates to the scheduler when the stop is completed successfully.
+     */
+    private void handleStopping() {
+        this.doorOpen = true; // open elevator door for load/unload
+        System.out.println("\nElevator has stopped at floor " + currentFloor + ".");
+        System.out.println("Initiating load/unload...");
+        loadUnload();
+        this.doorOpen = false; // close door after load/unload is finished
+        System.out.println("End of load/unload. Closing elevator door.");
+        // send a message to scheduler communicating that the door was open and closed
+        try {
+            DatagramPacket doorClosedSendPacket = createMessagePacket((byte) 0x04, currentFloor); //create STOP_FINISHED message
+            sendReceiveSocket.send(doorClosedSendPacket); // send STOP_FINISHED message to scheduler
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        stopSignal = false; // reset stop signal to false
+    }
 
 /*    *//**
      * Handles floor transition timeout by killing the ElevatorThread if there is a fault.
@@ -278,126 +294,68 @@ public class ElevatorThread implements Runnable {
                 /**
                  * Elevator state: MOVING_UP
                  */
-
                 case MOVING_UP:
-
                     System.out.println("Elevator State: MOVING UP");
-
                     int floorDifference = destination - currentFloor;
-
                     // move up to the destination floor one floor at a time
                     for (int i = 0; i < floorDifference; i++) {
+                        int topFloor = 22;
+                        if (i == topFloor) {break;}
                         incrementFloor(); // go up 1 floor
                         try {
-                            // Create arrival sensor message as elevator approaches next floor up
                             DatagramPacket arriveUpSignalPacket = this.createMessagePacket((byte) 0x01, currentFloor);
-                            // Send arrival sensor message to scheduler
                             // start timer
                             //handleTimeout(10000);
-                            sendReceiveSocket.send(arriveUpSignalPacket);
-                            // Wait for a response from the scheduler on whether to stop at this floor
-                            DatagramPacket arriveUpReceivePacket = receivePacket();
+                            sendReceiveSocket.send(arriveUpSignalPacket); // Send ARRIVAL_SENSOR message to scheduler
+                            DatagramPacket arriveUpReceivePacket = receivePacket(); // Wait for a response from the scheduler on whether to stop at this floor
 
                             //floor transition timer was interrupted
                             //timerInterrupted = true;
-                            System.out.println("Scheduler response to arrival sensor: " + arriveUpReceivePacket.getData()[0]);
+                            System.out.println("Scheduler response to arrival sensor(0 = stop, 1 = continue): " + arriveUpReceivePacket.getData()[0]);
 
-                            //this.stopSignal = processStopSignalMessage(stopSignalMessage);
-                            this.stopSignal = processStopSignalMessage(arriveUpSignalPacket.getData());
-
-                            // if stop is not requested, keep moving up. else, stop the elevator
-                            if (!stopSignal) {continue;}
-
-                            // if stop is requested
-                            this.doorOpen = true;
-                            System.out.println("\nElevator has stopped at " + currentFloor + ".");
-                            //wait some time for load/unload, then close door and continue moving up
-                            try {
-                                Thread.sleep(LOAD_UNLOAD_TIME); // elevator door stays open for 5 seconds
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
+                            stopSignal = processStopSignalMessage(arriveUpSignalPacket.getData());
+                            if (stopSignal) { // if scheduler requested stop at this floor
+                                handleStopping();
                             }
-                            this.doorOpen = false;
-
-                            // send a message to scheduler communicating that the door was open and closed
-                            try {
-                                //create door opening and closing (after stopping at a new floor) to scheduler
-                                //String stringMessage = "The door has opened and closed.";
-                                DatagramPacket doorClosedSendPacket = createMessagePacket((byte) 0x04, currentFloor);
-                                // Send door closed message to the scheduler
-                                sendReceiveSocket.send(doorClosedSendPacket);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            // reset stop signal to false until scheduler sets it to true again
-                            stopSignal = false;
-
                         }
                         catch (IOException e) {e.printStackTrace();}
                     }
+                    state = ElevatorState.IDLE;
                     break;
 
                 /**
                  * Elevator state: MOVING_DOWN
                  */
-
                 case MOVING_DOWN:
                     System.out.println("Elevator State: MOVING DOWN");
                     floorDifference = currentFloor - destination;
+                    // move down to the destination floor one floor at a time
                     for (int i = 0; i < floorDifference; i++) {
-                        decrementFloor();
+                        int bottomFloor = 0;
+                        if (i == bottomFloor) {break;}
+                        decrementFloor(); // go down 1 floor
                         try {
-                            // Create arrival sensor message
-                            DatagramPacket arriveDownSendPacket = createMessagePacket((byte) 0x01, arrivalSignal);
-                            // Send arrival sensor message to scheduler
+                            DatagramPacket arriveDownSignalPacket = this.createMessagePacket((byte) 0x01, currentFloor);
                             // start timer
-                            //handleTimeout(5000);
-                            sendReceiveSocket.send(arriveDownSendPacket);
-                            // Wait for a response from the scheduler on whether to stop at this floor
-                            byte[] responseBytes = new byte[1024];
-                            DatagramPacket arriveDownReceivePacket = new DatagramPacket(responseBytes, responseBytes.length);
-                            sendReceiveSocket.receive(arriveDownReceivePacket);
-                            // floor transition timer was interrupted
-                            timerInterrupted = true;
+                            //handleTimeout(10000);
+                            sendReceiveSocket.send(arriveDownSignalPacket); // Send ARRIVAL_SENSOR message to scheduler
+                            DatagramPacket arriveDownReceivePacket = receivePacket(); // Wait for a response from the scheduler on whether to stop at this floor
 
-                            String stopSignalMessage = new String(responseBytes, 0, arriveDownReceivePacket.getLength());
-                            System.out.println("Scheduler response to arrival sensor: " + stopSignalMessage);
+                            //floor transition timer was interrupted
+                            //timerInterrupted = true;
+                            System.out.println("Scheduler response to arrival sensor(0 = stop, 1 = continue): " + arriveDownReceivePacket.getData()[0]);
 
-                            //this.stopSignal = processStopSignalMessage(stopSignalMessage);
-                            this.stopSignal = processStopSignalMessage(responseBytes);
-
-                            // if stop is not requested, move on to next iteration of loop
-                            if (!stopSignal) {
-                                continue;
+                            stopSignal = processStopSignalMessage(arriveDownSignalPacket.getData());
+                            if (stopSignal) { // if scheduler requested stopping at this floor
+                                handleStopping();
                             }
-
-                            System.out.println("\nElevator has stopped at " + currentFloor + ".");
-                            this.doorOpen = true;
-                            //wait some time for load/unload, then close door and continue moving down
-                            try {
-                                Thread.sleep(2000); // elevator door stays open for 5 seconds
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            this.doorOpen = false; // close door
-                            // send a message to scheduler communicating that the door was open and closed
-                            try {
-                                //create door opening and closing (after stopping at a new floor) to scheduler
-                                String stringMessage = "The door has opened and closed.";
-                                DatagramPacket doorClosedSendPacket = createMessagePacket((byte) 0x06, currentFloor);
-                                // Send door closed message to the scheduler
-                                sendReceiveSocket.send(doorClosedSendPacket);
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            // reset stop signal to false until scheduler sets it to true again
-                            stopSignal = false;
                         }
                         catch (IOException e) {e.printStackTrace();}
                     }
+                    state = ElevatorState.IDLE;
                     break;
-
             }
         }
     }
+
 }
