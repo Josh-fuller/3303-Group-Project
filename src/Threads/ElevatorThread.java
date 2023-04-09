@@ -13,24 +13,24 @@ import java.util.*;
 public class ElevatorThread implements Runnable {
     public enum ElevatorState {
         IDLE,
-        STOPPED,
         MOVING_UP,
         MOVING_DOWN,
     }
 
-    private int elevatorNumber;     // Elevator identifier number
     private int portNumber;         // Elevator's port number for receiving UDP communication
     private ElevatorState state;    // Elevator's current state
     private boolean doorOpen;       // true if door is open, false if closed
     private int currentFloor;       // Elevator's current floor as signalled by the arrival sensor
     private List<Integer> floors;   // list of 5 floors that have access to the elevator
     private boolean stopSignal;     // signal set to true when scheduler makes a command to stop at approaching floor
-    //private int arrivalSignal;      // integer indicates the floor number being approached by the elevator
     private int destination = 0;    // destination floor requested by the scheduler
-    DatagramPacket sendPacket, receivePacket; // Datagram Packets for UDP communication with the scheduler thread
     DatagramSocket sendReceiveSocket;         // Datagram socket for sending and receiving UDP communication to/from the scheduler thread
-    private boolean timerInterrupted = false;
-    private final int LOAD_UNLOAD_TIME = 5000;
+    private DatagramSocket timedSocket;
+    private DatagramPacket receiveTimedPacket;
+    private final int LOAD_UNLOAD_TIME = 3000;
+    private final int TIMEOUT = 5000;
+    private final int NUMBER_OF_FLOORS = 22;
+    private volatile boolean timedOut, running;
 
 
 
@@ -39,19 +39,20 @@ public class ElevatorThread implements Runnable {
      * Constructor for the class.
      */
     public ElevatorThread(int portNumber) {
-        //this.elevatorNumber = elevatorNumber;
         this.portNumber = portNumber;
         this.doorOpen = true;   // the elevator door is initially open
         this.currentFloor = 1;  // elevator starts at floor #1
-        //this.arrivalSignal = 1;
-        this.floors = new ArrayList<Integer>();
+        this.floors = new ArrayList<>();
         this.stopSignal = false;
         this.state = ElevatorState.IDLE;
+        this.timedOut = false;
+        this.running  = true;
         this.populateFloors();
         // Create a Datagram socket for both sending and receiving messages via UDP communication
         try {
             //sendReceiveSocket = new DatagramSocket(portNumber); //todo uncomment
             sendReceiveSocket = new DatagramSocket();
+            timedSocket = new DatagramSocket();
         } catch (SocketException se) {   // if socket creation fails
             se.printStackTrace();
             System.exit(1);
@@ -65,12 +66,10 @@ public class ElevatorThread implements Runnable {
      */
     private void populateFloors() {
         floors.clear();
-        for (int i = 0; i < 22; i++) {
+        for (int i = 0; i < NUMBER_OF_FLOORS; i++) {
             floors.add(i);
         }
-        //floors.addAll(Arrays.asList(new Integer[]{1, 2, 3, 4, 5}));
     }
-
 
 
     /**
@@ -82,7 +81,6 @@ public class ElevatorThread implements Runnable {
         if (i < topFloor) {
             i++;
             currentFloor = i;
-            //arrivalSignal = i;
             System.out.println("\nCURRENT FLOOR: " + currentFloor);
         }
     }
@@ -96,7 +94,6 @@ public class ElevatorThread implements Runnable {
         int i = currentFloor;
         if (i > bottomFloor) {
             i--;
-            //arrivalSignal = i;
             currentFloor = i;
             System.out.println("\nCURRENT FLOOR: " + currentFloor);
         }
@@ -128,22 +125,48 @@ public class ElevatorThread implements Runnable {
     public DatagramPacket createMessagePacket(byte typeByte, int floorNumber) throws UnknownHostException {
         byte[] messageTypeBytes = new byte[] {0x0, typeByte, 0x0};
         byte[] floorNumberBytes = new byte[] {(byte) (floorNumber & 0xFF)};
-
         //ByteBuffer bb = ByteBuffer.allocate(messageTypeBytes.length + floorNumberBytes.length + sentenceBytes.length);
         ByteBuffer bb = ByteBuffer.allocate(messageTypeBytes.length + floorNumberBytes.length);
-
         //make read request
         bb.put(messageTypeBytes);
         bb.put(floorNumberBytes);
-
         byte[] message = bb.array();
         InetAddress schedulerAddress = InetAddress.getByName("localhost");
         int schedulerPort = 1003;
-
         DatagramPacket sendPacket = new DatagramPacket(message, message.length, schedulerAddress, schedulerPort);
         return sendPacket;
     }
 
+    /**
+     * author: Ahmad
+     * @param timeout
+     * @throws SocketTimeoutException
+     */
+    public synchronized DatagramPacket receivePacketWithTimeout(int timeout) {
+        // Wait for incoming Datagram packet with a timeout
+        byte[] data = new byte[1024];
+
+        receiveTimedPacket = new DatagramPacket(data, data.length);
+        try {
+            timedSocket.setSoTimeout(TIMEOUT); // Timeout for socket in milliseconds
+        } catch (SocketException se) {
+            se.printStackTrace();
+            System.exit(1);
+        }
+
+        try {
+            // Block until a packet is received via TimedSocket.
+            timedSocket.receive(receiveTimedPacket);
+
+        } catch (SocketTimeoutException e) {
+            e.printStackTrace();
+            timedOut = true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return receiveTimedPacket;
+    }
 
 
     /**
@@ -160,7 +183,6 @@ public class ElevatorThread implements Runnable {
     }
 
 
-
     /**
      * Process string message from scheduler containing destination floor number for elevator to move to.
      * @param destFloorBytes
@@ -168,7 +190,7 @@ public class ElevatorThread implements Runnable {
     private void processDestinationFloorMessage (byte[] destFloorBytes) {
         //this.destination = Integer.valueOf(String.valueOf(destFloorBytes));
         this.destination = byteArrayToInt(destFloorBytes);
-        if (destination > 22) {destination = 22;}
+        if (destination > NUMBER_OF_FLOORS) {destination = NUMBER_OF_FLOORS;}
         else if (destination < 0) {destination = 0;}
         if (destination == currentFloor) {
             System.out.println("The elevator is already at destination floor " + destination + ".");
@@ -229,32 +251,6 @@ public class ElevatorThread implements Runnable {
         stopSignal = false; // reset stop signal to false
     }
 
-/*    *//**
-     * Handles floor transition timeout by killing the ElevatorThread if there is a fault.
-     * @throws InterruptedException
-     *//*
-    public synchronized void handleTimeout(long timeoutMillis) throws InterruptedException {
-        long startTime = System.currentTimeMillis();
-        long elapsedTime = 0;
-
-        while (!timerInterrupted) {
-            long remainingTime = timeoutMillis - elapsedTime;
-            if (remainingTime <= 0) {
-                break;
-            }
-            wait(remainingTime);
-            elapsedTime = System.currentTimeMillis() - startTime;
-        }
-
-        // if after waiting, message to scheduler is still not acknowledged, kill ElevatorThread
-        if (!timerInterrupted) {
-            // handle timeout case
-            System.out.println("Floor Transition Timeout!");
-            //todo kill the thread
-            System.exit(1);
-        }
-    }*/
-
 
     /**
      * ElevatorThread's run() method.
@@ -263,19 +259,16 @@ public class ElevatorThread implements Runnable {
     @Override
     public void run() {
 
-        while (true) {
+        while (running) {
 
             switch (state) {
 
                 /**
                  * Elevator state: IDLE
                  */
-
                 case IDLE:
-
                     // Send move request to the scheduler and wait to hear back on destination floor
                     System.out.println("Elevator State: IDLE");
-
                     try {
                         // Create move request datagram packet
                         DatagramPacket moveRequestPacket = createMessagePacket((byte) 0x03, currentFloor);
@@ -294,25 +287,26 @@ public class ElevatorThread implements Runnable {
                 /**
                  * Elevator state: MOVING_UP
                  */
+
                 case MOVING_UP:
+
                     System.out.println("Elevator State: MOVING UP");
                     int floorDifference = destination - currentFloor;
                     // move up to the destination floor one floor at a time
                     for (int i = 0; i < floorDifference; i++) {
-                        int topFloor = 22;
-                        if (i == topFloor) {break;}
+                        if (i == NUMBER_OF_FLOORS) {break;}
                         incrementFloor(); // go up 1 floor
                         try {
                             DatagramPacket arriveUpSignalPacket = this.createMessagePacket((byte) 0x01, currentFloor);
-                            // start timer
-                            //handleTimeout(10000);
-                            sendReceiveSocket.send(arriveUpSignalPacket); // Send ARRIVAL_SENSOR message to scheduler
-                            DatagramPacket arriveUpReceivePacket = receivePacket(); // Wait for a response from the scheduler on whether to stop at this floor
-
-                            //floor transition timer was interrupted
-                            //timerInterrupted = true;
-                            System.out.println("Scheduler response to arrival sensor(0 = stop, 1 = continue): " + arriveUpReceivePacket.getData()[0]);
-
+                            timedSocket.send(arriveUpSignalPacket); // Send ARRIVAL_SENSOR message to scheduler
+                            DatagramPacket arriveUpReceivePacket = receivePacketWithTimeout(TIMEOUT); // Wait for a response from the scheduler on whether to stop at this floor
+                            if (timedOut) { // socket timed out while waiting for stop signal message from scheduler
+                                running = false;
+                                System.out.println("Elevator's receive socket timed out while waiting for scheduler's command. Stopping elevatorThread.");
+                                Thread.currentThread().interrupt();
+                                break;
+                            }
+                            System.out.println("Scheduler response to arrival sensor (0 = stop, 1 = continue): " + arriveUpReceivePacket.getData()[0]);
                             stopSignal = processStopSignalMessage(arriveUpSignalPacket.getData());
                             if (stopSignal) { // if scheduler requested stop at this floor
                                 handleStopping();
@@ -323,10 +317,13 @@ public class ElevatorThread implements Runnable {
                     state = ElevatorState.IDLE;
                     break;
 
+
                 /**
                  * Elevator state: MOVING_DOWN
                  */
+
                 case MOVING_DOWN:
+
                     System.out.println("Elevator State: MOVING DOWN");
                     floorDifference = currentFloor - destination;
                     // move down to the destination floor one floor at a time
@@ -336,15 +333,15 @@ public class ElevatorThread implements Runnable {
                         decrementFloor(); // go down 1 floor
                         try {
                             DatagramPacket arriveDownSignalPacket = this.createMessagePacket((byte) 0x01, currentFloor);
-                            // start timer
-                            //handleTimeout(10000);
-                            sendReceiveSocket.send(arriveDownSignalPacket); // Send ARRIVAL_SENSOR message to scheduler
-                            DatagramPacket arriveDownReceivePacket = receivePacket(); // Wait for a response from the scheduler on whether to stop at this floor
-
-                            //floor transition timer was interrupted
-                            //timerInterrupted = true;
-                            System.out.println("Scheduler response to arrival sensor(0 = stop, 1 = continue): " + arriveDownReceivePacket.getData()[0]);
-
+                            timedSocket.send(arriveDownSignalPacket); // Send ARRIVAL_SENSOR message to scheduler
+                            DatagramPacket arriveDownReceivePacket = receivePacketWithTimeout(TIMEOUT);
+                            if (timedOut) { // if socket timed out while waiting for stop signal message from scheduler
+                                running = false;
+                                System.out.println("Elevator's receive socket timed out while waiting for scheduler's command. Stopping elevatorThread.");
+                                Thread.currentThread().interrupt();
+                                break;
+                            }
+                            System.out.println("Scheduler response to arrival sensor (0 = stop, 1 = continue): " + arriveDownReceivePacket.getData()[0]);
                             stopSignal = processStopSignalMessage(arriveDownSignalPacket.getData());
                             if (stopSignal) { // if scheduler requested stopping at this floor
                                 handleStopping();
@@ -357,5 +354,4 @@ public class ElevatorThread implements Runnable {
             }
         }
     }
-
 }
