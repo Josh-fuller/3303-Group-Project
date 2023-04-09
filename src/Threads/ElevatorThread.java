@@ -321,17 +321,6 @@ public class ElevatorThread implements Runnable {
 
                             // if stop is not requested, keep moving up. else, stop the elevator
                             if (!stopSignal) {continue;}
-                            else {
-                                this.doorOpen = true;
-                                try {
-                                    Thread.sleep(LOAD_UNLOAD_TIME); // elevator door stays open for 5 seconds
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                                this.doorOpen = false;
-                                DatagramPacket doorClosedSendPacket = createMessagePacket((byte) 0x04, currentFloor, "");
-                                sendReceiveSocket.send(doorClosedSendPacket);
-                            }
 
 
                             // if stop is requested
