@@ -281,13 +281,10 @@ public class FloorThread extends Thread {
                     break;*/
             }
 
+            this.sendPacket(buildFloorByteMsg());
 
             for (int i = 0; i < floorEventList.size(); i++) {
-                FloorEvent currentFloorEvent = floorEventList.get(i);
-
-                this.sendPacket(buildFloorByteMsg(currentFloorEvent));
-
-
+                
                 byte[] data = new byte[1024];
                 receivePacket = new DatagramPacket(data, data.length);
                 try {
