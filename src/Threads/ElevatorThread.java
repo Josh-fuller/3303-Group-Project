@@ -33,8 +33,6 @@ public class ElevatorThread implements Runnable {
     private volatile boolean timedOut, running;
 
 
-
-
     /**
      * Constructor for the class.
      */
@@ -85,7 +83,6 @@ public class ElevatorThread implements Runnable {
         }
     }
 
-
     /**
      * Decrements floors one by one updates arrivalSignal after reaching new floor.
      */
@@ -97,6 +94,24 @@ public class ElevatorThread implements Runnable {
             currentFloor = i;
             System.out.println("\nCURRENT FLOOR: " + currentFloor);
         }
+    }
+
+    /**
+     * Creates and returns a Datagram Packet using given input parameters.
+     */
+    public DatagramPacket createMessagePacket(byte typeByte, int floorNumber) throws UnknownHostException {
+        byte[] messageTypeBytes = new byte[] {0x0, typeByte, 0x0};
+        byte[] floorNumberBytes = new byte[] {(byte) (floorNumber & 0xFF)};
+        //ByteBuffer bb = ByteBuffer.allocate(messageTypeBytes.length + floorNumberBytes.length + sentenceBytes.length);
+        ByteBuffer bb = ByteBuffer.allocate(messageTypeBytes.length + floorNumberBytes.length);
+        //make read request
+        bb.put(messageTypeBytes);
+        bb.put(floorNumberBytes);
+        byte[] message = bb.array();
+        InetAddress schedulerAddress = InetAddress.getByName("localhost");
+        int schedulerPort = 1003;
+        DatagramPacket sendPacket = new DatagramPacket(message, message.length, schedulerAddress, schedulerPort);
+        return sendPacket;
     }
 
 
@@ -118,24 +133,6 @@ public class ElevatorThread implements Runnable {
         return receivePacket;
     }
 
-
-    /**
-     * Creates and returns a Datagram Packet using given input parameters.
-     */
-    public DatagramPacket createMessagePacket(byte typeByte, int floorNumber) throws UnknownHostException {
-        byte[] messageTypeBytes = new byte[] {0x0, typeByte, 0x0};
-        byte[] floorNumberBytes = new byte[] {(byte) (floorNumber & 0xFF)};
-        //ByteBuffer bb = ByteBuffer.allocate(messageTypeBytes.length + floorNumberBytes.length + sentenceBytes.length);
-        ByteBuffer bb = ByteBuffer.allocate(messageTypeBytes.length + floorNumberBytes.length);
-        //make read request
-        bb.put(messageTypeBytes);
-        bb.put(floorNumberBytes);
-        byte[] message = bb.array();
-        InetAddress schedulerAddress = InetAddress.getByName("localhost");
-        int schedulerPort = 1003;
-        DatagramPacket sendPacket = new DatagramPacket(message, message.length, schedulerAddress, schedulerPort);
-        return sendPacket;
-    }
 
     /**
      * author: Ahmad
@@ -294,7 +291,9 @@ public class ElevatorThread implements Runnable {
                     int floorDifference = destination - currentFloor;
                     // move up to the destination floor one floor at a time
                     for (int i = 0; i < floorDifference; i++) {
-                        if (i == NUMBER_OF_FLOORS) {break;}
+                        if (i == NUMBER_OF_FLOORS) {
+                            break;
+                        }
                         incrementFloor(); // go up 1 floor
                         try {
                             DatagramPacket arriveUpSignalPacket = this.createMessagePacket((byte) 0x01, currentFloor);
@@ -314,6 +313,7 @@ public class ElevatorThread implements Runnable {
                         }
                         catch (IOException e) {e.printStackTrace();}
                     }
+                    handleStopping();
                     state = ElevatorState.IDLE;
                     break;
 
@@ -329,13 +329,15 @@ public class ElevatorThread implements Runnable {
                     // move down to the destination floor one floor at a time
                     for (int i = 0; i < floorDifference; i++) {
                         int bottomFloor = 0;
-                        if (i == bottomFloor) {break;}
+                        if (i == bottomFloor) {
+                            break;
+                        }
                         decrementFloor(); // go down 1 floor
                         try {
                             DatagramPacket arriveDownSignalPacket = this.createMessagePacket((byte) 0x01, currentFloor);
                             timedSocket.send(arriveDownSignalPacket); // Send ARRIVAL_SENSOR message to scheduler
-                            DatagramPacket arriveDownReceivePacket = receivePacketWithTimeout(TIMEOUT);
-                            if (timedOut) { // if socket timed out while waiting for stop signal message from scheduler
+                            DatagramPacket arriveDownReceivePacket = receivePacketWithTimeout(TIMEOUT); // Wait for a response from the scheduler on whether to stop at this floor
+                            if (timedOut) { // socket timed out while waiting for stop signal message from scheduler
                                 running = false;
                                 System.out.println("Elevator's receive socket timed out while waiting for scheduler's command. Stopping elevatorThread.");
                                 Thread.currentThread().interrupt();
@@ -343,12 +345,13 @@ public class ElevatorThread implements Runnable {
                             }
                             System.out.println("Scheduler response to arrival sensor (0 = stop, 1 = continue): " + arriveDownReceivePacket.getData()[0]);
                             stopSignal = processStopSignalMessage(arriveDownSignalPacket.getData());
-                            if (stopSignal) { // if scheduler requested stopping at this floor
+                            if (stopSignal) { // if scheduler requested stop at this floor
                                 handleStopping();
                             }
                         }
                         catch (IOException e) {e.printStackTrace();}
                     }
+                    handleStopping();
                     state = ElevatorState.IDLE;
                     break;
             }
