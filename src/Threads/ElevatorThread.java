@@ -49,7 +49,8 @@ public class ElevatorThread extends Thread {
         this.populateFloors();
         // Create a Datagram socket for both sending and receiving messages via UDP communication
         try {
-            sendReceiveSocket = new DatagramSocket(portNumber);
+            System.out.println("TESTING PORT NUMBERS: 1) " + portNumber + " 2) " + this.portNumber);
+            sendReceiveSocket = new DatagramSocket(this.portNumber);
             sendReceiveSocket.setSoTimeout(5000);
             //sendReceiveSocket = new DatagramSocket();
             timedSocket = new DatagramSocket();
@@ -127,6 +128,8 @@ public class ElevatorThread extends Thread {
         receivePacket = new DatagramPacket(receiveData, receiveData.length);
         try {
             sendReceiveSocket.receive(receivePacket); //Receive from anywhere
+        } catch (SocketTimeoutException s){
+            System.out.println("ELEVATOR TIMED OUT (port: " + this.portNumber + ")");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

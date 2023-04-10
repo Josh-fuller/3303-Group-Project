@@ -26,6 +26,10 @@ public class SchedulerThread implements Runnable{
     ArrayList<int[]> schedulerTasks;
     Set<Integer> elevatorStops = new TreeSet<>();
 
+    int currentPort;
+
+    byte[] currentData;
+
 
     public enum SchedulerState {
         IDLE,
@@ -106,22 +110,6 @@ public class SchedulerThread implements Runnable{
         elevatorStops.add(destinationFloor);
         schedulerTasks.remove(0);
         return destinationFloor;
-    }
-
-
-    /** //TODO Remove
-     * Checks if the currentFloor the elevator is going to stop at is one of the stops that has been requested.
-     *
-     * @param currentFloor the floor to check
-     * @return true if currentFloor is in the stop list and false if not
-     */
-    public boolean processStopRequest(int currentFloor){
-        for(int i = 0;i < elevatorStops.size(); i++) {
-            if (elevatorStops.contains(currentFloor)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public void sortElevatorTasks(byte[] tasks){
@@ -273,19 +261,19 @@ public class SchedulerThread implements Runnable{
      * @return receivePacket A packet sent from the elevator or floor
      */
     public DatagramPacket receivePacket(){
-        DatagramPacket receivePacket;
+        DatagramPacket tempPacket;
 
         // Create a DatagramPacket to receive data from client
         byte[] receiveData = new byte[1024];
-        receivePacket = new DatagramPacket(receiveData, receiveData.length);
+        tempPacket = new DatagramPacket(receiveData, receiveData.length);
 
         try {
-            receiveSocket.receive(receivePacket); //Receive from anywhere
+            receiveSocket.receive(tempPacket); //Receive from anywhere
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        System.out.println("Scheduler Received packet containing message: " + receivePacket.getData());
-        return receivePacket;
+        System.out.println("Scheduler Received packet containing message: " + tempPacket.getData());
+        return tempPacket;
     }
 
     /** *
@@ -346,7 +334,7 @@ public class SchedulerThread implements Runnable{
     public void run() {
 
         //initialise everything as null to start, so it is inside scope in case IDLE is skipped, though that is not possible practically
-        DatagramPacket receivePacket = null;
+        DatagramPacket receivedPacket = null;
 
         // Get server IP address
         InetAddress IPAddress;
@@ -360,11 +348,18 @@ public class SchedulerThread implements Runnable{
 
             switch(state) {
                 case IDLE:
-                    receivePacket = receivePacket();
+                    //System.out.println("GOING TO RECEIVE IN SCHED");
+                    receivedPacket = receivePacket();
+                    //System.out.println("PERFORMED RECEIVE IN SCHED");
+                    currentData = receivedPacket.getData();
 
-                    messageType messageType = parseByteArrayForType(receivePacket.getData());
+                    System.out.println("TESTING SAVING THE DATA: " + Arrays.toString(receivedPacket.getData()) + " VERSUS " + Arrays.toString(currentData));
+
+                    messageType messageType = parseByteArrayForType(receivedPacket.getData());
                     System.out.println("SCHEDULER RECEIVED MESSAGE TYPE: " + messageType);
-                    System.out.println("SCHEDULER RECEIVED FROM PORT: " + receivePacket.getPort());
+                    System.out.println("SCHEDULER RECEIVED FROM PORT: " + receivedPacket.getPort());
+                    currentPort = receivedPacket.getPort();
+                    System.out.println("CURRENT PORT SAVED TO " + currentPort);
                     //based on message type, go to state
                     if (messageType == SchedulerThread.messageType.FLOOR_EVENT) {
                         processingFloorState();
@@ -384,9 +379,10 @@ public class SchedulerThread implements Runnable{
 
                 case PROCESSING_FLOOR_EVENT:
                     floorEventReceived = true;                  // Allows for move requests to happen
-                    sortElevatorTasks(receivePacket.getData());
+                    sortElevatorTasks(currentData);
 
-                    System.out.println("SCHEDULER... FLOOR EVENT DATA: " + Arrays.toString(receivePacket.getData()));
+
+                    System.out.println("SCHEDULER... FLOOR EVENT DATA: " + Arrays.toString(currentData));
                     idleState();
                     break;
 
@@ -396,9 +392,9 @@ public class SchedulerThread implements Runnable{
                         byte[] destinationFloorMessage = getNextMoveRequestEvent(schedulerTasks);
                         System.out.println("SCHEDULER RESPONSE TO MOVE REQUEST IS FLOOR SET: " + Arrays.toString(destinationFloorMessage));
 
-                        System.out.println("SCHEDULER SENDING MESSAGE BACK TO PORT: " + receivePacket().getPort());
+                        System.out.println("SCHEDULER SENDING MESSAGE BACK TO PORT: " + currentPort);
 
-                        DatagramPacket sendElevatorMovePacket = new DatagramPacket(destinationFloorMessage, destinationFloorMessage.length, IPAddress, receivePacket().getPort());
+                        DatagramPacket sendElevatorMovePacket = new DatagramPacket(destinationFloorMessage, destinationFloorMessage.length, IPAddress, currentPort);
 
                         try {
                             sendSocket.send(sendElevatorMovePacket);
@@ -414,7 +410,7 @@ public class SchedulerThread implements Runnable{
 
                 case PROCESSING_ARRIVAL_SENSOR:
 
-                    int currentArrivingFloorNum = parseByteArrayForFloorNum(receivePacket.getData()); //gets the 4th byte as the floor num, message = 2 bytes mode + 0 byte + floor num byte
+                    int currentArrivingFloorNum = parseByteArrayForFloorNum(currentData); //gets the 4th byte as the floor num, message = 2 bytes mode + 0 byte + floor num byte
 
                     byte[] stopFloorMessage = findSingleIntArray(currentArrivingFloorNum, schedulerTasks);
 
@@ -437,7 +433,7 @@ public class SchedulerThread implements Runnable{
 
                 case DISPATCHING_TO_FLOOR: //Case where the elevator is about to stop (the floor should start its timer)
 
-                    int floorNumber = parseByteArrayForFloorNum(receivePacket.getData()); //the floor it stopped at, have to do it again might not be init
+                    int floorNumber = parseByteArrayForFloorNum(currentData); //the floor it stopped at, have to do it again might not be init
 
                     byte sendFloorData = (byte) floorNumber; //the floor data to send to the floor
 
@@ -467,7 +463,7 @@ public class SchedulerThread implements Runnable{
 
                 case SENDING_STOP_COMPLETE:// the case where the elevator successfully let passengers on/off (the floor should stop its timer)
 
-                    int floorNumberStoppedAt = parseByteArrayForFloorNum(receivePacket.getData()); //the floor it stopped at, have to do it again might not be init
+                    int floorNumberStoppedAt = parseByteArrayForFloorNum(currentData); //the floor it stopped at, have to do it again might not be init
 
                     byte byteEq = (byte) floorNumberStoppedAt;
 
