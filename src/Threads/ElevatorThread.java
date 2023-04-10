@@ -20,17 +20,17 @@ public class ElevatorThread extends Thread {
 
     private int portNumber;             // Elevator's port number for receiving UDP communication
     private ElevatorState state;        // Elevator's current state
-    private volatile boolean doorOpen;           // true if door is open, false if closed
-    private Integer currentFloor;           // Elevator's current floor as signalled by the arrival sensor
+    private boolean doorOpen;           // true if door is open, false if closed
+    private int currentFloor;           // Elevator's current floor as signalled by the arrival sensor
     private List<Integer> floors;       // list of 5 floors that have access to the elevator
-    private volatile boolean stopSignal;         // signal set to true when scheduler makes a command to stop at approaching floor
-    private Integer destination = 0;        // destination floor requested by the scheduler
-    DatagramSocket sendReceiveSocket;         // Datagram socket for sending and receiving UDP communication to/from the scheduler thread
+    private boolean stopSignal;         // signal set to true when scheduler makes a command to stop at approaching floor
+    private int destination = 0;        // destination floor requested by the scheduler
+    private DatagramSocket sendReceiveSocket;         // Datagram socket for sending and receiving UDP communication to/from the scheduler thread
     private DatagramSocket timedSocket;
     private DatagramPacket receiveTimedPacket;
-    private final Integer LOAD_UNLOAD_TIME = 3000;
-    private final Integer TIMEOUT = 5000;
-    private final Integer NUMBER_OF_FLOORS = 22;
+    private final int LOAD_UNLOAD_TIME = 3000;
+    private final int TIMEOUT = 5000;
+    private final int NUMBER_OF_FLOORS = 22;
     private volatile boolean timedOut, running;
 
 
@@ -59,7 +59,6 @@ public class ElevatorThread extends Thread {
     }
 
 
-
     /**
      * Populates the list of floors that the elevator will move between.
      */
@@ -70,11 +69,10 @@ public class ElevatorThread extends Thread {
         }
     }
 
-
     /**
      * Increments floors one by one updates arrivalSignal after reaching new floor.
      */
-    public synchronized void incrementFloor() {
+    private void incrementFloor() {
         int topFloor = floors.size();
         int i = currentFloor;
         if (i < topFloor) {
@@ -87,7 +85,7 @@ public class ElevatorThread extends Thread {
     /**
      * Decrements floors one by one updates arrivalSignal after reaching new floor.
      */
-    public synchronized void decrementFloor(){
+    private void decrementFloor(){
         int bottomFloor = 1;
         int i = currentFloor;
         if (i > bottomFloor) {
@@ -100,7 +98,7 @@ public class ElevatorThread extends Thread {
     /**
      * Creates and returns a Datagram Packet using given input parameters.
      */
-    public synchronized DatagramPacket createMessagePacket(byte typeByte, int floorNumber) throws UnknownHostException {
+    private DatagramPacket createMessagePacket(byte typeByte, int floorNumber) throws UnknownHostException {
         byte[] messageTypeBytes = new byte[] {0x0, typeByte, 0x0};
         byte[] floorNumberBytes = new byte[] {(byte) (floorNumber & 0xFF)};
         //ByteBuffer bb = ByteBuffer.allocate(messageTypeBytes.length + floorNumberBytes.length + sentenceBytes.length);
@@ -121,7 +119,7 @@ public class ElevatorThread extends Thread {
      *
      * @return receivePacket A packet sent from the elevator or floor
      */
-    public synchronized DatagramPacket receivePacket(){
+    private DatagramPacket receivePacket(){
         DatagramPacket receivePacket;
         // Create a DatagramPacket to receive data from client
         byte[] receiveData = new byte[1024];
@@ -140,7 +138,7 @@ public class ElevatorThread extends Thread {
      * @param timeout
      * @throws SocketTimeoutException
      */
-    public synchronized DatagramPacket receivePacketWithTimeout(int timeout) {
+    private synchronized DatagramPacket receivePacketWithTimeout(int timeout) {
         // Wait for incoming Datagram packet with a timeout
         byte[] data = new byte[1024];
 
@@ -171,7 +169,7 @@ public class ElevatorThread extends Thread {
      * Process byte array message from scheduler containing stop signal.
      * @param stopSignalBytes
      */
-    private synchronized boolean processStopSignalMessage (byte[] stopSignalBytes){
+    private boolean processStopSignalMessage (byte[] stopSignalBytes){
         //int signal = Integer.valueOf(stopSignalMessage);
         int signal = byteArrayToInt(stopSignalBytes);
         if (signal == 0) { // if signal is 0, return true.
@@ -185,7 +183,7 @@ public class ElevatorThread extends Thread {
      * Process string message from scheduler containing destination floor number for elevator to move to.
      * @param destFloorBytes
      */
-    private synchronized void processDestinationFloorMessage (byte[] destFloorBytes) {
+    private void processDestinationFloorMessage (byte[] destFloorBytes) {
         //this.destination = Integer.valueOf(String.valueOf(destFloorBytes));
         this.destination = byteArrayToInt(destFloorBytes);
         if (destination > NUMBER_OF_FLOORS) {destination = NUMBER_OF_FLOORS;}
@@ -232,7 +230,7 @@ public class ElevatorThread extends Thread {
     /**
      * Handles stops requested by the scheduler. Communicates to the scheduler when the stop is completed successfully.
      */
-    private synchronized void handleStopping() {
+    private void handleStopping() {
         this.doorOpen = true; // open elevator door for load/unload
         System.out.println("\nElevator has stopped at floor " + currentFloor + ".");
         System.out.println("Initiating load/unload...");
