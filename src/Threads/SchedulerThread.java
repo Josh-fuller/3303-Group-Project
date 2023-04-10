@@ -91,7 +91,8 @@ public class SchedulerThread implements Runnable{
         return state;
     }
 
-    /** TODO Delete this once I have the getElevatorStops method
+
+    /** //TODO Remove
      * Adds the destination floor to a list based on the schedulerTasks list. Also removes the added
      * task from the schedulerTask list.
      *
@@ -107,14 +108,33 @@ public class SchedulerThread implements Runnable{
         return destinationFloor;
     }
 
-    //TODO return int[]
+
+    /** //TODO Remove
+     * Checks if the currentFloor the elevator is going to stop at is one of the stops that has been requested.
+     *
+     * @param currentFloor the floor to check
+     * @return true if currentFloor is in the stop list and false if not
+     */
+    public boolean processStopRequest(int currentFloor){
+        for(int i = 0;i < elevatorStops.size(); i++) {
+            if (elevatorStops.contains(currentFloor)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void sortElevatorTasks(byte[] tasks){
         int counter = 2;
         while(tasks[counter] != 0 || tasks[counter+1] != 0) {
             schedulerTasks.add(new int[] { tasks[counter] & 0xff , tasks[counter + 1] & 0xff  });
             counter += 2;
         }
-        System.out.println(schedulerTasks);
+        System.out.print("SCHEDULER TASKS FROM MESSAGE: ");
+        for (int[] pair : schedulerTasks) {
+            System.out.print(Arrays.toString(pair) + " ");
+        }
+        System.out.println();
     }
 
     /** TODO Change method to be able to handle multiple elevators and
@@ -132,12 +152,54 @@ public class SchedulerThread implements Runnable{
         return false;
     }
 
+    /**
+     * Converts an int to a byte array for message purposes
+     *
+     * @param value Int value to convert
+     * @return the value of the int to convert to a byte array
+     */
     public static byte[] intToByteArray(int value) {
         byte[] bytes = new byte[4];
         for (int i = 0; i < 4; i++) {
             bytes[i] = (byte) (value >>> (i * 8));
         }
         return bytes;
+    }
+
+    /**
+     * Scans a list of integer arrays (start floor, stop floor) to see if the start floor is at the current floor, and returns the pair as a byte array if true
+     *
+     * @param value Int value to convert
+     * @return the value of the int to convert to a byte array
+     */
+    public byte[] findBothIntArray(int value, ArrayList<int[]> arrayList) {
+        for (int[] array : arrayList) {
+            if (array[0] == value) {
+                byte[] byteArray = new byte[array.length];
+                for (int i = 0; i < array.length; i++) {
+                    byteArray[i] = (byte) array[i];
+                }
+                return byteArray;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Scans a list of integer arrays (start floor, stop floor) to see if the start floor is at the current floor, and returns the SECOND VALUE (destination floor) as a byte array if true
+     *
+     * @param value Int value to convert
+     * @return the value of the int to convert to a byte array
+     */
+    public byte[] findSingleIntArray(int value, ArrayList<int[]> arrayList) {
+        for (int[] array : arrayList) {
+            if (array[0] == value) {
+                byte[] byteArray = new byte[1];
+                byteArray[0] = (byte) array[1];
+                return byteArray;
+            }
+        }
+        return null;
     }
 
     /**
@@ -254,6 +316,27 @@ public class SchedulerThread implements Runnable{
     }
 
     /** *
+     * Returns the byte array equivalent of the first element of the event list, when an elevator does a move_request
+     *
+     * @param intArrayList the event list
+     *
+     * @return byteArray The finished byte array
+     *
+     */
+    public byte[] getNextMoveRequestEvent(ArrayList<int[]> intArrayList) {
+        if(intArrayList.isEmpty()) {
+            byte[] byteArray = {0x1,0x1};
+            return byteArray;
+        }
+        byte[] byteArray = new byte[2];
+        int[] firstIntArray = intArrayList.get(0);
+        byteArray[0] = (byte) firstIntArray[0];
+        byteArray[1] = (byte) firstIntArray[1];
+        intArrayList.remove(0);
+        return byteArray;
+    }
+
+    /** *
      * The runnable portion of scheduler, responsible for acting as the translator from floor/elevator and back
      *
      * @author Josh Fuller
@@ -309,18 +392,10 @@ public class SchedulerThread implements Runnable{
                 case PROCESSING_MOVE_REQUEST:
                     if(floorEventReceived){
 
-                        byte b = (byte) 0xFF;
-                        byte[] destinationFloorMessage = null;
-                        int currentMovingFloorNum = parseByteArrayForFloorNum(receivePacket.getData());
-                        int destinationFloor = getDestinationFloor();
+                        byte[] destinationFloorMessage = getNextMoveRequestEvent(schedulerTasks);
+                        System.out.println("SCHEDULER RESPONSE TO MOVE REQUEST IS FLOOR SET: " + Arrays.toString(destinationFloorMessage));
 
-                        if(destinationFloor == -1){
-                            destinationFloorMessage[0] = b;
-                        }else{
-                            destinationFloorMessage = intToByteArray(destinationFloor);
-                        }
-
-                        DatagramPacket sendElevatorMovePacket = new DatagramPacket(destinationFloorMessage, destinationFloorMessage.length, IPAddress, 69);//SEND BACK TO ELEVATOR THAT MADE THE REQUEST
+                        DatagramPacket sendElevatorMovePacket = new DatagramPacket(destinationFloorMessage, destinationFloorMessage.length, IPAddress, receivePacket().getPort());
 
                         try {
                             sendSocket.send(sendElevatorMovePacket);
@@ -328,6 +403,8 @@ public class SchedulerThread implements Runnable{
                             throw new RuntimeException(e);
                         }
 
+                    } else {
+                        System.out.println("NO EVENT LIST YET, RETURNING TO IDLE");
                     }
                     idleState();
                     break;

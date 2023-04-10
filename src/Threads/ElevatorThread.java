@@ -29,7 +29,7 @@ public class ElevatorThread extends Thread {
     private DatagramSocket timedSocket;
     private DatagramPacket receiveTimedPacket;
     private final int LOAD_UNLOAD_TIME = 3000;
-    private final int TIMEOUT = 5000;
+    private final int TIMEOUT = 12000;
     private final int NUMBER_OF_FLOORS = 22;
     private volatile boolean timedOut, running;
 
@@ -50,6 +50,7 @@ public class ElevatorThread extends Thread {
         // Create a Datagram socket for both sending and receiving messages via UDP communication
         try {
             sendReceiveSocket = new DatagramSocket(portNumber);
+            sendReceiveSocket.setSoTimeout(3000);
             //sendReceiveSocket = new DatagramSocket();
             timedSocket = new DatagramSocket();
         } catch (SocketException se) {   // if socket creation fails
@@ -273,10 +274,12 @@ public class ElevatorThread extends Thread {
                         sendReceiveSocket.send(moveRequestPacket);
                         // Wait for a response from the scheduler for the destination floor to move to
                         DatagramPacket moveRequestReceivePacket = receivePacket();
+                        System.out.println("ELEVATOR THINKS IT RECEIVED: " + Arrays.toString(moveRequestReceivePacket.getData()));
                         System.out.println("Scheduler's response back to elevator's move request: " + byteArrayToInt(moveRequestReceivePacket.getData()));
                         this.processDestinationFloorMessage(moveRequestReceivePacket.getData());
                     } catch (IOException e) {
                         e.printStackTrace();
+                        state = ElevatorState.IDLE;
                     }
                     break;
 
