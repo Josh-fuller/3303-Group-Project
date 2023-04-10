@@ -418,7 +418,7 @@ public class SchedulerThread implements Runnable{
 
                     byte[] stopFloorMessage = findSingleIntArray(currentArrivingFloorNum, schedulerTasks);
 
-                    DatagramPacket sendElevatorStopPacket = new DatagramPacket(stopFloorMessage, stopFloorMessage.length, IPAddress, 69);//SEND TO ELEVATOR TAT ASKED TO MOVE
+                    DatagramPacket sendElevatorStopPacket = new DatagramPacket(stopFloorMessage, stopFloorMessage.length, IPAddress, receivePacket().getPort());//SEND TO ELEVATOR TAT ASKED TO MOVE
                     try {
                         sendSocket.send(sendElevatorStopPacket);
                     } catch (IOException e) {
