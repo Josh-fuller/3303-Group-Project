@@ -3,6 +3,8 @@ import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.util.*;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 /**
  * ElevatorThread implements the elevator state machine. The states are IDLE, STOPPED, MOVING_UP, MOVING_DOWN.
@@ -50,8 +52,8 @@ public class ElevatorThread implements Runnable {
         this.populateFloors();
         // Create a Datagram socket for both sending and receiving messages via UDP communication
         try {
-            //sendReceiveSocket = new DatagramSocket(portNumber); //todo uncomment
-            sendReceiveSocket = new DatagramSocket();
+            sendReceiveSocket = new DatagramSocket(portNumber); //todo uncomment
+            //sendReceiveSocket = new DatagramSocket();
         } catch (SocketException se) {   // if socket creation fails
             se.printStackTrace();
             System.exit(1);

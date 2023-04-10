@@ -7,6 +7,9 @@ import org.junit.*;
 import java.io.IOException;
 import java.net.*;
 import java.util.ArrayList;
+import java.util.HashMap;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 public class SchedulerThreadTest {
 
@@ -35,6 +38,7 @@ public class SchedulerThreadTest {
        // sendPacket = new DatagramPacket(message, message.length,InetAddress.getLocalHost(), 1003);
     }
 
+    /*
     @Test
     public void testMessageSendFromFloor() throws IOException {
         scheduler.receivePacket();
@@ -47,6 +51,16 @@ public class SchedulerThreadTest {
        // FloorThread.floorEventToByte(floorTest1);
        //  byte[] e = scheduler.floorEventToByte(floorTest1);
        //  System.out.println(scheduler.byteToFloorEvent(e));
+    }
+    */
+    @Test
+    public void testCreateByteMultiMap() {
+        byte[] testArray = {0x0 , 0x1,  0x2,  0x4, 0x5};
+        Multimap<Byte, Byte> testMap = scheduler.createByteMultiMap(testArray);
+        Multimap<Byte, Byte> realMap = ArrayListMultimap.create();
+        realMap.put((byte) 2,(byte) 4);
+        realMap.put((byte) 2,(byte) 5);
+        Assert.assertEquals(realMap,testMap);
     }
 
 

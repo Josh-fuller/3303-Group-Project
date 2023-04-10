@@ -4,6 +4,8 @@ import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.util.*;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 /** *
  * Class Scheduler used to translate data between Floors and Elevators.
@@ -158,8 +160,8 @@ public class SchedulerThread implements Runnable{
     public static messageType parseByteArrayForType(byte[] byteArray) {
 
         messageType type = messageType.ERROR; // default value
-        System.out.println(byteArray[0]);
-        System.out.println(byteArray[1]);
+        //System.out.println(byteArray[0]);
+        System.out.println("SCHEDULER RECEIVED MESSAGE BYTE: " + byteArray[1]);
         // check first two bytes
         if (byteArray.length >= 2 && byteArray[0] == 0x0 && byteArray[1] == 0x1) {
             type = messageType.ARRIVAL_SENSOR;
@@ -230,7 +232,7 @@ public class SchedulerThread implements Runnable{
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        System.out.println("Received packet");
+        System.out.println("Scheduler Received packet containing message: " + receivePacket.getData());
         return receivePacket;
     }
 
@@ -262,6 +264,29 @@ public class SchedulerThread implements Runnable{
         return byteArrayToSend;
     }
 
+
+    /** *
+     * Creates a key/value pair for the start and end floor of a floor event, so that they are processed in order and by the same car.
+     *
+     * @param arr what type of message to send
+     *
+     * @return byteMap The key/value floor pair
+     *
+     * @author Josh Fuller
+     */
+    public Multimap<Byte, Byte> createByteMultiMap(byte[] arr) {
+        Multimap<Byte, Byte> byteMultiMap = ArrayListMultimap.create();
+        if (arr.length >= 3) {
+            for (int i = 3; i < arr.length; i++) {
+                byte b = arr[i];
+                if (b == 0) {
+                    break;
+                }
+                byteMultiMap.put(arr[2], b);
+            }
+        }
+        return byteMultiMap;
+    }
     /** *
      * The runnable portion of scheduler, responsible for acting as the translator from floor/elevator and back
      *
@@ -288,8 +313,8 @@ public class SchedulerThread implements Runnable{
                     receivePacket = receivePacket();
 
                     messageType messageType = parseByteArrayForType(receivePacket.getData());
-                    System.out.println(messageType);
-                    System.out.println(receivePacket.getPort());
+                    System.out.println("SCHEDULER RECEIVED MESSAGE TYPE: " + messageType);
+                    System.out.println("SCHEDULER RECEIVED FROM PORT: " + receivePacket.getPort());
                     //based on message type, go to state
                     if (messageType == SchedulerThread.messageType.FLOOR_EVENT) {
                         processingFloorState();
@@ -319,7 +344,7 @@ public class SchedulerThread implements Runnable{
                     }
 
                     schedulerTasks.add(tempFloorEvent);
-*/                  System.out.println(Arrays.toString(receivePacket.getData()));
+*/                  System.out.println("SCHEDULER... FLOOR EVENT DATA: " + Arrays.toString(receivePacket.getData()));
                     idleState();
                     break;
 

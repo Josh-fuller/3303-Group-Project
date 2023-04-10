@@ -4,7 +4,6 @@ import java.io.*;
 import java.util.ArrayList;
 import java.net.*;
 import java.net.DatagramPacket;
-import java.util.Arrays;
 
 /**
  * Class Threads.FloorThread represents the floor subsystem of the elevator scheduling system.
