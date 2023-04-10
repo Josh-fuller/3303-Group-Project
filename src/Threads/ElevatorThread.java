@@ -20,18 +20,17 @@ public class ElevatorThread extends Thread {
 
     private int portNumber;             // Elevator's port number for receiving UDP communication
     private ElevatorState state;        // Elevator's current state
-    private boolean doorOpen;           // true if door is open, false if closed
-    //private int currentFloor;           // Elevator's current floor as signalled by the arrival sensor
-    private int currentFloor;
+    private volatile boolean doorOpen;           // true if door is open, false if closed
+    private Integer currentFloor;           // Elevator's current floor as signalled by the arrival sensor
     private List<Integer> floors;       // list of 5 floors that have access to the elevator
-    private boolean stopSignal;         // signal set to true when scheduler makes a command to stop at approaching floor
-    private int destination = 0;        // destination floor requested by the scheduler
+    private volatile boolean stopSignal;         // signal set to true when scheduler makes a command to stop at approaching floor
+    private Integer destination = 0;        // destination floor requested by the scheduler
     DatagramSocket sendReceiveSocket;         // Datagram socket for sending and receiving UDP communication to/from the scheduler thread
     private DatagramSocket timedSocket;
     private DatagramPacket receiveTimedPacket;
-    private final int LOAD_UNLOAD_TIME = 3000;
-    private final int TIMEOUT = 5000;
-    private final int NUMBER_OF_FLOORS = 22;
+    private final Integer LOAD_UNLOAD_TIME = 3000;
+    private final Integer TIMEOUT = 5000;
+    private final Integer NUMBER_OF_FLOORS = 22;
     private volatile boolean timedOut, running;
 
 
