@@ -49,8 +49,8 @@ public class ElevatorThread extends Thread {
         this.populateFloors();
         // Create a Datagram socket for both sending and receiving messages via UDP communication
         try {
-            //sendReceiveSocket = new DatagramSocket(portNumber); //todo uncomment
-            sendReceiveSocket = new DatagramSocket();
+            sendReceiveSocket = new DatagramSocket(portNumber);
+            //sendReceiveSocket = new DatagramSocket();
             timedSocket = new DatagramSocket();
         } catch (SocketException se) {   // if socket creation fails
             se.printStackTrace();

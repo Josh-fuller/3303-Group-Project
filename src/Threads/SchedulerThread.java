@@ -17,7 +17,7 @@ public class SchedulerThread implements Runnable{
 
     private final DatagramSocket receiveSocket;
     private DatagramSocket sendSocket;
-    private boolean floorEventRecieved = false;
+    private boolean floorEventReceived = false;
 
     public ArrayList<int[]> getSchedulerTasks() {
         return schedulerTasks;
@@ -301,7 +301,7 @@ public class SchedulerThread implements Runnable{
                     break;
 
                 case PROCESSING_FLOOR_EVENT:
-                    floorEventRecieved = true;                  // Allows for move requests to happen
+                    floorEventReceived = true;                  // Allows for move requests to happen
                     sortElevatorTasks(receivePacket.getData());
 
                     System.out.println("SCHEDULER... FLOOR EVENT DATA: " + Arrays.toString(receivePacket.getData()));
@@ -309,7 +309,7 @@ public class SchedulerThread implements Runnable{
                     break;
 
                 case PROCESSING_MOVE_REQUEST:
-                    if(floorEventRecieved){
+                    if(floorEventReceived){
 
                         byte b = (byte) 0xFF;
                         byte[] destinationFloorMessage = null;
