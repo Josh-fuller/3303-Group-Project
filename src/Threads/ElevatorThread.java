@@ -17,13 +17,13 @@ public class ElevatorThread implements Runnable {
         MOVING_DOWN,
     }
 
-    private int portNumber;         // Elevator's port number for receiving UDP communication
-    private ElevatorState state;    // Elevator's current state
-    private boolean doorOpen;       // true if door is open, false if closed
-    private int currentFloor;       // Elevator's current floor as signalled by the arrival sensor
-    private List<Integer> floors;   // list of 5 floors that have access to the elevator
-    private boolean stopSignal;     // signal set to true when scheduler makes a command to stop at approaching floor
-    private int destination = 0;    // destination floor requested by the scheduler
+    private int portNumber;             // Elevator's port number for receiving UDP communication
+    private ElevatorState state;        // Elevator's current state
+    private boolean doorOpen;           // true if door is open, false if closed
+    private int currentFloor;           // Elevator's current floor as signalled by the arrival sensor
+    private List<Integer> floors;       // list of 5 floors that have access to the elevator
+    private boolean stopSignal;         // signal set to true when scheduler makes a command to stop at approaching floor
+    private int destination = 0;        // destination floor requested by the scheduler
     DatagramSocket sendReceiveSocket;         // Datagram socket for sending and receiving UDP communication to/from the scheduler thread
     private DatagramSocket timedSocket;
     private DatagramPacket receiveTimedPacket;
@@ -73,7 +73,7 @@ public class ElevatorThread implements Runnable {
     /**
      * Increments floors one by one updates arrivalSignal after reaching new floor.
      */
-    public void incrementFloor() {
+    public synchronized void incrementFloor() {
         int topFloor = floors.size();
         int i = currentFloor;
         if (i < topFloor) {
@@ -86,7 +86,7 @@ public class ElevatorThread implements Runnable {
     /**
      * Decrements floors one by one updates arrivalSignal after reaching new floor.
      */
-    public void decrementFloor(){
+    public synchronized void decrementFloor(){
         int bottomFloor = 1;
         int i = currentFloor;
         if (i > bottomFloor) {
@@ -99,7 +99,7 @@ public class ElevatorThread implements Runnable {
     /**
      * Creates and returns a Datagram Packet using given input parameters.
      */
-    public DatagramPacket createMessagePacket(byte typeByte, int floorNumber) throws UnknownHostException {
+    public synchronized DatagramPacket createMessagePacket(byte typeByte, int floorNumber) throws UnknownHostException {
         byte[] messageTypeBytes = new byte[] {0x0, typeByte, 0x0};
         byte[] floorNumberBytes = new byte[] {(byte) (floorNumber & 0xFF)};
         //ByteBuffer bb = ByteBuffer.allocate(messageTypeBytes.length + floorNumberBytes.length + sentenceBytes.length);
@@ -120,7 +120,7 @@ public class ElevatorThread implements Runnable {
      *
      * @return receivePacket A packet sent from the elevator or floor
      */
-    public DatagramPacket receivePacket(){
+    public synchronized DatagramPacket receivePacket(){
         DatagramPacket receivePacket;
         // Create a DatagramPacket to receive data from client
         byte[] receiveData = new byte[1024];
