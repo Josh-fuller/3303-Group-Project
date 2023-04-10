@@ -10,7 +10,10 @@ import java.util.Arrays;
  * Class Threads.FloorThread represents the floor subsystem of the elevator scheduling system which communicates with
  * the scheduler via UDP.
  *
- * @author Mahtab Ameli
+ * @author Mahtab
+ * @author Ahmad
+ * @author Josh
+ * @author Justin
  */
 public class FloorThread extends Thread {
 
@@ -258,7 +261,7 @@ public class FloorThread extends Thread {
 
 
     /**
-     * This is the runnable portion of this class that handles all the delegation to methods instantiated above.
+     * This is the runnable portion that handles all the delegation to methods instantiated above.
      */
     public void run() {
 
@@ -266,10 +269,9 @@ public class FloorThread extends Thread {
 
             switch(status) {
 
-                case IDLE: // Default floor status
-                    // TODO When and how often should the floor send FloorEvents to the Scheduler? because I think
-                    // TODO     currently it will only send 1 floorEvent.
-                    this.sendPacket(buildFloorByteMsg()); // Send FloorEvent to scheduler.
+                case IDLE:
+                    // Send FloorEvents to scheduler.
+                    this.sendPacket(buildFloorByteMsg());
 
                     // Receive a message from scheduler and parse it for message type.
                     receivePacket = receivePacket();
@@ -290,37 +292,31 @@ public class FloorThread extends Thread {
                     } break;
 
 
-
                 // TODO Change to "PROCESSING_STOP" because it handles both "starting" and "completed" stop.
                 case PROCESSING_STARTING_STOP: //Scheduler tells floor elevator has stopped, floor starts timer
                     try {
-                        // Create an acknowledgement message then send it to scheduler.
-                        byte[] ackMessage = "ACK".getBytes();
-                        //this.sendPacket(ackMessage);
-
                         // The called method will wait for 8 seconds to receive a packet from scheduler, otherwise
                         // an exception will be thrown, implying there is a fault and the door didn't close.
+                        System.out.println("Elevator is coming to a stop, starting timer.");
                         waitForPacketWithTimeout(8*1000);
+                        System.out.println("Door closed on time, timer stopped :)");
 
                     } catch (SocketTimeoutException e) {
                         // Socket timeout exception is caught, an error statement is printed,
                         // timedOut flag is set to true and the floorThread is halted.
                         System.out.println("ERROR: Timer ran out while waiting to receive a packet from scheduler!");
-                        timedOut= true;
+                        timedOut = true;
                         break;
                     }
                     // go back to idle status
                     idleStatus();
                     break;
-
             }
-
 
             try {
                 Thread.sleep(500);
-            } catch (InterruptedException e) {
+            } catch (InterruptedException e) {}
 
-            }
 
         }
     }
