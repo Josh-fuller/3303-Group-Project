@@ -12,15 +12,20 @@ public class main {
 
         //declare and initialise everything
 
-        Thread elevator, floor, scheduler;
+        Thread elevator1, floor, scheduler, elevator2;
 
 
         // Create the floor,scheduler and elevator threads,
         // passing each thread a reference to the
 
-        elevator = new Thread(new
+        elevator1 = new Thread(new
                 ElevatorThread(1011),"Elevator 1");
         System.out.println("Elevator Created");
+
+        elevator2 = new Thread(new
+                ElevatorThread(1012),"Elevator 2");
+        System.out.println("Elevator Created");
+
 
 
         floor = new Thread(new
@@ -32,7 +37,8 @@ public class main {
         System.out.println("Scheduler Created");
 
 
-        elevator.start();
+        elevator1.start();
+        //elevator2.start();
         floor.start();
         scheduler.start();
 
