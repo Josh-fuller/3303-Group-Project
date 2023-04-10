@@ -430,15 +430,6 @@ public class SchedulerThread implements Runnable{
                         throw new RuntimeException(e);
                     }
 
-                    byte[] receivedFloorData = new byte[1024];
-                    DatagramPacket receivedFloorPacket = new DatagramPacket(receivedFloorData, receivedFloorData.length); //Add error handling in future iterations
-
-                    try {
-                        receiveSocket.receive(receivedFloorPacket);//RECEIVE FROM FLOOR, just an ack rn but will be used for error handling in the future
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                    System.out.println("RECEIVED ACK FROM FLOOR");
 
                     //go to idle state
                     idleState();
