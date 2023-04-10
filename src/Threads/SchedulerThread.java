@@ -426,7 +426,7 @@ public class SchedulerThread implements Runnable{
                     }
 
 
-                    if(stopRequest == 0){
+                    if(stopFloorMessage[0] != 0x0){
                         dispatchingToFloorState();
                     } else{
                         idleState();
