@@ -282,29 +282,6 @@ public class FloorThread extends Thread {
                     idleStatus();
                     break;*/
             }
-            //TODO What of this is still needed?(sendPacket is above)
-            this.sendPacket(buildFloorByteMsg());
-
-            for (int i = 0; i < floorEventList.size(); i++) {
-                
-                byte[] data = new byte[1024];
-                receivePacket = new DatagramPacket(data, data.length);
-                try {
-                    // Block until a Datagram is received via sendReceiveSocket.
-                    sendReceiveSocket.receive(receivePacket);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    System.exit(1);
-                }
-
-                System.out.println("STEP 8");
-                System.out.println("Finished Processing Use #" + i);
-
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                }
-            }
         }
     }
 }
