@@ -18,8 +18,6 @@ public class SchedulerThread implements Runnable{
     private final DatagramSocket receiveSocket;
     private DatagramSocket sendSocket;
 
-    ElevatorThread elevatorThread = new ElevatorThread( 1);
-
     public ArrayList<FloorEvent> getSchedulerTasks() {
         return schedulerTasks;
     }
@@ -92,19 +90,7 @@ public class SchedulerThread implements Runnable{
         return state;
     }
 
-
-    //TODO Make javadoc + fix up once elevatorThread is fixed
-
-    /**
-     * Getter for the elevator stops
-     *
-     * @return floor numbers the elevators should stop at
-     */
-    public Set<Integer> getElevatorStops() {
-        return elevatorStops;
-    }
-
-    /**
+    /** TODO Delete this once I have the getElevatorStops method
      * Adds the destination floor to a list based on the schedulerTasks list. Also removes the added
      * task from the schedulerTask list.
      *
@@ -120,7 +106,12 @@ public class SchedulerThread implements Runnable{
         return destinationFloor;
     }
 
-    /**
+    //TODO return int[]
+    public void getElevatorStops(){
+        return ;
+    }
+
+    /** TODO Change method to be able to handle multiple elevators and
      * Checks if the currentFloor the elevator is going to stop at is one of the stops that has been requested.
      *
      * @param currentFloor the floor to check
@@ -136,6 +127,7 @@ public class SchedulerThread implements Runnable{
     }
 
     /**
+     * TODO Possibly delete this method
      * Converts the floor event that was sent from the floor thread from a serialized object that
      * was converted into a byteArray back into a floor event.
      *
@@ -166,7 +158,8 @@ public class SchedulerThread implements Runnable{
     public static messageType parseByteArrayForType(byte[] byteArray) {
 
         messageType type = messageType.ERROR; // default value
-
+        System.out.println(byteArray[0]);
+        System.out.println(byteArray[1]);
         // check first two bytes
         if (byteArray.length >= 2 && byteArray[0] == 0x0 && byteArray[1] == 0x1) {
             type = messageType.ARRIVAL_SENSOR;
@@ -217,6 +210,7 @@ public class SchedulerThread implements Runnable{
      * @return floorNum the floor number an elevator requests to go to
      */
     public static int parseByteArrayForFloorNum(byte[] byteArray) {
+        //return byteArray[3] & 0xff; // get 4th byte as int
         return byteArray[3] & 0xff; // get 4th byte as int
     }
 
@@ -237,7 +231,8 @@ public class SchedulerThread implements Runnable{
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        System.out.println("Received packet");
+        //System.out.println("Received packet");
+        System.out.println("Scheduler received packet: " + receiveData[0] + receiveData[1] + receiveData[2] + receiveData[3]);
         return receivePacket;
     }
 
@@ -295,7 +290,8 @@ public class SchedulerThread implements Runnable{
                     receivePacket = receivePacket();
 
                     messageType messageType = parseByteArrayForType(receivePacket.getData());
-
+                    System.out.println(messageType);
+                    System.out.println(receivePacket.getPort());
                     //based on message type, go to state
                     if (messageType == SchedulerThread.messageType.FLOOR_EVENT) {
                         processingFloorState();
@@ -314,24 +310,23 @@ public class SchedulerThread implements Runnable{
                     break;
 
                 case PROCESSING_FLOOR_EVENT:
-
+/*              //TODO Add new way of processing floor
                     FloorEvent tempFloorEvent;
-
                     try {
                         tempFloorEvent = byteToFloorEvent(receivePacket.getData());
                     } catch (IOException | ClassNotFoundException e) {
                         throw new RuntimeException(e);
                     }
-
                     schedulerTasks.add(tempFloorEvent);
-
+*/                  System.out.println(Arrays.toString(receivePacket.getData()));
                     idleState();
                     break;
 
                 case PROCESSING_MOVE_REQUEST:
 
                     byte b = (byte) 0xFF;
-                    byte[] destinationFloorMessage = null;
+                    //byte[] destinationFloorMessage = null;
+                    byte[] destinationFloorMessage = new byte[4];
                     int currentMovingFloorNum = parseByteArrayForFloorNum(receivePacket.getData());
                     int destinationFloor = getDestinationFloor();
 
@@ -341,7 +336,8 @@ public class SchedulerThread implements Runnable{
                         destinationFloorMessage = intToByteArray(destinationFloor);
                     }
 
-                    DatagramPacket sendElevatorMovePacket = new DatagramPacket(destinationFloorMessage, destinationFloorMessage.length, IPAddress, 69);//SEND BACK TO ELEVATOR THAT MADE THE REQUEST
+                    //DatagramPacket sendElevatorMovePacket = new DatagramPacket(destinationFloorMessage, destinationFloorMessage.length, IPAddress, 69);//SEND BACK TO ELEVATOR THAT MADE THE REQUEST
+                    DatagramPacket sendElevatorMovePacket = new DatagramPacket(destinationFloorMessage, destinationFloorMessage.length, IPAddress, receivePacket.getPort());//SEND BACK TO ELEVATOR THAT MADE THE REQUEST
 
                     try {
                         sendSocket.send(sendElevatorMovePacket);
@@ -365,7 +361,8 @@ public class SchedulerThread implements Runnable{
 
                     byte[] stopFloorMessage = intToByteArray(stopRequest);
 
-                    DatagramPacket sendElevatorStopPacket = new DatagramPacket(stopFloorMessage, stopFloorMessage.length, IPAddress, 69);//SEND TO ELEVATOR TAT ASKED TO MOVE
+                    //DatagramPacket sendElevatorStopPacket = new DatagramPacket(stopFloorMessage, stopFloorMessage.length, IPAddress, 69);//SEND TO ELEVATOR TAT ASKED TO MOVE
+                    DatagramPacket sendElevatorStopPacket = new DatagramPacket(stopFloorMessage, stopFloorMessage.length, IPAddress, receivePacket.getPort());//SEND TO ELEVATOR TAT ASKED TO MOVE
                     try {
                         sendSocket.send(sendElevatorStopPacket);
                     } catch (IOException e) {
@@ -420,7 +417,7 @@ public class SchedulerThread implements Runnable{
 
                     byte[] completeStopMessage = createByteArray((byte) 6, byteEq);
 
-                    DatagramPacket sendFloorSecondPacket = new DatagramPacket(completeStopMessage, completeStopMessage.length, IPAddress, 2529);
+                    DatagramPacket sendFloorSecondPacket = new DatagramPacket(completeStopMessage, completeStopMessage.length, IPAddress, 2530);
 
                     try {
                         sendSocket.send(sendFloorSecondPacket);//SEND TO FLOOR
@@ -432,9 +429,6 @@ public class SchedulerThread implements Runnable{
                     idleState();
                     break;
             }
-
-
-
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {}
