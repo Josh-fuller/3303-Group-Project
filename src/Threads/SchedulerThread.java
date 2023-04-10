@@ -375,9 +375,14 @@ public class SchedulerThread implements Runnable{
                         }
 
                     } else {
-                        System.out.println("NO EVENT LIST YET, RETURNING TO IDLE");
+                        System.out.println("NO EVENT LIST YET, RETURNING TO  AND SENDING DEFAULT (FLOOR 1*)");
                         byte[] destinationFloorMessage = {0x1,0x1};
                         DatagramPacket sendElevatorMovePacket = new DatagramPacket(destinationFloorMessage, destinationFloorMessage.length, IPAddress, receivePacket().getPort());
+                        try {
+                            sendSocket.send(sendElevatorMovePacket);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
                     idleState();
                     break;
