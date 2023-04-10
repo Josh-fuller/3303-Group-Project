@@ -64,7 +64,7 @@ public class ElevatorThread extends Thread {
      */
     private void populateFloors() {
         floors.clear();
-        for (int i = 0; i < NUMBER_OF_FLOORS; i++) {
+        for (int i = 1; i < NUMBER_OF_FLOORS; i++) {
             floors.add(i);
         }
     }
@@ -328,7 +328,7 @@ public class ElevatorThread extends Thread {
                     floorDifference = currentFloor - destination;
                     // move down to the destination floor one floor at a time
                     for (int i = 0; i < floorDifference; i++) {
-                        int bottomFloor = 0;
+                        int bottomFloor = 1;
                         if (i == bottomFloor) {
                             break;
                         }
