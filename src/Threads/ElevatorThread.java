@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * ElevatorThread implements the elevator state machine. The states are IDLE, STOPPED, MOVING_UP, MOVING_DOWN.
@@ -10,7 +11,7 @@ import java.util.*;
  * @author  Mahtab Ameli
  * @version Iteration 5
  */
-public class ElevatorThread implements Runnable {
+public class ElevatorThread extends Thread {
     public enum ElevatorState {
         IDLE,
         MOVING_UP,
@@ -20,7 +21,8 @@ public class ElevatorThread implements Runnable {
     private int portNumber;             // Elevator's port number for receiving UDP communication
     private ElevatorState state;        // Elevator's current state
     private boolean doorOpen;           // true if door is open, false if closed
-    private int currentFloor;           // Elevator's current floor as signalled by the arrival sensor
+    //private int currentFloor;           // Elevator's current floor as signalled by the arrival sensor
+    private int currentFloor;
     private List<Integer> floors;       // list of 5 floors that have access to the elevator
     private boolean stopSignal;         // signal set to true when scheduler makes a command to stop at approaching floor
     private int destination = 0;        // destination floor requested by the scheduler
@@ -341,7 +343,7 @@ public class ElevatorThread implements Runnable {
                             if (timedOut) { // socket timed out while waiting for stop signal message from scheduler
                                 running = false;
                                 System.out.println("Elevator's receive socket timed out while waiting for scheduler's command. Stopping elevatorThread.");
-                                Thread.currentThread().interrupt();
+                                Thread.currentThread().interrupt(); // stop this thread in a thread-safe way
                                 break;
                             }
                             System.out.println("Scheduler response to arrival sensor (0 = stop, 1 = continue): " + arriveDownReceivePacket.getData()[0]);
