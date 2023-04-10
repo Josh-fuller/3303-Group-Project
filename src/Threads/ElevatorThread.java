@@ -50,7 +50,7 @@ public class ElevatorThread extends Thread {
         // Create a Datagram socket for both sending and receiving messages via UDP communication
         try {
             sendReceiveSocket = new DatagramSocket(portNumber);
-            sendReceiveSocket.setSoTimeout(5000);
+            //sendReceiveSocket.setSoTimeout(9000);
             //sendReceiveSocket = new DatagramSocket();
             timedSocket = new DatagramSocket();
         } catch (SocketException se) {   // if socket creation fails

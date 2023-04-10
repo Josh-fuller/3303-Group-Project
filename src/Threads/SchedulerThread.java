@@ -408,6 +408,8 @@ public class SchedulerThread implements Runnable{
 
                     } else {
                         System.out.println("NO EVENT LIST YET, RETURNING TO IDLE");
+                        byte[] destinationFloorMessage = {0x1,0x1};
+                        DatagramPacket sendElevatorMovePacket = new DatagramPacket(destinationFloorMessage, destinationFloorMessage.length, IPAddress, receivePacket().getPort());
                     }
                     idleState();
                     break;
