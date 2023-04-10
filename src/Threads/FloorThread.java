@@ -28,7 +28,7 @@ public class FloorThread extends Thread {
         ERROR
     }
 //TODO What is the actual starting state?
-    FloorStatus status = FloorStatus.PROCESSING_STARTING_STOP;
+    FloorStatus status = FloorStatus.IDLE;
 
     public enum FloorStatus {
         IDLE,

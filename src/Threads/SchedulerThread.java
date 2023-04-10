@@ -111,9 +111,7 @@ public class SchedulerThread implements Runnable{
     public void sortElevatorTasks(byte[] tasks){
         int counter = 2;
         while(tasks[counter] != 0 || tasks[counter+1] != 0) {
-            int task1 =  tasks[counter] & 0xff;
-            int task2 = tasks[counter + 1] & 0xff;
-            schedulerTasks.add(new int[] { task1 , task2  });
+            schedulerTasks.add(new int[] { tasks[counter] & 0xff , tasks[counter + 1] & 0xff  });
             counter += 2;
         }
         System.out.println(schedulerTasks);
