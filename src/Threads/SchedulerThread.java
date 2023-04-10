@@ -17,15 +17,11 @@ public class SchedulerThread implements Runnable{
 
     private final DatagramSocket receiveSocket;
     private DatagramSocket sendSocket;
+
     private boolean floorEventReceived = false;
 
-    public ArrayList<int[]> getSchedulerTasks() {
-        return schedulerTasks;
-    }
-
     ArrayList<int[]> schedulerTasks;
-    Set<Integer> elevatorStops = new TreeSet<>();
-
+    Set<Integer> elevatorStops = new TreeSet<>();   //TODO Remove
 
     public enum SchedulerState {
         IDLE,
@@ -125,9 +121,11 @@ public class SchedulerThread implements Runnable{
     }
 
     public void sortElevatorTasks(byte[] tasks){
-        int counter = 2;
+        int counter = 2;      // Starts at 2 because first 2 bytes are the message type
         while(tasks[counter] != 0 || tasks[counter+1] != 0) {
-            schedulerTasks.add(new int[] { tasks[counter] & 0xff , tasks[counter + 1] & 0xff  });
+            int task1 = tasks[counter] & 0xff;
+            int task2 = tasks[counter+1] & 0xff;
+            schedulerTasks.add(new int[]{task1,task2});
             counter += 2;
         }
         System.out.print("SCHEDULER TASKS FROM MESSAGE: ");
@@ -137,20 +135,6 @@ public class SchedulerThread implements Runnable{
         System.out.println();
     }
 
-    /** TODO Change method to be able to handle multiple elevators and
-     * Checks if the currentFloor the elevator is going to stop at is one of the stops that has been requested.
-     *
-     * @param currentFloor the floor to check
-     * @return true if currentFloor is in the stop list and false if not
-     */
-    public boolean processStopRequest(int currentFloor){
-        for(int i = 0;i < elevatorStops.size(); i++) {
-            if (elevatorStops.contains(currentFloor)) {
-                return true;
-            }
-        }
-        return false;
-    }
 
     /**
      * Converts an int to a byte array for message purposes
@@ -257,7 +241,7 @@ public class SchedulerThread implements Runnable{
         return type;
     }
 
-    /**
+    /** //TODO Remove
      * Converts the packet data's floor number into an integer.
      *
      * @param byteArray the received packet data containing request information

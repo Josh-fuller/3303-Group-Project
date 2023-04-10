@@ -127,7 +127,10 @@ public class ElevatorThread extends Thread {
         receivePacket = new DatagramPacket(receiveData, receiveData.length);
         try {
             sendReceiveSocket.receive(receivePacket); //Receive from anywhere
-        } catch (IOException e) {
+            System.out.println("ELEVATOR RECEIVED DATA WITHIN TIME LIMIT");
+        //} catch (SocketTimeoutException s){
+            //System.out.println("NO MOVE REQUEST PROVIDED IN TIME IN ELEVATOR: " + portNumber);
+        } catch (IOException e ) {
             throw new RuntimeException(e);
         }
         return receivePacket;

@@ -11,8 +11,6 @@ import java.util.ArrayList;
 public class SchedulerThreadTest {
 
     private SchedulerThread scheduler = new SchedulerThread();
-    FloorThread floor = new FloorThread();
-
 
     FloorEvent floorTest1 = new FloorEvent("01:00:00.000", 1, FloorEvent.FloorButton.UP, 2, 2);
     FloorEvent floorTest2 = new FloorEvent("01:00:00.000", 2, FloorEvent.FloorButton.UP, 3, 1);
@@ -20,10 +18,6 @@ public class SchedulerThreadTest {
 
     DatagramSocket testSendSocket, testReceiveSocket;
     DatagramPacket sendPacket;
-
-
-
-
 
     public SchedulerThreadTest() throws IOException {}
 
