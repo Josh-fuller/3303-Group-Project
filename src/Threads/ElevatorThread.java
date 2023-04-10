@@ -278,7 +278,7 @@ public class ElevatorThread extends Thread {
                         // Wait for a response from the scheduler for the destination floor to move to
                         DatagramPacket moveRequestReceivePacket = receivePacket();
                         System.out.println("ELEVATOR THINKS IT RECEIVED: " + Arrays.toString(moveRequestReceivePacket.getData()));
-                        System.out.println("Scheduler's response back to elevator's move request: " + byteArrayToInt(moveRequestReceivePacket.getData()));
+                        System.out.println("Scheduler's response back to elevator's move request: " + Arrays.toString(moveRequestReceivePacket.getData())); //TODO fix this to re-state the message floors
                         this.processDestinationFloorMessage(moveRequestReceivePacket.getData());
                     } catch (IOException e) {
                         e.printStackTrace();

@@ -244,7 +244,7 @@ public class SchedulerThread implements Runnable{
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        System.out.println("Scheduler Received packet containing message: " + tempPacket.getData());
+        System.out.println("Scheduler Received packet containing message (from port: " + tempPacket.getPort() + ") " + Arrays.toString(tempPacket.getData()));
         return tempPacket;
     }
 
@@ -325,7 +325,7 @@ public class SchedulerThread implements Runnable{
                     //System.out.println("PERFORMED RECEIVE IN SCHED");
                     currentData = receivedPacket.getData();
 
-                    System.out.println("TESTING SAVING THE DATA: " + Arrays.toString(receivedPacket.getData()) + " VERSUS " + Arrays.toString(currentData));
+                    //System.out.println("TESTING SAVING THE DATA: " + Arrays.toString(receivedPacket.getData()) + " VERSUS " + Arrays.toString(currentData));
 
                     messageType messageType = parseByteArrayForType(receivedPacket.getData());
                     System.out.println("SCHEDULER RECEIVED MESSAGE TYPE: " + messageType);
@@ -337,13 +337,15 @@ public class SchedulerThread implements Runnable{
                         processingFloorState();
                     } else if(messageType == SchedulerThread.messageType.ARRIVAL_SENSOR) {
                         processingSensorRequestState();
+                        System.out.println("SCHEDULER: MESSAGE TYPE ARRIVAL SENSOR FROM FLOOR: " + parseByteArrayForFloorNum(currentData));
                     } else if(messageType == SchedulerThread.messageType.MOVE_REQUEST) {
                         processingMoveRequestState();
                     } else if(messageType == SchedulerThread.messageType.STOP_FINISHED) {
+                        System.out.println("SCHEDULER: MESSAGE TYPE STOP_COMPLETE FROM ELEVATOR " + currentPort + " AT FLOOR " + parseByteArrayForFloorNum(currentData));
                         sendingStopCompleteState();
                     }
                     else if (messageType == SchedulerThread.messageType.ERROR) {
-                        System.out.println("ERROR DETECTED IN SCHEDULER MESSAGE");
+                        System.out.println("ERROR DETECTED IN SCHEDULER MESSAGE WITH TYPE: " + messageType);
                     }
 
 
@@ -375,9 +377,9 @@ public class SchedulerThread implements Runnable{
                         }
 
                     } else {
-                        System.out.println("NO EVENT LIST YET, RETURNING TO  AND SENDING DEFAULT (FLOOR 1*)");
+                        System.out.println("NO EVENT LIST YET, RETURNING TO IDLE AND SENDING DEFAULT (FLOOR 1*)");
                         byte[] destinationFloorMessage = {0x1,0x1};
-                        DatagramPacket sendElevatorMovePacket = new DatagramPacket(destinationFloorMessage, destinationFloorMessage.length, IPAddress, receivePacket().getPort());
+                        DatagramPacket sendElevatorMovePacket = new DatagramPacket(destinationFloorMessage, destinationFloorMessage.length, IPAddress, currentPort);
                         try {
                             sendSocket.send(sendElevatorMovePacket);
                         } catch (IOException e) {
@@ -393,7 +395,7 @@ public class SchedulerThread implements Runnable{
 
                     byte[] stopFloorMessage = findSingleIntArray(currentArrivingFloorNum, schedulerTasks);
 
-                    DatagramPacket sendElevatorStopPacket = new DatagramPacket(stopFloorMessage, stopFloorMessage.length, IPAddress, receivePacket().getPort());//SEND TO ELEVATOR TAT ASKED TO MOVE
+                    DatagramPacket sendElevatorStopPacket = new DatagramPacket(stopFloorMessage, stopFloorMessage.length, IPAddress, currentPort);//SEND TO ELEVATOR TAT ASKED TO MOVE
                     try {
                         sendSocket.send(sendElevatorStopPacket);
                     } catch (IOException e) {
@@ -402,8 +404,10 @@ public class SchedulerThread implements Runnable{
 
 
                     if(stopFloorMessage[0] != 0x0){
+                        System.out.println("SENDING START_STOP TO FLOOR");
                         dispatchingToFloorState();
                     } else{
+                        System.out.println("SCHEDULER: ELEVATOR SHOULD NOT STOP UPON ARRIVAL");
                         idleState();
                     }
 

@@ -296,7 +296,7 @@ public class FloorThread extends Thread {
                     try {
                         // Create an acknowledgement message then send it to scheduler.
                         byte[] ackMessage = "ACK".getBytes();
-                        this.sendPacket(ackMessage);
+                        //this.sendPacket(ackMessage);
 
                         // The called method will wait for 8 seconds to receive a packet from scheduler, otherwise
                         // an exception will be thrown, implying there is a fault and the door didn't close.
