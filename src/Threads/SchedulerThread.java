@@ -193,13 +193,14 @@ public class SchedulerThread implements Runnable{
      */
     public byte[] findSingleIntArray(int value, ArrayList<int[]> arrayList) {
         for (int[] array : arrayList) {
-            if (array[0] == value) {
+            if (array[0] == value) { //if found, send the related floor
                 byte[] byteArray = new byte[1];
                 byteArray[0] = (byte) array[1];
                 return byteArray;
             }
         }
-        return null;
+        byte[] byteArray = {0x0}; //if not found, send 0
+        return byteArray;
     }
 
     /**
@@ -395,6 +396,8 @@ public class SchedulerThread implements Runnable{
                         byte[] destinationFloorMessage = getNextMoveRequestEvent(schedulerTasks);
                         System.out.println("SCHEDULER RESPONSE TO MOVE REQUEST IS FLOOR SET: " + Arrays.toString(destinationFloorMessage));
 
+                        System.out.println("SCHEDULER SENDING MESSAGE BACK TO PORT: " + receivePacket().getPort());
+
                         DatagramPacket sendElevatorMovePacket = new DatagramPacket(destinationFloorMessage, destinationFloorMessage.length, IPAddress, receivePacket().getPort());
 
                         try {
@@ -411,17 +414,9 @@ public class SchedulerThread implements Runnable{
 
                 case PROCESSING_ARRIVAL_SENSOR:
 
-                    int stopRequest; //0 is affirmative, 1 is negative
-
                     int currentArrivingFloorNum = parseByteArrayForFloorNum(receivePacket.getData()); //gets the 4th byte as the floor num, message = 2 bytes mode + 0 byte + floor num byte
 
-                    if(processStopRequest(currentArrivingFloorNum)){
-                        stopRequest = 0;
-                    } else {
-                        stopRequest = 1;
-                    }
-
-                    byte[] stopFloorMessage = intToByteArray(stopRequest);
+                    byte[] stopFloorMessage = findSingleIntArray(currentArrivingFloorNum, schedulerTasks);
 
                     DatagramPacket sendElevatorStopPacket = new DatagramPacket(stopFloorMessage, stopFloorMessage.length, IPAddress, 69);//SEND TO ELEVATOR TAT ASKED TO MOVE
                     try {

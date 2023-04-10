@@ -19,7 +19,7 @@ public class main {
         // passing each thread a reference to the
 
         elevator1 = new Thread(new
-                ElevatorThread(1011),"Elevator 1");
+                ElevatorThread(52997),"Elevator 1");
         System.out.println("Elevator Created");
 
         elevator2 = new Thread(new
