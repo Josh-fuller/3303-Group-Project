@@ -4,8 +4,6 @@ import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.util.*;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 
 /** *
  * Class Scheduler used to translate data between Floors and Elevators.
@@ -19,6 +17,8 @@ public class SchedulerThread implements Runnable{
 
     private final DatagramSocket receiveSocket;
     private DatagramSocket sendSocket;
+
+    ElevatorThread elevatorThread = new ElevatorThread( 1);
 
     public ArrayList<FloorEvent> getSchedulerTasks() {
         return schedulerTasks;
@@ -92,7 +92,19 @@ public class SchedulerThread implements Runnable{
         return state;
     }
 
-    /** TODO Delete this once I have the getElevatorStops method
+
+    //TODO Make javadoc + fix up once elevatorThread is fixed
+
+    /**
+     * Getter for the elevator stops
+     *
+     * @return floor numbers the elevators should stop at
+     */
+    public Set<Integer> getElevatorStops() {
+        return elevatorStops;
+    }
+
+    /**
      * Adds the destination floor to a list based on the schedulerTasks list. Also removes the added
      * task from the schedulerTask list.
      *
@@ -108,12 +120,7 @@ public class SchedulerThread implements Runnable{
         return destinationFloor;
     }
 
-    //TODO return int[]
-    public void getElevatorStops(){
-        return ;
-    }
-
-    /** TODO Change method to be able to handle multiple elevators and
+    /**
      * Checks if the currentFloor the elevator is going to stop at is one of the stops that has been requested.
      *
      * @param currentFloor the floor to check
@@ -129,7 +136,6 @@ public class SchedulerThread implements Runnable{
     }
 
     /**
-     * TODO Possibly delete this method
      * Converts the floor event that was sent from the floor thread from a serialized object that
      * was converted into a byteArray back into a floor event.
      *
@@ -264,29 +270,6 @@ public class SchedulerThread implements Runnable{
         return byteArrayToSend;
     }
 
-
-    /** *
-     * Creates a key/value pair for the start and end floor of a floor event, so that they are processed in order and by the same car.
-     *
-     * @param arr what type of message to send
-     *
-     * @return byteMap The key/value floor pair
-     *
-     * @author Josh Fuller
-     */
-    public Multimap<Byte, Byte> createByteMultiMap(byte[] arr) {
-        Multimap<Byte, Byte> byteMultiMap = ArrayListMultimap.create();
-        if (arr.length >= 3) {
-            for (int i = 3; i < arr.length; i++) {
-                byte b = arr[i];
-                if (b == 0) {
-                    break;
-                }
-                byteMultiMap.put(arr[2], b);
-            }
-        }
-        return byteMultiMap;
-    }
     /** *
      * The runnable portion of scheduler, responsible for acting as the translator from floor/elevator and back
      *
@@ -452,9 +435,6 @@ public class SchedulerThread implements Runnable{
                     idleState();
                     break;
             }
-
-
-
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {}
