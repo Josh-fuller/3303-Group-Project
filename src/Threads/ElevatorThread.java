@@ -142,7 +142,7 @@ public class ElevatorThread extends Thread {
      * @param timeout
      * @throws SocketTimeoutException
      */
-    private synchronized DatagramPacket receivePacketWithTimeout(int timeout) {
+    private synchronized DatagramPacket receivePacketWithTimeout (int timeout) throws SocketTimeoutException {
         // Wait for incoming Datagram packet with a timeout
         byte[] data = new byte[1024];
 
@@ -158,11 +158,9 @@ public class ElevatorThread extends Thread {
             // Block until a packet is received via TimedSocket.
             timedSocket.receive(receiveTimedPacket);
 
-        } catch (SocketTimeoutException e) {
-            e.printStackTrace();
-            timedOut = true;
         } catch (IOException e) {
-            e.printStackTrace();
+            timedOut = true;
+            throw new SocketTimeoutException();
         }
 
         return receiveTimedPacket;
@@ -303,22 +301,38 @@ public class ElevatorThread extends Thread {
                         incrementFloor(); // go up 1 floor
                         try {
                             DatagramPacket arriveUpSignalPacket = this.createMessagePacket((byte) 0x01, currentFloor);
+
                             timedSocket.send(arriveUpSignalPacket); // Send ARRIVAL_SENSOR message to scheduler
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            System.exit(1);
+                        }
+
+                        try {
+
                             DatagramPacket arriveUpReceivePacket = receivePacketWithTimeout(TIMEOUT); // Wait for a response from the scheduler on whether to stop at this floor
-                            if (timedOut) { // socket timed out while waiting for stop signal message from scheduler
-                                running = false;
-                                System.out.println("Elevator's receive socket timed out while waiting for scheduler's command. Stopping elevatorThread.");
-                                Thread.currentThread().interrupt();
-                                break;
-                            }
-                            System.out.println("Scheduler response to arrival sensor (0 = stop, 1 = continue): " + arriveUpReceivePacket.getData()[0]);
+
+                            //TODO not sure where the below statement should be and why it shows an error
                             stopSignal = processStopSignalMessage(arriveUpSignalPacket.getData());
+                            System.out.println("Scheduler response to arrival sensor (0 = stop, 1 = continue): " + arriveUpReceivePacket.getData()[0]);
+
                             if (stopSignal) { // if scheduler requested stop at this floor
                                 handleStopping();
                             }
+
+                        } catch (SocketTimeoutException e) {
+
+                            //TODO insert action to perform when the timer runs out here / handle the timeout
+
+                            running = false;
+                            System.out.println("Elevator's receive socket timed out while waiting for scheduler's command. Stopping elevatorThread.");
+                            Thread.currentThread().interrupt();
+                            break;
                         }
-                        catch (IOException e) {e.printStackTrace();}
+
+
                     }
+
                     handleStopping();
                     state = ElevatorState.IDLE;
                     break;
