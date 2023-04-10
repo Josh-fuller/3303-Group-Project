@@ -17,12 +17,13 @@ public class SchedulerThread implements Runnable{
 
     private final DatagramSocket receiveSocket;
     private DatagramSocket sendSocket;
+    private boolean floorEventRecieved = false;
 
-    public ArrayList<FloorEvent> getSchedulerTasks() {
+    public ArrayList<int[]> getSchedulerTasks() {
         return schedulerTasks;
     }
 
-    ArrayList<FloorEvent> schedulerTasks;
+    ArrayList<int[]> schedulerTasks;
     Set<Integer> elevatorStops = new TreeSet<>();
 
 
@@ -100,15 +101,22 @@ public class SchedulerThread implements Runnable{
         if(schedulerTasks.isEmpty()){
             return -1;
         }
-        int destinationFloor = schedulerTasks.get(0).getElevatorButton();
+        int destinationFloor = 1;
         elevatorStops.add(destinationFloor);
         schedulerTasks.remove(0);
         return destinationFloor;
     }
 
     //TODO return int[]
-    public void getElevatorStops(){
-        return ;
+    public void sortElevatorTasks(byte[] tasks){
+        int counter = 2;
+        while(tasks[counter] != 0 || tasks[counter+1] != 0) {
+            int task1 =  tasks[counter] & 0xff;
+            int task2 = tasks[counter + 1] & 0xff;
+            schedulerTasks.add(new int[] { task1 , task2  });
+            counter += 2;
+        }
+        System.out.println(schedulerTasks);
     }
 
     /** TODO Change method to be able to handle multiple elevators and
@@ -124,21 +132,6 @@ public class SchedulerThread implements Runnable{
             }
         }
         return false;
-    }
-
-    /**
-     * TODO Possibly delete this method
-     * Converts the floor event that was sent from the floor thread from a serialized object that
-     * was converted into a byteArray back into a floor event.
-     *
-     * @param event The floor event that was sent from the floor thread
-     * @return The floor event that was sent from the floor thread
-     * @throws IOException
-     * @throws ClassNotFoundException
-     */
-    public FloorEvent byteToFloorEvent(byte[] event) throws IOException, ClassNotFoundException {
-        ObjectInputStream inputStream = new ObjectInputStream(new ByteArrayInputStream(event));
-        return (FloorEvent) inputStream.readObject();
     }
 
     public static byte[] intToByteArray(int value) {
@@ -158,8 +151,6 @@ public class SchedulerThread implements Runnable{
     public static messageType parseByteArrayForType(byte[] byteArray) {
 
         messageType type = messageType.ERROR; // default value
-        System.out.println(byteArray[0]);
-        System.out.println(byteArray[1]);
         // check first two bytes
         if (byteArray.length >= 2 && byteArray[0] == 0x0 && byteArray[1] == 0x1) {
             type = messageType.ARRIVAL_SENSOR;
@@ -289,7 +280,6 @@ public class SchedulerThread implements Runnable{
 
                     messageType messageType = parseByteArrayForType(receivePacket.getData());
                     System.out.println(messageType);
-                    System.out.println(receivePacket.getPort());
                     //based on message type, go to state
                     if (messageType == SchedulerThread.messageType.FLOOR_EVENT) {
                         processingFloorState();
@@ -308,40 +298,33 @@ public class SchedulerThread implements Runnable{
                     break;
 
                 case PROCESSING_FLOOR_EVENT:
-/*              //TODO Add new way of processing floor
-
-                    FloorEvent tempFloorEvent;
-
-                    try {
-                        tempFloorEvent = byteToFloorEvent(receivePacket.getData());
-                    } catch (IOException | ClassNotFoundException e) {
-                        throw new RuntimeException(e);
-                    }
-
-                    schedulerTasks.add(tempFloorEvent);
-*/                  System.out.println(Arrays.toString(receivePacket.getData()));
+                    floorEventRecieved = true;                  // Allows for move requests to happen
+                    sortElevatorTasks(receivePacket.getData());
                     idleState();
                     break;
 
                 case PROCESSING_MOVE_REQUEST:
+                    if(floorEventRecieved){
 
-                    byte b = (byte) 0xFF;
-                    byte[] destinationFloorMessage = null;
-                    int currentMovingFloorNum = parseByteArrayForFloorNum(receivePacket.getData());
-                    int destinationFloor = getDestinationFloor();
+                        byte b = (byte) 0xFF;
+                        byte[] destinationFloorMessage = null;
+                        int currentMovingFloorNum = parseByteArrayForFloorNum(receivePacket.getData());
+                        int destinationFloor = getDestinationFloor();
 
-                    if(destinationFloor == -1){
-                        destinationFloorMessage[0] = b;
-                    }else{
-                        destinationFloorMessage = intToByteArray(destinationFloor);
-                    }
+                        if(destinationFloor == -1){
+                            destinationFloorMessage[0] = b;
+                        }else{
+                            destinationFloorMessage = intToByteArray(destinationFloor);
+                        }
 
-                    DatagramPacket sendElevatorMovePacket = new DatagramPacket(destinationFloorMessage, destinationFloorMessage.length, IPAddress, 69);//SEND BACK TO ELEVATOR THAT MADE THE REQUEST
+                        DatagramPacket sendElevatorMovePacket = new DatagramPacket(destinationFloorMessage, destinationFloorMessage.length, IPAddress, 69);//SEND BACK TO ELEVATOR THAT MADE THE REQUEST
 
-                    try {
-                        sendSocket.send(sendElevatorMovePacket);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
+                        try {
+                            sendSocket.send(sendElevatorMovePacket);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+
                     }
                     idleState();
                     break;
