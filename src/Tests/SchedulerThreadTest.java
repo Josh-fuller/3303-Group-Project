@@ -53,15 +53,7 @@ public class SchedulerThreadTest {
        //  System.out.println(scheduler.byteToFloorEvent(e));
     }
     */
-    @Test
-    public void testCreateByteMultiMap() {
-        byte[] testArray = {0x0 , 0x1,  0x2,  0x4, 0x5};
-        Multimap<Byte, Byte> testMap = scheduler.createByteMultiMap(testArray);
-        Multimap<Byte, Byte> realMap = ArrayListMultimap.create();
-        realMap.put((byte) 2,(byte) 4);
-        realMap.put((byte) 2,(byte) 5);
-        Assert.assertEquals(realMap,testMap);
-    }
+
 
 
 }

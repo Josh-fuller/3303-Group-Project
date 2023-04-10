@@ -18,8 +18,6 @@ public class SchedulerThread implements Runnable{
     private final DatagramSocket receiveSocket;
     private DatagramSocket sendSocket;
 
-    ElevatorThread elevatorThread = new ElevatorThread( 1);
-
     public ArrayList<FloorEvent> getSchedulerTasks() {
         return schedulerTasks;
     }
@@ -316,18 +314,8 @@ public class SchedulerThread implements Runnable{
                     break;
 
                 case PROCESSING_FLOOR_EVENT:
-/*              //TODO Add new way of processing floor
 
-                    FloorEvent tempFloorEvent;
-
-                    try {
-                        tempFloorEvent = byteToFloorEvent(receivePacket.getData());
-                    } catch (IOException | ClassNotFoundException e) {
-                        throw new RuntimeException(e);
-                    }
-
-                    schedulerTasks.add(tempFloorEvent);
-*/                  System.out.println("SCHEDULER... FLOOR EVENT DATA: " + Arrays.toString(receivePacket.getData()));
+                    System.out.println("SCHEDULER... FLOOR EVENT DATA: " + Arrays.toString(receivePacket.getData()));
                     idleState();
                     break;
 
