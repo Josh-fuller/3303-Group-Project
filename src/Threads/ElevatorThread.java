@@ -170,7 +170,7 @@ public class ElevatorThread implements Runnable {
      * Process byte array message from scheduler containing stop signal.
      * @param stopSignalBytes
      */
-    private boolean processStopSignalMessage (byte[] stopSignalBytes){
+    private synchronized boolean processStopSignalMessage (byte[] stopSignalBytes){
         //int signal = Integer.valueOf(stopSignalMessage);
         int signal = byteArrayToInt(stopSignalBytes);
         if (signal == 0) { // if signal is 0, return true.
@@ -184,7 +184,7 @@ public class ElevatorThread implements Runnable {
      * Process string message from scheduler containing destination floor number for elevator to move to.
      * @param destFloorBytes
      */
-    private void processDestinationFloorMessage (byte[] destFloorBytes) {
+    private synchronized void processDestinationFloorMessage (byte[] destFloorBytes) {
         //this.destination = Integer.valueOf(String.valueOf(destFloorBytes));
         this.destination = byteArrayToInt(destFloorBytes);
         if (destination > NUMBER_OF_FLOORS) {destination = NUMBER_OF_FLOORS;}
@@ -231,7 +231,7 @@ public class ElevatorThread implements Runnable {
     /**
      * Handles stops requested by the scheduler. Communicates to the scheduler when the stop is completed successfully.
      */
-    private void handleStopping() {
+    private synchronized void handleStopping() {
         this.doorOpen = true; // open elevator door for load/unload
         System.out.println("\nElevator has stopped at floor " + currentFloor + ".");
         System.out.println("Initiating load/unload...");
@@ -264,6 +264,7 @@ public class ElevatorThread implements Runnable {
                  * Elevator state: IDLE
                  */
                 case IDLE:
+
                     // Send move request to the scheduler and wait to hear back on destination floor
                     System.out.println("Elevator State: IDLE");
                     try {
