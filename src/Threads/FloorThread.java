@@ -275,6 +275,7 @@ public class FloorThread extends Thread {
                 case IDLE:
                     // Send FloorEvents to scheduler.
                     if(!hasSentEventList){
+                        System.out.println("FLOOR SENDING EVENT LIST");
                         this.sendPacket(buildFloorByteMsg());
                         hasSentEventList = true;
                     }
