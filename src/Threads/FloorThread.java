@@ -50,7 +50,7 @@ public class FloorThread extends Thread {
     public FloorThread() throws IOException {
         super("FLOOR");
         array = new byte[1024];
-        schedulerPort = 1003;
+        schedulerPort = 10003;
         this.floorEventList = new ArrayList<>();
         this.populateFloorEventList(); // populate list of floor events from input text file
 
@@ -58,7 +58,7 @@ public class FloorThread extends Thread {
             // Build a Datagram socket and associate it with
             // an available socket so that it can both transmit
             // and receive UDP Datagrams.
-            sendReceiveSocket = new DatagramSocket(2529);
+            sendReceiveSocket = new DatagramSocket(25291);
         } catch (SocketException se) {   // Incase a socket can't be created.
             se.printStackTrace();
             System.exit(1);
@@ -203,7 +203,7 @@ public class FloorThread extends Thread {
             // Build a Datagram socket and associate it with
             // an available port so that it can
             // receive UDP Datagrams and have a timeout.
-            TimedSocket = new DatagramSocket(2530);
+            TimedSocket = new DatagramSocket(25301);
 
             TimedSocket.setSoTimeout(timeout); // Timeout for socket in milliseconds
 

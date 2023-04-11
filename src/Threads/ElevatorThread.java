@@ -109,7 +109,7 @@ public class ElevatorThread extends Thread {
         bb.put(floorNumberBytes);
         byte[] message = bb.array();
         InetAddress schedulerAddress = InetAddress.getByName("localhost");
-        int schedulerPort = 1003;
+        int schedulerPort = 10003;
         DatagramPacket sendPacket = new DatagramPacket(message, message.length, schedulerAddress, schedulerPort);
         return sendPacket;
     }

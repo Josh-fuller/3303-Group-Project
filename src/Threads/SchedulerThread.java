@@ -55,7 +55,7 @@ public class SchedulerThread implements Runnable{
 
         // Create a DatagramSocket on port 23
         try {
-            receiveSocket = new DatagramSocket(1003);
+            receiveSocket = new DatagramSocket(10003);
             sendSocket = new DatagramSocket();
         } catch (SocketException e) {
             throw new RuntimeException(e);
