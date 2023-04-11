@@ -114,7 +114,7 @@ public class ElevatorThread extends Thread {
         bb.put(floorNumberBytes);
         byte[] message = bb.array();
         InetAddress schedulerAddress = InetAddress.getByName("localhost");
-        int schedulerPort = 10003;
+        int schedulerPort = 1003;
         DatagramPacket sendPacket = new DatagramPacket(message, message.length, schedulerAddress, schedulerPort);
         return sendPacket;
     }
@@ -280,11 +280,11 @@ public class ElevatorThread extends Thread {
      */
     private void handleStopping() {
         this.doorOpen = true; // open elevator door for load/unload
-        System.out.println("\nElevator has stopped at floor " + currentFloor + ".");
-        System.out.println("Initiating load/unload...");
+        System.out.println("\nElevator " + portNumber + " has stopped at floor " + currentFloor + ".");
+        System.out.println("Initiating load/unload at floor: " + currentFloor + "...");
         loadUnload();
         this.doorOpen = false; // close door after load/unload is finished
-        System.out.println("End of load/unload. Closing elevator door.");
+        System.out.println("End of load/unload. Closing elevator" + portNumber + "  door.");
         // send a message to scheduler communicating that the door was open and closed
         try {
             DatagramPacket doorClosedSendPacket = createMessagePacket((byte) 0x04, currentFloor); //create STOP_FINISHED message
@@ -316,7 +316,7 @@ public class ElevatorThread extends Thread {
             }
             int thisDestination = destinationList.getFirst();
             System.out.println("------------------------------------------------------------------------------------");
-            System.out.println("Elevator: Finishing leftover stop at floor " + thisDestination);
+            System.out.println("Elevator " + portNumber + "  : Finishing leftover stop at floor " + thisDestination);
             System.out.println("------------------------------------------------------------------------------------");
             if ((thisDestination > 0) && (thisDestination < 22)) { // if the destination is valid
                 // directly go to thisDestination without stopping on the way
@@ -342,7 +342,7 @@ public class ElevatorThread extends Thread {
                  * Elevator state: IDLE
                  */
                 case IDLE:
-                    System.out.println("Elevator State: IDLE");
+                    System.out.println("Elevator " + portNumber + " State: IDLE");
                     // if there are leftover destinations on the list, go to those first
                     // then send new move request
                     finishLeftoverStops();
@@ -354,8 +354,8 @@ public class ElevatorThread extends Thread {
                         sendReceiveSocket.send(moveRequestPacket);
                         // Wait for a response from the scheduler for the destination floor to move to
                         DatagramPacket moveRequestReceivePacket = receivePacket();
-                        System.out.println("ELEVATOR THINKS IT RECEIVED: " + Arrays.toString(moveRequestReceivePacket.getData()));
-                        System.out.println("Scheduler's response back to elevator's move request: " + (moveRequestReceivePacket.getData()[0] + "," + moveRequestReceivePacket.getData()[1])); //TODO fix this to re-state the message floors
+                        System.out.println("ELEVATOR " + portNumber + " THINKS IT RECEIVED: " + Arrays.toString(moveRequestReceivePacket.getData()));
+                        System.out.println("Scheduler's response back to elevator's  move request: " + (moveRequestReceivePacket.getData()[0] + "," + moveRequestReceivePacket.getData()[1])); //TODO fix this to re-state the message floors
                         this.processDestinationFloorMessage(moveRequestReceivePacket.getData());
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -370,7 +370,7 @@ public class ElevatorThread extends Thread {
 
                 case MOVING_UP:
 
-                    System.out.println("Elevator State: MOVING UP");
+                    System.out.println("Elevator " + portNumber + " State: MOVING UP");
                     int floorDifference = nextDestination - currentFloor; // floorDifference = the number of times the elevator must increment to reach destination
                     // move up to the destination floor one floor at a time
                     for (int i = 0; i < floorDifference; i++) {
@@ -399,7 +399,7 @@ public class ElevatorThread extends Thread {
                             }
                         } catch (SocketTimeoutException e) {
                             running = false;
-                            System.out.println("Elevator's receive socket timed out while waiting for scheduler's command. Stopping elevatorThread.");
+                            System.out.println("Elevator " + portNumber + "'s receive socket timed out while waiting for scheduler's command. Stopping elevatorThread.");
                             Thread.currentThread().interrupt();
                             break;
                         }
@@ -422,7 +422,7 @@ public class ElevatorThread extends Thread {
 
                 case MOVING_DOWN:
 
-                    System.out.println("Elevator State: MOVING DOWN");
+                    System.out.println("Elevator " + portNumber + " State: MOVING DOWN");
                     floorDifference = nextDestination - currentFloor; // floorDifference = the number of times the elevator must increment to reach destination
                     // move up to the destination floor one floor at a time
                     for (int i = 0; i < floorDifference; i++) {
@@ -453,14 +453,14 @@ public class ElevatorThread extends Thread {
                             } else if (destinationList.contains(currentFloor)) {handleStopping();}
                         } catch (SocketTimeoutException e) {
                             running = false;
-                            System.out.println("Elevator's receive socket timed out while waiting for scheduler's command. Stopping elevatorThread.");
+                            System.out.println("Elevator " + portNumber + "'s receive socket timed out while waiting for scheduler's command. Stopping elevatorThread. (" + portNumber + ")");
                             Thread.currentThread().interrupt();
                             break;
                         }
                     }
                     // Elevator has reached destination.
                     System.out.println("------------------------------------------------------------------------------------");
-                    System.out.println("Next destination floor #" + nextDestination + " reached.");
+                    System.out.println("Next destination floor #" + nextDestination + " reached by Elevator " + portNumber);
                     addDestination(secondDestination);
                     nextDestination = secondDestination; //
                     System.out.println("Added 2nd destination floor to the list: #" + secondDestination);

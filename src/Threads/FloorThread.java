@@ -53,7 +53,7 @@ public class FloorThread extends Thread {
     public FloorThread() throws IOException {
         super("FLOOR");
         array = new byte[1024];
-        schedulerPort = 10003;
+        schedulerPort = 1003;
         this.floorEventList = new ArrayList<>();
         this.populateFloorEventList(); // populate list of floor events from input text file
 

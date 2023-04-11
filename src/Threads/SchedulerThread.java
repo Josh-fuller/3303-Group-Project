@@ -55,7 +55,7 @@ public class SchedulerThread implements Runnable{
 
         // Create a DatagramSocket on port 23
         try {
-            receiveSocket = new DatagramSocket(10003);
+            receiveSocket = new DatagramSocket(1003);
             sendSocket = new DatagramSocket();
         } catch (SocketException e) {
             throw new RuntimeException(e);
@@ -287,6 +287,10 @@ public class SchedulerThread implements Runnable{
     public byte[] getNextMoveRequestEvent(ArrayList<int[]> intArrayList) {
         if(intArrayList.isEmpty()) {
             byte[] byteArray = {0x1,0x1};
+            System.out.println("\n ------------------------------------------------------------");
+            System.out.println("FLOOR EVENT TASK LIST COMPLETE, INITIATING DEFAULT CYCLE");
+            System.out.println(" ------------------------------------------------------------\n");
+            System.out.println(" ------------------------------------------------------------\n");
             return byteArray;
         }
         byte[] byteArray = new byte[2];
@@ -329,19 +333,19 @@ public class SchedulerThread implements Runnable{
 
                     messageType messageType = parseByteArrayForType(receivedPacket.getData());
                     System.out.println("SCHEDULER RECEIVED MESSAGE TYPE: " + messageType);
-                    System.out.println("SCHEDULER RECEIVED FROM PORT: " + receivedPacket.getPort());
+                    //System.out.println("SCHEDULER RECEIVED FROM PORT: " + receivedPacket.getPort());
                     currentPort = receivedPacket.getPort();
-                    System.out.println("CURRENT PORT SAVED TO " + currentPort);
+                    //System.out.println("CURRENT PORT SAVED TO " + currentPort);
                     //based on message type, go to state
                     if (messageType == SchedulerThread.messageType.FLOOR_EVENT) {
                         processingFloorState();
                     } else if(messageType == SchedulerThread.messageType.ARRIVAL_SENSOR) {
                         processingSensorRequestState();
-                        System.out.println("SCHEDULER: MESSAGE TYPE ARRIVAL SENSOR FROM FLOOR: " + parseByteArrayForFloorNum(currentData));
+                        //System.out.println("SCHEDULER: MESSAGE TYPE ARRIVAL SENSOR FROM FLOOR: " + parseByteArrayForFloorNum(currentData));
                     } else if(messageType == SchedulerThread.messageType.MOVE_REQUEST) {
                         processingMoveRequestState();
                     } else if(messageType == SchedulerThread.messageType.STOP_FINISHED) {
-                        System.out.println("SCHEDULER: MESSAGE TYPE STOP_COMPLETE FROM ELEVATOR " + currentPort + " AT FLOOR " + parseByteArrayForFloorNum(currentData));
+                        //System.out.println("SCHEDULER: MESSAGE TYPE STOP_COMPLETE FROM ELEVATOR " + currentPort + " AT FLOOR " + parseByteArrayForFloorNum(currentData));
                         sendingStopCompleteState();
                     }
                     else if (messageType == SchedulerThread.messageType.ERROR) {
@@ -364,9 +368,9 @@ public class SchedulerThread implements Runnable{
                     if(floorEventReceived){
 
                         byte[] destinationFloorMessage = getNextMoveRequestEvent(schedulerTasks);
-                        System.out.println("SCHEDULER RESPONSE TO MOVE REQUEST IS FLOOR SET: " + Arrays.toString(destinationFloorMessage));
+                        System.out.println("\nSCHEDULER RESPONSE TO MOVE REQUEST IS FLOOR SET: " + Arrays.toString(destinationFloorMessage));
 
-                        System.out.println("SCHEDULER SENDING MESSAGE BACK TO PORT: " + currentPort);
+                        System.out.println("SCHEDULER SENDING MESSAGE BACK TO PORT: " + currentPort + "\n");
 
                         DatagramPacket sendElevatorMovePacket = new DatagramPacket(destinationFloorMessage, destinationFloorMessage.length, IPAddress, currentPort);
 
@@ -437,7 +441,7 @@ public class SchedulerThread implements Runnable{
 
                 case SENDING_STOP_COMPLETE:// the case where the elevator successfully let passengers on/off (the floor should stop its timer)
 
-                    System.out.println("INSIDE CASE SENDING_STOP_COMPLETE");
+                    //System.out.println("INSIDE CASE SENDING_STOP_COMPLETE");
 
                     int floorNumberStoppedAt = parseByteArrayForFloorNum(currentData); //the floor it stopped at, have to do it again might not be init
 
