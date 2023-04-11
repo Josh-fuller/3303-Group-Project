@@ -22,6 +22,7 @@ public class FloorThread extends Thread {
     private DatagramSocket sendReceiveSocket;
     private DatagramSocket TimedSocket;
     private DatagramPacket receiveTimedPacket;
+    private boolean hasSentEventList = false;
 
     private final ArrayList<FloorEvent> floorEventList; // list of Threads.FloorEvent objects read from input file
 
@@ -61,7 +62,7 @@ public class FloorThread extends Thread {
             // Build a Datagram socket and associate it with
             // an available socket so that it can both transmit
             // and receive UDP Datagrams.
-            sendReceiveSocket = new DatagramSocket(25291);
+            sendReceiveSocket = new DatagramSocket(2529);
         } catch (SocketException se) {   // Incase a socket can't be created.
             se.printStackTrace();
             System.exit(1);
@@ -206,7 +207,7 @@ public class FloorThread extends Thread {
             // Build a Datagram socket and associate it with
             // an available port so that it can
             // receive UDP Datagrams and have a timeout.
-            TimedSocket = new DatagramSocket(25301);
+            TimedSocket = new DatagramSocket(2530);
 
             TimedSocket.setSoTimeout(timeout); // Timeout for socket in milliseconds
 
@@ -273,7 +274,10 @@ public class FloorThread extends Thread {
 
                 case IDLE:
                     // Send FloorEvents to scheduler.
-                    this.sendPacket(buildFloorByteMsg());
+                    if(!hasSentEventList){
+                        this.sendPacket(buildFloorByteMsg());
+                        hasSentEventList = true;
+                    }
 
                     // Receive a message from scheduler and parse it for message type.
                     receivePacket = receivePacket();

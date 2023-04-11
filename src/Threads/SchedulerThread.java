@@ -175,7 +175,7 @@ public class SchedulerThread implements Runnable{
         //System.out.println(byteArray[0]);
         System.out.println("SCHEDULER RECEIVED MESSAGE BYTE: " + byteArray[1]);
         // check first two bytes
-        if (byteArray.length >= 2 && byteArray[0] == 0x0 && byteArray[1] == 0x1) {
+        if (byteArray[0] == 0x0 && byteArray[1] == 0x1) {
             type = messageType.ARRIVAL_SENSOR;
         } else if (byteArray.length >= 2 && byteArray[0] == 0x0 && byteArray[1] == 0x2) {
             type = messageType.FLOOR_EVENT;
