@@ -437,6 +437,8 @@ public class SchedulerThread implements Runnable{
 
                 case SENDING_STOP_COMPLETE:// the case where the elevator successfully let passengers on/off (the floor should stop its timer)
 
+                    System.out.println("INSIDE CASE SENDING_STOP_COMPLETE");
+
                     int floorNumberStoppedAt = parseByteArrayForFloorNum(currentData); //the floor it stopped at, have to do it again might not be init
 
                     byte byteEq = (byte) floorNumberStoppedAt;
@@ -445,8 +447,11 @@ public class SchedulerThread implements Runnable{
 
                     DatagramPacket sendFloorSecondPacket = new DatagramPacket(completeStopMessage, completeStopMessage.length, IPAddress, 2530);
 
+
+
                     try {
                         sendSocket.send(sendFloorSecondPacket);//SEND TO FLOOR
+                        System.out.println("STOP_COMPLETE SENT TO FLOOR, CONTAINS " + Arrays.toString(completeStopMessage));
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
