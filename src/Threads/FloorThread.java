@@ -218,11 +218,13 @@ public class FloorThread extends Thread {
         try {
             // Block until a packet is received within the specified timeout or until the timer runs out.
             TimedSocket.receive(receiveTimedPacket);
+            TimedSocket.close();
 
         } catch (IOException e) {
             // we throw a new socketTimeout exception to indicate the socket timer ran out.
             throw new SocketTimeoutException();
         }
+
     }
 
     /**
