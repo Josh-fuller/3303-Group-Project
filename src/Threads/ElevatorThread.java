@@ -36,6 +36,7 @@ public class ElevatorThread extends Thread {
     private int thirdDestination = -1;
     private LinkedList<Integer> destinationList;
     private boolean destinationReached = false;
+    private boolean stoppedOnce = false;
 
 
     /**
@@ -449,6 +450,7 @@ public class ElevatorThread extends Thread {
                                 thirdDestination = arriveDownReceivePacket.getData()[0];
                                 addDestination(thirdDestination);
                                 handleStopping();
+                                stoppedOnce = true;
                             }
                         } catch (SocketTimeoutException e) {
                             running = false;
