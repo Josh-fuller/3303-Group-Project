@@ -284,7 +284,7 @@ public class ElevatorThread extends Thread {
         System.out.println("Initiating load/unload at floor: " + currentFloor + "...");
         loadUnload();
         this.doorOpen = false; // close door after load/unload is finished
-        System.out.println("End of load/unload. Closing elevator" + portNumber + "  door.");
+        System.out.println("End of load/unload. Closing elevator " + portNumber + "  door.");
         // send a message to scheduler communicating that the door was open and closed
         try {
             DatagramPacket doorClosedSendPacket = createMessagePacket((byte) 0x04, currentFloor); //create STOP_FINISHED message
