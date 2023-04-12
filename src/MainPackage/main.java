@@ -2,9 +2,11 @@ package MainPackage;
 
 import Threads.ElevatorThread;
 import Threads.FloorThread;
+import Threads.GUIThread;
 import Threads.SchedulerThread;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class main {
 
@@ -12,29 +14,28 @@ public class main {
 
         //declare and initialise everything
 
-        Thread elevator1, floor, scheduler, elevator2, elevator3, elevator4;
+        Thread elevator1,elevator2, elevator3, elevator4, floor, scheduler;
+        ArrayList<ElevatorThread> elevators = new ArrayList<>();
+        ElevatorThread e1,e2,e3,e4;
 
+        e1 = new ElevatorThread(1011,1);
+        e2 = new ElevatorThread(1012,2);
+        e3 = new ElevatorThread(1013,3);
+        e4 = new ElevatorThread(1014,4);
 
         // Create the floor,scheduler and elevator threads,
         // passing each thread a reference to the
 
-        elevator1 = new Thread(new
-                ElevatorThread(1011),"Elevator 1");
+        elevator1 = new Thread(e1,"Elevator 1");
+        elevator2 = new Thread(e2,"Elevator 2");
+        elevator3 = new Thread(e3,"Elevator 3");
+        elevator4 = new Thread(e4,"Elevator 4");
         System.out.println("Elevator Created");
 
-        elevator2 = new Thread(new
-                ElevatorThread(1012),"Elevator 1");
-        System.out.println("Elevator Created");
-
-        elevator3 = new Thread(new
-                ElevatorThread(1013),"Elevator 1");
-        System.out.println("Elevator Created");
-
-        elevator4 = new Thread(new
-                ElevatorThread(1014),"Elevator 1");
-        System.out.println("Elevator Created");
-
-
+        elevators.add(e1);
+        elevators.add(e2);
+        elevators.add(e3);
+        elevators.add(e4);
 
         floor = new Thread(new
                 FloorThread(), "Floor");
@@ -44,7 +45,10 @@ public class main {
                 SchedulerThread(), "Scheduler");
         System.out.println("Scheduler Created");
 
+        GUIThread gui = new GUIThread(elevators);
+        System.out.println("GUI Created");
 
+        gui.start();
         elevator1.start();
         elevator2.start();
         elevator3.start();
