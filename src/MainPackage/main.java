@@ -12,7 +12,7 @@ public class main {
 
         //declare and initialise everything
 
-        Thread elevator1, floor, scheduler, elevator2;
+        Thread elevator1, floor, scheduler, elevator2, elevator3, elevator4;
 
 
         // Create the floor,scheduler and elevator threads,
@@ -20,6 +20,18 @@ public class main {
 
         elevator1 = new Thread(new
                 ElevatorThread(1011),"Elevator 1");
+        System.out.println("Elevator Created");
+
+        elevator2 = new Thread(new
+                ElevatorThread(1012),"Elevator 1");
+        System.out.println("Elevator Created");
+
+        elevator3 = new Thread(new
+                ElevatorThread(1013),"Elevator 1");
+        System.out.println("Elevator Created");
+
+        elevator4 = new Thread(new
+                ElevatorThread(1014),"Elevator 1");
         System.out.println("Elevator Created");
 
 
@@ -34,7 +46,9 @@ public class main {
 
 
         elevator1.start();
-        //elevator2.start();
+        elevator2.start();
+        elevator3.start();
+        elevator4.start();
         floor.start();
         scheduler.start();
 
