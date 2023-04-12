@@ -203,7 +203,7 @@ public class SchedulerThread implements Runnable{
         return type;
     }
 
-    /** //TODO Remove
+    /**
      * Converts the packet data's floor number into an integer.
      *
      * @param byteArray the received packet data containing request information
