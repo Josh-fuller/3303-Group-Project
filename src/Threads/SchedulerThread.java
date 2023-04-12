@@ -164,6 +164,16 @@ public class SchedulerThread implements Runnable{
     }
 
     /**
+     * Closes sockets so tests don't throw bind exceptions, bot used in class
+     *
+     *
+     */
+    public void closeSocket(){
+        receiveSocket.close();
+        sendSocket.close();
+    }
+
+    /**
      * Parses through received messages to get their type, for easy switch statement implementation
      *
      * @param byteArray The messageType in byte[]
@@ -249,7 +259,7 @@ public class SchedulerThread implements Runnable{
     }
 
     /** *
-     * Creates a byte array based on the message type and floor number provided, to send to floor. Typically, 05 to indicate
+     * Creates a byte array based on the message type and floor number provided, to send to floor. 05 to indicate
      * that the elevator is about to stop, and 06 to indicate a stop has been completed
      *
      * @param type what type of message to send
