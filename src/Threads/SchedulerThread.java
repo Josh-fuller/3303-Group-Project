@@ -308,8 +308,10 @@ public class SchedulerThread implements Runnable{
 
         while(true){
 
+
             switch(state) {
                 case IDLE:
+                    long startTime1 = System.nanoTime();
                     //System.out.println("GOING TO RECEIVE IN SCHED");
                     receivedPacket = receivePacket();
                     //System.out.println("PERFORMED RECEIVE IN SCHED");
@@ -338,19 +340,33 @@ public class SchedulerThread implements Runnable{
                         System.out.println("ERROR DETECTED IN SCHEDULER MESSAGE WITH TYPE: " + messageType);
                     }
 
+                    long endTime1 = System.nanoTime();
+                    long executionTime1 = endTime1 - startTime1;
+                    System.out.println("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                    System.out.println("Execution time of IDLE case: " + executionTime1/1000000 + " milliseconds");
+                    System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 
                     break;
 
                 case PROCESSING_FLOOR_EVENT:
+                    long startTime2 = System.nanoTime();
                     floorEventReceived = true;                  // Allows for move requests to happen
                     sortElevatorTasks(currentData);
 
 
                     System.out.println("SCHEDULER... FLOOR EVENT DATA: " + Arrays.toString(currentData));
                     idleState();
+
+                    long endTime2 = System.nanoTime();
+                    long executionTime2 = endTime2 - startTime2;
+                    System.out.println("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                    System.out.println("Execution time of PROCESSING_FLOOR_EVENT case: " + executionTime2/1000 + " microseconds");
+                    System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+
                     break;
 
                 case PROCESSING_MOVE_REQUEST:
+                    long startTime3 = System.nanoTime();
                     if(floorEventReceived){
 
                         byte[] destinationFloorMessage = getNextMoveRequestEvent(schedulerTasks);
@@ -377,9 +393,17 @@ public class SchedulerThread implements Runnable{
                         }
                     }
                     idleState();
+
+                    long endTime3 = System.nanoTime();
+                    long executionTime3 = endTime3 - startTime3;
+                    System.out.println("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                    System.out.println("Execution time of PROCESSING_MOVE_REQUEST case: " + executionTime3/1000 + " microseconds");
+                    System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+
                     break;
 
                 case PROCESSING_ARRIVAL_SENSOR:
+                    long startTime4 = System.nanoTime();
 
                     int currentArrivingFloorNum = parseByteArrayForFloorNum(currentData); //gets the 4th byte as the floor num, message = 2 bytes mode + 0 byte + floor num byte
 
@@ -401,11 +425,16 @@ public class SchedulerThread implements Runnable{
                         idleState();
                     }
 
+                    long endTime4 = System.nanoTime();
+                    long executionTime4 = endTime4 - startTime4;
+                    System.out.println("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                    System.out.println("Execution time of PROCESSING_ARRIVAL_SENSOR case: " + executionTime4/1000 + " microseconds");
+                    System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
 
                     break;
 
                 case DISPATCHING_TO_FLOOR: //Case where the elevator is about to stop (the floor should start its timer)
-
+                    long startTime5 = System.nanoTime();
                     int floorNumber = parseByteArrayForFloorNum(currentData); //the floor it stopped at, have to do it again might not be init
 
                     byte sendFloorData = (byte) floorNumber; //the floor data to send to the floor
@@ -423,10 +452,17 @@ public class SchedulerThread implements Runnable{
 
                     //go to idle state
                     idleState();
+
+                    long endTime5 = System.nanoTime();
+                    long executionTime5 = endTime5 - startTime5;
+                    System.out.println("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                    System.out.println("Execution time of DISPATCHING_TO_FLOOR case: " + executionTime5/1000 + " microseconds");
+                    System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+
                     break;
 
                 case SENDING_STOP_COMPLETE:// the case where the elevator successfully let passengers on/off (the floor should stop its timer)
-
+                    long startTime6 = System.nanoTime();
                     //System.out.println("INSIDE CASE SENDING_STOP_COMPLETE");
 
                     int floorNumberStoppedAt = parseByteArrayForFloorNum(currentData); //the floor it stopped at, have to do it again might not be init
@@ -446,10 +482,21 @@ public class SchedulerThread implements Runnable{
                         throw new RuntimeException(e);
                     }
 
+
+
                     //go to idle state
                     idleState();
+
+                    long endTime6 = System.nanoTime();
+                    long executionTime6 = endTime6 - startTime6;
+                    System.out.println("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+                    System.out.println("Execution time of SENDING_STOP_COMPLETE case: " + executionTime6/1000 + " microseconds");
+                    System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+
                     break;
             }
+
+
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {}
