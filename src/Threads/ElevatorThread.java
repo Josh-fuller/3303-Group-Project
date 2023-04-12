@@ -312,9 +312,7 @@ public class ElevatorThread extends Thread {
     }
 
     public void addDestination(int destination) {
-        if (!destinationList.contains(destination)) { // add destination to list if absent
-            destinationList.add(destination);
-        }
+        destinationList.add(destination);
     }
 
 
