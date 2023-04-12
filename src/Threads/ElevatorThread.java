@@ -116,7 +116,7 @@ public class ElevatorThread extends Thread {
     /**
      * Creates and returns a Datagram Packet using given input parameters.
      */
-    private DatagramPacket createMessagePacket(byte typeByte, int floorNumber) throws UnknownHostException {
+    public DatagramPacket createMessagePacket(byte typeByte, int floorNumber) throws UnknownHostException {
         byte[] messageTypeBytes = new byte[] {0x0, typeByte, 0x0};
         byte[] floorNumberBytes = new byte[] {(byte) (floorNumber & 0xFF)};
         ByteBuffer bb = ByteBuffer.allocate(messageTypeBytes.length + floorNumberBytes.length);
@@ -186,7 +186,7 @@ public class ElevatorThread extends Thread {
      * Process byte array message from scheduler containing stop signal.
      * @param stopSignalBytes
      */
-    private boolean processStopSignalMessage (byte[] stopSignalBytes){
+    public boolean processStopSignalMessage (byte[] stopSignalBytes){
         int signal = byteArrayToInt(stopSignalBytes);
         if (signal == 0) { // if signal is 0, return true.
             return false;
@@ -199,7 +199,7 @@ public class ElevatorThread extends Thread {
      * Process string message from scheduler containing destination floor number for elevator to move to.
      * @param destFloorBytes
      */
-    private void processDestinationFloorMessage (byte[] destFloorBytes) {
+    public void processDestinationFloorMessage (byte[] destFloorBytes) {
         int startFloor = destFloorBytes[0];
         int endFloor = destFloorBytes[1];
 
@@ -297,7 +297,7 @@ public class ElevatorThread extends Thread {
     /**
      * Handles stops requested by the scheduler. Communicates to the scheduler when the stop is completed successfully.
      */
-    private void handleStopping() {
+    public void handleStopping() {
         openDoor();
         System.out.println("\nElevator " + portNumber + " has stopped at floor " + currentFloor + ".");
         System.out.println("Initiating load/unload at floor: " + currentFloor + "...");
@@ -314,14 +314,14 @@ public class ElevatorThread extends Thread {
         stopSignal = false; // reset stop signal to false
     }
 
-    private void addDestination(int destination) {
+    public void addDestination(int destination) {
         if (!destinationList.contains(destination)) { // add destination to list if absent
             destinationList.add(destination);
         }
     }
 
 
-    private void finishLeftoverStops() {
+    public void finishLeftoverStops() {
         while(!destinationList.isEmpty()) {
 
             if (destinationList.getFirst() == currentFloor) {
