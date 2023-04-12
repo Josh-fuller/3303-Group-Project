@@ -72,17 +72,22 @@ public class ElevatorThread extends Thread {
     /**
      * Populates the list of floors that the elevator will move between.
      */
-    private void populateFloors() {
+    public void populateFloors() {
         floorList.clear();
-        for (int i = 1; i < NUMBER_OF_FLOORS; i++) {
-            floorList.add(i);
+        for (int i = 0; i < NUMBER_OF_FLOORS; i++) {
+            floorList.add(i+1);
         }
+    }
+
+
+    public int getFloorCount() {
+        return floorList.size();
     }
 
     /**
      * Increments floors one by one updates arrivalSignal after reaching new floor.
      */
-    private void incrementFloor() {
+    public void incrementFloor() {
         int topFloor = floorList.size();
         int i = currentFloor;
         if (i < topFloor) {
@@ -97,7 +102,7 @@ public class ElevatorThread extends Thread {
     /**
      * Decrements floors one by one updates arrivalSignal after reaching new floor.
      */
-    private void decrementFloor(){
+    public void decrementFloor(){
         int bottomFloor = 1;
         int i = currentFloor;
         if (i > bottomFloor) {
