@@ -36,7 +36,6 @@ public class SchedulerThread implements Runnable{
         PROCESSING_FLOOR_EVENT,
         PROCESSING_ARRIVAL_SENSOR,
         PROCESSING_MOVE_REQUEST,
-        PROCESSING_ELEVATOR_EVENT,
         DISPATCHING_TO_FLOOR,
         SENDING_STOP_COMPLETE
     }
