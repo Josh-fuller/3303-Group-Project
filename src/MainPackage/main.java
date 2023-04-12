@@ -32,7 +32,6 @@ public class main {
         elevator4 = new Thread(e4,"Elevator 4");
         System.out.println("Elevator Created");
 
-
         elevators.add(e1);
         elevators.add(e2);
         elevators.add(e3);
@@ -46,8 +45,8 @@ public class main {
                 SchedulerThread(), "Scheduler");
         System.out.println("Scheduler Created");
 
-
         GUIThread gui = new GUIThread(elevators);
+        System.out.println("GUI Created");
 
         gui.start();
         elevator1.start();
