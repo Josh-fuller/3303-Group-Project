@@ -2,17 +2,22 @@ package Threads;
 
 import java.awt.Color;
 import java.awt.GridLayout;
+import java.util.ArrayList;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-public class GUIThread {
+public class GUIThread extends Thread{
     private JFrame frame;
     private JPanel[][] boxes;
+    private ArrayList<ElevatorThread> elevators;
 
     // This is where we construct everything needed for the class
-    public GUIThread() {
+    public GUIThread(ArrayList<ElevatorThread> elevators) {
+
+        this.elevators = elevators;
+
         // Create the frame and set its properties
         frame = new JFrame("ElevatorGUI");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -56,17 +61,19 @@ public class GUIThread {
         JLabel statusLabel = new JLabel("Status");
         statusLabel.setHorizontalAlignment(JLabel.CENTER);
 
-        JLabel openLabel = new JLabel("Door Opening");
-        openLabel.setBackground(Color.ORANGE);
+        JLabel openLabel = new JLabel("Door Open");
+        openLabel.setBackground(Color.BLUE);
         openLabel.setHorizontalAlignment(JLabel.CENTER);
-
-        JLabel closeLabel = new JLabel("Door Closing");
-        closeLabel.setBackground(Color.RED);
-        closeLabel.setHorizontalAlignment(JLabel.CENTER);
 
         JLabel closedLabel = new JLabel("Door Closed");
         closedLabel.setBackground(Color.GREEN);
         closedLabel.setHorizontalAlignment(JLabel.CENTER);
+
+        JLabel closeLabel = new JLabel("ERROR");
+        closeLabel.setBackground(Color.RED);
+        closeLabel.setHorizontalAlignment(JLabel.CENTER);
+
+
 
         // Set the font color for the labels
         statusLabel.setForeground(Color.BLACK);
@@ -114,13 +121,15 @@ public class GUIThread {
         for (int i = 0; i < 22; i++) {
             if (i != (22 - FloorNum)) {
                 JPanel prevBox = boxes[i][ElevatorNum - 1];
-                if (prevBox.getBackground() == color) {
-                    prevBox.setBackground(null);
+                if (prevBox.getBackground() != Color.white) {
+                    prevBox.setBackground(Color.white);
                     break;
                 }
             }
         }
     }
+
+
 
     /**
      * This method/runnable will allow us to make sure that only one box is highlighted per column and will
@@ -150,11 +159,27 @@ public class GUIThread {
         colorThread.start();
     }
 
+    public void run(){
+
+        while(true){
+            for(ElevatorThread e : elevators){
+                if(e.isDoorOpen()){
+                    highlightBox(e.getCurrentFloor(),e.getElevatorNum(),Color.BLUE);
+                }else{
+                    highlightBox(e.getCurrentFloor(),e.getElevatorNum(),Color.GREEN);
+                }
+
+
+            }
+
+        }
+    }
+
     // This is just a main to show an example
     public static void main(String[] args) {
-        GUIThread gui = new GUIThread();
+        //GUIThread gui = new GUIThread();
         // Example usage: simulating elevators 2 and 4 going from floor 5 to 8
         int[][] boxCoords = {{5, 2}, {8, 2}, {5, 4}, {8, 4}};
-        gui.highlightBoxes(boxCoords, Color.RED, 1000); // Delay for 1 second between color changes
+        //gui.highlightBoxes(boxCoords, Color.RED, 1000); // Delay for 1 second between color changes
     }
 }
