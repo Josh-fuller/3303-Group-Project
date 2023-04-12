@@ -23,7 +23,8 @@ public class SchedulerThread implements Runnable{
         return schedulerTasks;
     }
 
-    ArrayList<int[]> schedulerTasks;
+    private ArrayList<int[]> schedulerTasks;
+
 
     int currentPort;
 
@@ -61,6 +62,10 @@ public class SchedulerThread implements Runnable{
             throw new RuntimeException(e);
         }
 
+    }
+
+    public ArrayList<int[]> getEventList(){ //getter for tasks, for testing purposes
+        return schedulerTasks;
     }
 
     public void idleState(){
@@ -193,35 +198,6 @@ public class SchedulerThread implements Runnable{
             type = messageType.MOVE_REQUEST;
         } else if (byteArray.length >= 2 && byteArray[0] == 0x0 && byteArray[1] == 0x4) {
             type = messageType.STOP_FINISHED;
-        }
-
-        // find first 0
-        int firstZeroIndex = -1;
-        for (int i = 2; i < byteArray.length; i++) {
-            if (byteArray[i] == 0x0) {
-                firstZeroIndex = i;
-                break;
-            }
-        }
-
-        // if no 0 found, set type to 2 and return
-        if (firstZeroIndex == -1) {
-            type = messageType.ERROR;
-            return type;
-        }
-
-        // find second 0
-        int secondZeroIndex = -1;
-        for (int i = firstZeroIndex + 1; i < byteArray.length; i++) {
-            if (byteArray[i] == 0x0) {
-                secondZeroIndex = i;
-                break;
-            }
-        }
-
-        // if no second 0 found, set type to 2
-        if (secondZeroIndex == -1) {
-            type = messageType.ERROR;
         }
 
         return type;

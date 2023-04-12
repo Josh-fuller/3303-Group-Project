@@ -89,7 +89,7 @@ public class SchedulerThreadTest {
         byte[] testA = {0x0,0x1};
         byte[] testB = {0x0,0x2};
         byte[] testC = {0x0,0x3};
-        byte[] testD = {0x0,0x6};
+        byte[] testD = {0x0,0x4};
 
         SchedulerThread.messageType msgTypeA = SchedulerThread.messageType.ARRIVAL_SENSOR;
         SchedulerThread.messageType msgTypeB = SchedulerThread.messageType.FLOOR_EVENT;
@@ -100,6 +100,30 @@ public class SchedulerThreadTest {
         Assert.assertEquals(scheduler.parseByteArrayForType(testB) , msgTypeB);
         Assert.assertEquals(scheduler.parseByteArrayForType(testC) , msgTypeC);
         Assert.assertEquals(scheduler.parseByteArrayForType(testD) , msgTypeD);
+    }
+
+    @Test
+    public void testSortElevatorTasks(){
+
+        scheduler.closeSocket();
+
+        byte[] taskByteArray = {0x0,0x2, 0x1, 0x3, 0x4, 0x7, 0x9, 0x22};
+
+        ArrayList<int[]> expectedEventList = new ArrayList<>();
+
+        int[] tempIntArray = {1,3};
+        expectedEventList.add(tempIntArray);
+
+        tempIntArray = new int[]{4, 7};
+        expectedEventList.add(tempIntArray);
+
+        tempIntArray = new int[]{9, 22};
+        expectedEventList.add(tempIntArray);
+
+        scheduler.sortElevatorTasks(taskByteArray);
+
+        Assert.assertEquals(scheduler.getEventList(), expectedEventList);
+
     }
 
 
