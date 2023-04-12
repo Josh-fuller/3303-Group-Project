@@ -129,6 +129,14 @@ public class GUIThread extends Thread{
         }
     }
 
+    public void killElevator(int ElevatorNum){
+        if (ElevatorNum < 1 || ElevatorNum > 4) {
+            throw new IllegalArgumentException("Invalid Floor number or elevator number");
+        }
+        for (int i = 0; i < 22; i++) {
+            boxes[i][ElevatorNum - 1].setBackground(Color.RED);
+        }
+    }
 
 
     /**
@@ -163,13 +171,13 @@ public class GUIThread extends Thread{
 
         while(true){
             for(ElevatorThread e : elevators){
-                if(e.isDoorOpen()){
+                if(!e.isRunning()){
+                    killElevator(e.getElevatorNum());
+                } else if (e.isDoorOpen()){
                     highlightBox(e.getCurrentFloor(),e.getElevatorNum(),Color.BLUE);
                 }else{
                     highlightBox(e.getCurrentFloor(),e.getElevatorNum(),Color.GREEN);
                 }
-
-
             }
 
         }

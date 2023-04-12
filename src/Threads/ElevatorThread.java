@@ -42,7 +42,6 @@ public class ElevatorThread extends Thread {
     private LinkedList<Integer> destinationList;
 
 
-
     /**
      * Constructor for the class.
      */
@@ -382,6 +381,8 @@ public class ElevatorThread extends Thread {
         return secondDestination;
     }
 
+    public boolean isRunning() {return running;}
+
     public void closeSocket() {
         sendReceiveSocket.close();
     }
@@ -392,6 +393,10 @@ public class ElevatorThread extends Thread {
 
     @Override
     public void run() {
+        //Shows the error of the elevator being stuck in between floors
+        if(elevatorNum == 4){
+            running = false;
+        }
 
         while (running) {
 

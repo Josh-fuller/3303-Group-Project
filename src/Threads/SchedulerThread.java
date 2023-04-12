@@ -100,7 +100,12 @@ public class SchedulerThread implements Runnable{
     }
 
 
-
+    /**
+     * Takes the floor message and translates it into a list of tasks, the first task being the pickup floor and the
+     * second task being the destination floor.
+     *
+     * @param tasks
+     */
     public void sortElevatorTasks(byte[] tasks){
         int counter = 2;      // Starts at 2 because first 2 bytes are the message type
         while(tasks[counter] != 0 || tasks[counter+1] != 0) {
@@ -170,8 +175,6 @@ public class SchedulerThread implements Runnable{
 
     /**
      * Closes sockets so tests don't throw bind exceptions, bot used in class
-     *
-     *
      */
     public void closeSocket(){
         receiveSocket.close();
