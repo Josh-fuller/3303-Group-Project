@@ -86,11 +86,6 @@ public class SchedulerThread implements Runnable{
         state = SchedulerState.PROCESSING_ARRIVAL_SENSOR;
     }
 
-
-    public void processingElevatorEventState(){
-        state = SchedulerState.PROCESSING_ELEVATOR_EVENT;
-    }
-
     public void dispatchingToFloorState(){
         state = SchedulerState.DISPATCHING_TO_FLOOR;
     }
