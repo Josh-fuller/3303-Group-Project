@@ -32,13 +32,13 @@ public class ElevatorThread extends Thread {
     private DatagramPacket receiveTimedPacket;
     private final int LOAD_UNLOAD_TIME = 3000;
     private final int FLOOR_TRANSITION_TIME = 1500;
-    private final int OPEN_CLOSE_TIME = 200;
+    private final int OPEN_CLOSE_TIME = 300;
     private final int TIMEOUT = 12000;
     private final int NUMBER_OF_FLOORS = 22;
     private volatile boolean timedOut, running;
     private int nextDestination = 0;        // destination floor requested by the scheduler
     private int secondDestination = 0;
-    private int thirdDestination = -1;
+    private int thirdDestination = 0;
     private LinkedList<Integer> destinationList;
 
 
@@ -229,7 +229,9 @@ public class ElevatorThread extends Thread {
 
         if (nextDestination == currentFloor) {
             System.out.println("The elevator is already at destination floor " + nextDestination + ".");
+            openDoor();
             loadUnload(); // todo new
+            closeDoor();
             state = ElevatorThread.ElevatorState.IDLE;
         } else if (nextDestination > currentFloor) {
             System.out.println("Initiating move up from floor " + currentFloor + " to " + nextDestination + "...");
