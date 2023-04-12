@@ -284,12 +284,10 @@ public class FloorThread extends Thread {
                     receivePacket = receivePacket();
                     MsgType messageType = parseByteArrayForType(receivePacket.getData());
 
-                    // TODO change to "Elevator Stopped" because it handles both.
                     // Based on message type, go to status.
                     if (messageType == MsgType.STARTING_STOP) {
                         handleStaringStopStatus();
 
-                        // TODO I might delete this cuz it's not used; the [06] is now sent to a specific socket with timeout.
                     } else if (messageType == MsgType.COMPLETED_STOP) {
                         handleCompletedStopStatus();
 
@@ -299,7 +297,6 @@ public class FloorThread extends Thread {
                     } break;
 
 
-                // TODO Change to "PROCESSING_STOP" because it handles both "starting" and "completed" stop.
                 case PROCESSING_STARTING_STOP: //Scheduler tells floor elevator has stopped, floor starts timer
                     try {
                         // The called method will wait for 8 seconds to receive a packet from scheduler, otherwise
