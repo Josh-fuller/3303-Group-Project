@@ -80,10 +80,6 @@ public class ElevatorThread extends Thread {
     }
 
 
-    public int getFloorCount() {
-        return floorList.size();
-    }
-
     /**
      * Increments floors one by one updates arrivalSignal after reaching new floor.
      */
@@ -112,6 +108,7 @@ public class ElevatorThread extends Thread {
             System.out.println("\nCURRENT FLOOR: " + currentFloor);
         }
     }
+
 
     /**
      * Creates and returns a Datagram Packet using given input parameters.
@@ -199,7 +196,7 @@ public class ElevatorThread extends Thread {
      * Process string message from scheduler containing destination floor number for elevator to move to.
      * @param destFloorBytes
      */
-    public void processDestinationFloorMessage (byte[] destFloorBytes) {
+    public void processDestinationFloorsMessage (byte[] destFloorBytes) {
         int startFloor = destFloorBytes[0];
         int endFloor = destFloorBytes[1];
 
@@ -209,7 +206,7 @@ public class ElevatorThread extends Thread {
             state = ElevatorThread.ElevatorState.IDLE;
             return;
         }
-        int bottomFloor = 0;
+        int bottomFloor = 1;
         if ((startFloor < bottomFloor) || (endFloor < bottomFloor)) { // invalid destination input from scheduler: floor too low
             System.out.println("INVALID DESTINATION REQUEST: The lowest possible destination floor is #1.");
             state = ElevatorThread.ElevatorState.IDLE;
@@ -217,8 +214,8 @@ public class ElevatorThread extends Thread {
         }
         this.nextDestination = startFloor;
         this.secondDestination = endFloor;
-        addDestination(nextDestination);
-        addDestination(secondDestination); // todo new
+        //addDestination(nextDestination);
+        addDestination(secondDestination);
 
         System.out.println("------------------------------------------------------------------------------------");
         System.out.println("Move Request Response: ");
@@ -228,7 +225,7 @@ public class ElevatorThread extends Thread {
         if (nextDestination == currentFloor) {
             System.out.println("The elevator is already at destination floor " + nextDestination + ".");
             openDoor();
-            loadUnload(); // todo new
+            loadUnload();
             closeDoor();
             state = ElevatorThread.ElevatorState.IDLE;
         } else if (nextDestination > currentFloor) {
@@ -276,7 +273,7 @@ public class ElevatorThread extends Thread {
         }
     }
 
-    private void openDoor() {
+    public void openDoor() {
         try {
             Thread.sleep(OPEN_CLOSE_TIME);
         } catch (InterruptedException e) {
@@ -285,7 +282,7 @@ public class ElevatorThread extends Thread {
         this.doorOpen = true;
     }
 
-    private void closeDoor() {
+    public void closeDoor() {
         try {
             Thread.sleep(OPEN_CLOSE_TIME);
         } catch (InterruptedException e) {
@@ -369,6 +366,25 @@ public class ElevatorThread extends Thread {
     public int getElevatorNum() {
         return elevatorNum;
     }
+    public LinkedList<Integer> getDestinationList() {
+        return this.destinationList;
+    }
+
+    public int getFloorCount() {
+        return floorList.size();
+    }
+
+    public int getNextDestination() {
+        return nextDestination;
+    }
+
+    public int getSecondDestination() {
+        return secondDestination;
+    }
+
+    public void closeSocket() {
+        sendReceiveSocket.close();
+    }
 
     /**
      * ElevatorThread's run() method.
@@ -399,7 +415,7 @@ public class ElevatorThread extends Thread {
                         DatagramPacket moveRequestReceivePacket = receivePacket();
                         System.out.println("ELEVATOR " + portNumber + " THINKS IT RECEIVED: " + Arrays.toString(moveRequestReceivePacket.getData()));
                         //System.out.println("Scheduler's response back to elevator's move request: " + (moveRequestReceivePacket.getData()[0] + "," + moveRequestReceivePacket.getData()[1])); //TODO fix this to re-state the message floors
-                        this.processDestinationFloorMessage(moveRequestReceivePacket.getData());
+                        this.processDestinationFloorsMessage(moveRequestReceivePacket.getData());
                     } catch (IOException e) {
                         e.printStackTrace();
                         state = ElevatorState.IDLE;
