@@ -12,12 +12,15 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @version Iteration 5
  */
 public class ElevatorThread extends Thread {
+
+
     public enum ElevatorState {
         IDLE,
         MOVING_UP,
         MOVING_DOWN,
     }
 
+    private final int elevatorNum;
     private int portNumber;             // Elevator's port number for receiving UDP communication
     private ElevatorState state;        // Elevator's current state
     private boolean doorOpen;           // true if door is open, false if closed
@@ -42,7 +45,8 @@ public class ElevatorThread extends Thread {
     /**
      * Constructor for the class.
      */
-    public ElevatorThread(int portNumber) {
+    public ElevatorThread(int portNumber,int elevatorNum) {
+        this.elevatorNum = elevatorNum;
         this.portNumber = portNumber;
         this.doorOpen = true;   // the elevator door is initially open
         this.currentFloor = 1;  // elevator starts at floor #1
@@ -324,11 +328,37 @@ public class ElevatorThread extends Thread {
             System.out.println("------------------------------------------------------------------------------------");
             if ((thisDestination > 0) && (thisDestination < 22)) { // if the destination is valid
                 // directly go to thisDestination without stopping on the way
-                currentFloor = thisDestination;
+                if(currentFloor > thisDestination){
+                    while(currentFloor != thisDestination){
+                        decrementFloor();
+
+                    }
+                }else{
+                    while(currentFloor != thisDestination){
+                        incrementFloor();
+                    }
+                }
+                //currentFloor = thisDestination;
                 handleStopping();
                 destinationList.removeFirst();
             }
         }
+    }
+
+    public int getCurrentFloor(){
+        return currentFloor;
+    }
+
+    public int getPortNumber(){
+        return portNumber;
+    }
+
+    public boolean isDoorOpen(){
+        return doorOpen;
+    }
+
+    public int getElevatorNum() {
+        return elevatorNum;
     }
 
     /**
