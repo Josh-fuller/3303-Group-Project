@@ -23,7 +23,8 @@ public class SchedulerThread implements Runnable{
         return schedulerTasks;
     }
 
-    ArrayList<int[]> schedulerTasks;
+    private ArrayList<int[]> schedulerTasks;
+
 
     int currentPort;
 
@@ -61,6 +62,10 @@ public class SchedulerThread implements Runnable{
             throw new RuntimeException(e);
         }
 
+    }
+
+    public ArrayList<int[]> getEventList(){ //getter for tasks, for testing purposes
+        return schedulerTasks;
     }
 
     public void idleState(){
@@ -164,6 +169,16 @@ public class SchedulerThread implements Runnable{
     }
 
     /**
+     * Closes sockets so tests don't throw bind exceptions, bot used in class
+     *
+     *
+     */
+    public void closeSocket(){
+        receiveSocket.close();
+        sendSocket.close();
+    }
+
+    /**
      * Parses through received messages to get their type, for easy switch statement implementation
      *
      * @param byteArray The messageType in byte[]
@@ -185,39 +200,10 @@ public class SchedulerThread implements Runnable{
             type = messageType.STOP_FINISHED;
         }
 
-        // find first 0
-        int firstZeroIndex = -1;
-        for (int i = 2; i < byteArray.length; i++) {
-            if (byteArray[i] == 0x0) {
-                firstZeroIndex = i;
-                break;
-            }
-        }
-
-        // if no 0 found, set type to 2 and return
-        if (firstZeroIndex == -1) {
-            type = messageType.ERROR;
-            return type;
-        }
-
-        // find second 0
-        int secondZeroIndex = -1;
-        for (int i = firstZeroIndex + 1; i < byteArray.length; i++) {
-            if (byteArray[i] == 0x0) {
-                secondZeroIndex = i;
-                break;
-            }
-        }
-
-        // if no second 0 found, set type to 2
-        if (secondZeroIndex == -1) {
-            type = messageType.ERROR;
-        }
-
         return type;
     }
 
-    /** //TODO Remove
+    /**
      * Converts the packet data's floor number into an integer.
      *
      * @param byteArray the received packet data containing request information
@@ -249,7 +235,7 @@ public class SchedulerThread implements Runnable{
     }
 
     /** *
-     * Creates a byte array based on the message type and floor number provided, to send to floor. Typically, 05 to indicate
+     * Creates a byte array based on the message type and floor number provided, to send to floor. 05 to indicate
      * that the elevator is about to stop, and 06 to indicate a stop has been completed
      *
      * @param type what type of message to send
