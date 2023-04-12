@@ -21,6 +21,8 @@ public class ElevatorThread extends Thread {
     }
 
     private final int elevatorNum;      // Number that identifies this elevator
+
+    private int numTimesProcessed;
     private int portNumber;             // Elevator's port number for receiving UDP communication
     private ElevatorState state;        // Elevator's current state
     private int currentFloor;           // Elevator's current floor
@@ -265,6 +267,7 @@ public class ElevatorThread extends Thread {
     private void loadUnload() {
         try {
             Thread.sleep(LOAD_UNLOAD_TIME); // elevator door stays open for 5 seconds
+            numTimesProcessed += 1;
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -481,9 +484,7 @@ public class ElevatorThread extends Thread {
     @Override
     public void run() {
         //Shows the error of the elevator being stuck in between floors
-        if(elevatorNum == 4){
-            running = false;
-        }
+
 
         while (running) {
 
@@ -494,6 +495,8 @@ public class ElevatorThread extends Thread {
                  * Elevator state: IDLE
                  */
                 case IDLE:
+
+
                     System.out.println("Elevator " + portNumber + " State: IDLE");
                     // if there are leftover destinations on the list, go to those first
                     // then send new move request
@@ -502,6 +505,13 @@ public class ElevatorThread extends Thread {
                     try {
                         // Create move request datagram packet
                         DatagramPacket moveRequestPacket = createMessagePacket((byte) 0x03, currentFloor);
+
+                        //Forced error sim for demo purposes, handled the same as a timeout error
+                        if(elevatorNum == 4 && numTimesProcessed >= 3){
+                            //System.out.println("ENTERED CONDITION");
+                            running = false;
+                        }
+
                         // Send message to scheduler
                         sendReceiveSocket.send(moveRequestPacket);
                         // Wait for a response from the scheduler for the destination floor to move to
