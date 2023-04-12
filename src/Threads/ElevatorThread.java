@@ -1,18 +1,18 @@
 package Threads;
-import java.io.IOException;
-import java.net.*;
-import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.net.*;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
 
 /**
- * ElevatorThread implements the elevator state machine. The states are IDLE, STOPPED, MOVING_UP, MOVING_DOWN.
+ * ElevatorThread implements the elevator state machine subsystem. The states are IDLE, MOVING_UP, MOVING_DOWN.
+ * Instances of this class communicate with SchedulerThread via the User Datagram Protocol (UDP).
  *
  * @author  Mahtab Ameli
  * @version Iteration 5
  */
 public class ElevatorThread extends Thread {
-
 
     public enum ElevatorState {
         IDLE,
@@ -20,26 +20,29 @@ public class ElevatorThread extends Thread {
         MOVING_DOWN,
     }
 
-    private final int elevatorNum;
+    private final int elevatorNum;      // Number that identifies this elevator
     private int portNumber;             // Elevator's port number for receiving UDP communication
     private ElevatorState state;        // Elevator's current state
+    private int currentFloor;           // Elevator's current floor
     private boolean doorOpen;           // true if door is open, false if closed
-    private int currentFloor;           // Elevator's current floor as signalled by the arrival sensor
-    private List<Integer> floorList;       // list of 5 floors that have access to the elevator
-    private boolean stopSignal;         // signal set to true when scheduler makes a command to stop at approaching floor
-    private DatagramSocket sendReceiveSocket;         // Datagram socket for sending and receiving UDP communication to/from the scheduler thread
-    private DatagramSocket timedSocket;
-    private DatagramPacket receiveTimedPacket;
-    private final int LOAD_UNLOAD_TIME = 2000;
+    private List<Integer> floorList;    // list of 22 floors that have access to the elevator
+    private boolean stopSignal;         // signal set to true when scheduler makes a command to stop at current floor
+
+    private DatagramSocket sendReceiveSocket;  // Datagram socket for sending and receiving UDP communication to/from the scheduler thread
+    private DatagramSocket timedSocket;        // a timed datagram socket for UDP communication. if socket times out, the elevator shuts down.
+    private DatagramPacket receiveTimedPacket; // the packet received by timedSocket from the scheuler
+
+    private final int LOAD_UNLOAD_TIME = 2000; //in ms
     private final int FLOOR_TRANSITION_TIME = 1200;
     private final int OPEN_CLOSE_TIME = 300;
     private final int TIMEOUT = 12000;
     private final int NUMBER_OF_FLOORS = 22;
-    private volatile boolean timedOut, running;
-    private int nextDestination = 0;        // destination floor requested by the scheduler
-    private int secondDestination = 0;
-    private int thirdDestination = 0;
-    private LinkedList<Integer> destinationList;
+
+    private int nextDestination = 0;       // the immediate destination elevator must travel to (1st destination received in response to move request)
+    private int secondDestination = 0;     // the second destination received in response to the move request
+    private int thirdDestination = 0;      // the destination receive from the scheduler in response to arrival sensor message
+    private LinkedList<Integer> destinationList;    // list of destinations the elevator must travel to
+    private volatile boolean running;      // boolean used to handle socket timeout
 
 
 
@@ -55,7 +58,6 @@ public class ElevatorThread extends Thread {
         this.destinationList = new LinkedList<>();
         this.stopSignal = false;
         this.state = ElevatorState.IDLE;
-        this.timedOut = false;
         this.running  = true;
         this.populateFloors();
         // Create a Datagram socket for both sending and receiving messages via UDP communication
@@ -69,6 +71,7 @@ public class ElevatorThread extends Thread {
     }
 
 
+
     /**
      * Populates the list of floors that the elevator will move between.
      */
@@ -80,8 +83,9 @@ public class ElevatorThread extends Thread {
     }
 
 
+
     /**
-     * Increments floors one by one updates arrivalSignal after reaching new floor.
+     * Increments currentFloor by 1.
      */
     public void incrementFloor() {
         int topFloor = floorList.size();
@@ -95,8 +99,9 @@ public class ElevatorThread extends Thread {
     }
 
 
+
     /**
-     * Decrements floors one by one updates arrivalSignal after reaching new floor.
+     * Decrements currentFloor by 1.
      */
     public void decrementFloor(){
         int bottomFloor = 1;
@@ -108,6 +113,7 @@ public class ElevatorThread extends Thread {
             System.out.println("\nCURRENT FLOOR: " + currentFloor);
         }
     }
+
 
 
     /**
@@ -127,6 +133,7 @@ public class ElevatorThread extends Thread {
     }
 
 
+
     /**
      * Waits to receive a DatagramPacket on sendReceiveSocket.
      *
@@ -134,14 +141,11 @@ public class ElevatorThread extends Thread {
      */
     private DatagramPacket receivePacket(){
         DatagramPacket receivePacket;
-        // Create a DatagramPacket to receive data from client
         byte[] receiveData = new byte[1024];
         receivePacket = new DatagramPacket(receiveData, receiveData.length);
         try {
             sendReceiveSocket.receive(receivePacket); //Receive from anywhere
             System.out.println("ELEVATOR RECEIVED DATA WITHIN TIME LIMIT");
-        //} catch (SocketTimeoutException s){
-            //System.out.println("NO MOVE REQUEST PROVIDED IN TIME IN ELEVATOR: " + portNumber);
         } catch (IOException e ) {
             throw new RuntimeException(e);
         }
@@ -150,6 +154,8 @@ public class ElevatorThread extends Thread {
 
 
     /**
+     * Receives datagramPacket on timedSocket.
+     *
      * author: Ahmad
      * @param timeout
      * @throws SocketTimeoutException
@@ -165,30 +171,13 @@ public class ElevatorThread extends Thread {
             se.printStackTrace();
             System.exit(1);
         }
-
         try {
             // Block until a packet is received via TimedSocket.
             timedSocket.receive(receiveTimedPacket);
-
         } catch (IOException e) {
-            timedOut = true;
             throw new SocketTimeoutException();
         }
-
         return receiveTimedPacket;
-    }
-
-
-    /**
-     * Process byte array message from scheduler containing stop signal.
-     * @param stopSignalBytes
-     */
-    public boolean processStopSignalMessage (byte[] stopSignalBytes){
-        int signal = byteArrayToInt(stopSignalBytes);
-        if (signal == 0) { // if signal is 0, return true.
-            return false;
-        }
-        return true;
     }
 
 
@@ -240,6 +229,22 @@ public class ElevatorThread extends Thread {
         }
     }
 
+
+
+    /**
+     * Processes byte array message from scheduler containing stop signal.
+     * @param stopSignalBytes
+     */
+    public boolean processStopSignalMessage (byte[] stopSignalBytes){
+        int signal = byteArrayToInt(stopSignalBytes);
+        if (signal == 0) { // if signal is 0, return true.
+            return false;
+        }
+        return true;
+    }
+
+
+
     /**
      * Converts array of bytes into int.
      * @param byteArray
@@ -253,6 +258,8 @@ public class ElevatorThread extends Thread {
         return result;
     }
 
+
+
     /**
      * Makes elevator wait a constant amount of time for loading/unloading passengers.
      */
@@ -265,6 +272,10 @@ public class ElevatorThread extends Thread {
     }
 
 
+
+    /**
+     * Makes elevator wait a constant amount of time for moving to the adjacent floor.
+     */
     private void floorTransitionTime() {
         try {
             Thread.sleep(FLOOR_TRANSITION_TIME);
@@ -273,6 +284,11 @@ public class ElevatorThread extends Thread {
         }
     }
 
+
+
+    /**
+     * Makes elevator wait a constant amount of time for opening the elevator door. Updates doorOpen attribute.
+     */
     public void openDoor() {
         try {
             Thread.sleep(OPEN_CLOSE_TIME);
@@ -282,6 +298,11 @@ public class ElevatorThread extends Thread {
         this.doorOpen = true;
     }
 
+
+
+    /**
+     * Makes elevator wait a constant amount of time for closing the elevator door. Updates doorOpen attribute.
+     */
     public void closeDoor() {
         try {
             Thread.sleep(OPEN_CLOSE_TIME);
@@ -290,6 +311,8 @@ public class ElevatorThread extends Thread {
         }
         this.doorOpen = false;
     }
+
+
 
     /**
      * Handles stops requested by the scheduler. Communicates to the scheduler when the stop is completed successfully.
@@ -311,6 +334,12 @@ public class ElevatorThread extends Thread {
         stopSignal = false; // reset stop signal to false
     }
 
+
+
+    /**
+     * Adds an int destination floor to destinationList, if absent.
+     * @param destination
+     */
     public void addDestination(int destination) {
         if (!destinationList.contains(destination)) { // add destination to list if absent
             destinationList.add(destination);
@@ -318,6 +347,9 @@ public class ElevatorThread extends Thread {
     }
 
 
+    /**
+     * Moves elevator to all required stops on the list.
+     */
     public void finishLeftoverStops() {
         while(!destinationList.isEmpty()) {
 
@@ -351,40 +383,95 @@ public class ElevatorThread extends Thread {
         }
     }
 
+
+
+    /**
+     * Returns current floor.
+     * @return
+     */
     public int getCurrentFloor(){
         return currentFloor;
     }
 
+
+
+    /**
+     * Returns elevator's port number bound to sendReceiveSocket.
+     * @return
+     */
     public int getPortNumber(){
         return portNumber;
     }
 
+
+    /**
+     * Returns the status of the elevator's door.
+     * @return
+     */
     public boolean isDoorOpen(){
         return doorOpen;
     }
 
+
+
+    /**
+     * Returns elevator number, identifying this elevator thread.
+     * @return
+     */
     public int getElevatorNum() {
         return elevatorNum;
     }
+
+
+
+    /**
+     * Returns list of destinations that the elevator must move to.
+     * @return
+     */
     public LinkedList<Integer> getDestinationList() {
         return this.destinationList;
     }
 
+
+    /**
+     * Returns number of floors in this building.
+     * @return
+     */
     public int getFloorCount() {
         return floorList.size();
     }
 
+
+
+    /**
+     * Returns the immediate destination's floor number.
+     * @return
+     */
     public int getNextDestination() {
         return nextDestination;
     }
 
+
+
+    /**
+     * Returns the second destination floor number received from the elevator during idle state.
+     * @return
+     */
     public int getSecondDestination() {
         return secondDestination;
     }
 
+
+
+    /**
+     * Closes the sendReceiveSocket.
+     */
     public void closeSocket() {
         sendReceiveSocket.close();
     }
+
+
+
 
     /**
      * ElevatorThread's run() method.
@@ -396,6 +483,7 @@ public class ElevatorThread extends Thread {
         while (running) {
 
             switch (state) {
+
 
                 /**
                  * Elevator state: IDLE
@@ -426,7 +514,6 @@ public class ElevatorThread extends Thread {
                 /**
                  * Elevator state: MOVING_UP
                  */
-
                 case MOVING_UP:
 
                     System.out.println("Elevator " + portNumber + " State: MOVING UP");
@@ -471,10 +558,10 @@ public class ElevatorThread extends Thread {
                     state = ElevatorState.IDLE;
                     break;
 
+
                 /**
                  * Elevator state: MOVING_DOWN
                  */
-
                 case MOVING_DOWN:
 
                     System.out.println("Elevator " + portNumber + " State: MOVING DOWN");
