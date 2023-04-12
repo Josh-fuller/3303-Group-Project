@@ -10,6 +10,7 @@ import javax.swing.JPanel;
 
 public class GUIThread extends Thread{
     private JFrame frame;
+
     private JPanel[][] boxes;
     private ArrayList<ElevatorThread> elevators;
 
@@ -123,12 +124,16 @@ public class GUIThread extends Thread{
                 JPanel prevBox = boxes[i][ElevatorNum - 1];
                 if (prevBox.getBackground() != Color.white) {
                     prevBox.setBackground(Color.white);
-                    break;
                 }
             }
         }
     }
 
+    /**
+     * Changes all floors to have an error color to show that the elevator has been killed and is no longer servicing.
+     *
+     * @param ElevatorNum the elevator that was killed
+     */
     public void killElevator(int ElevatorNum){
         if (ElevatorNum < 1 || ElevatorNum > 4) {
             throw new IllegalArgumentException("Invalid Floor number or elevator number");
@@ -166,6 +171,8 @@ public class GUIThread extends Thread{
         // Start the thread
         colorThread.start();
     }
+
+    public JPanel[][] getBoxes() {return boxes;}
 
     public void run(){
 

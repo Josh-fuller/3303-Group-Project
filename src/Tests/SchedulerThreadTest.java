@@ -1,12 +1,8 @@
 package Tests;
 
-import Threads.FloorEvent;
-import Threads.FloorThread;
 import Threads.SchedulerThread;
 import org.junit.*;
 
-import java.awt.*;
-import java.io.IOException;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Arrays;
