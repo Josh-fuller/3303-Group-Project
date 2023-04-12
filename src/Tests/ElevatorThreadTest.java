@@ -5,7 +5,7 @@ import java.net.*;
 
 
 /**
- * Test Class for methods in the elevator.
+ * Test Class for methods in ElevatorThread.
  *
  * @author Mahtab
  */
