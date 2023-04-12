@@ -288,9 +288,6 @@ public class FloorThread extends Thread {
                     if (messageType == MsgType.STARTING_STOP) {
                         handleStaringStopStatus();
 
-                    } else if (messageType == MsgType.COMPLETED_STOP) {
-                        handleCompletedStopStatus();
-
                     } else if (messageType == MsgType.ERROR) {
                         System.out.println("ERROR DETECTED IN SCHEDULER MESSAGE");
 
