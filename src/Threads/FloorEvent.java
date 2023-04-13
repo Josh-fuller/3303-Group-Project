@@ -29,12 +29,11 @@ public class FloorEvent implements Serializable{
      * @param floorButton the up/down direction button
      * @param elevatorButton destination floor button pressed inside the elevator
      */
-    public FloorEvent(String time, int floorNumber, FloorButton floorButton, int elevatorButton, int elevatorNum) {
+    public FloorEvent(String time, int floorNumber, FloorButton floorButton, int elevatorButton) {
         this.time = time;
         this.floorNumber = floorNumber;
         this.floorButton = floorButton;
         this.elevatorButton = elevatorButton;
-        this.elevatorNum = elevatorNum;
         isProcessed = false;
     }
 

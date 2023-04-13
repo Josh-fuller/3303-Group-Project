@@ -263,7 +263,7 @@ public class ElevatorStateMachine {
         else {
             directionButton = FloorEvent.FloorButton.DOWN;
         }
-        FloorEvent event = new FloorEvent("10:00:00.000", arrivalSignal, directionButton, destinationFloor, 1);
+        FloorEvent event = new FloorEvent("10:00:00.000", arrivalSignal, directionButton, destinationFloor);
         return event;
     }
 

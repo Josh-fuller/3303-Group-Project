@@ -12,7 +12,7 @@ public class FloorEventTest {
     FloorEvent.FloorButton floorButton = FloorEvent.FloorButton.DOWN;
     int elevatorButton = 2;
     int elevatorNum = 1;
-    FloorEvent floorEvent = new FloorEvent(time, floorNumber, floorButton, elevatorButton, elevatorNum);
+    FloorEvent floorEvent = new FloorEvent(time, floorNumber, floorButton, elevatorButton);
 
     @Test
     public void testTimeReturnedIsCorrect() {
