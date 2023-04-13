@@ -7,7 +7,8 @@ import java.net.*;
 /**
  * Test Class for methods in ElevatorThread.
  *
- * @author Mahtab
+ * @author Mahtab Ameli
+ * @version Iteration 5
  */
 public class ElevatorThreadTest {
 
@@ -18,12 +19,31 @@ public class ElevatorThreadTest {
         elevator = new ElevatorThread(6000,1);
     }
 
+    /**
+     * Tests whether a new instance of elevatorThread has access to the correct number of building floors.
+     *
+     * METHODS TESTED:
+     * populateFloors()
+     * getFloorCount()
+     *
+     */
     @Test
     public void testPopulateFloors(){
         //PopulateFloors() is called from the constructor of elevatorThread, initializing number of building floors to 22
         Assert.assertEquals(22, elevator.getFloorCount()); // Number of floors
     }
 
+
+
+    /**
+     * Tests whether currentFloor is correctly updated when the elevator moves up and down floors.
+     *
+     * METHODS TESTED:
+     * incrementFloor()
+     * decrementFloor()
+     * getCurrentFloor()
+     *
+     */
     @Test
     public void testIncrementDecrementFloor(){
         Assert.assertEquals(1, elevator.getCurrentFloor()); // Elevator must initially be at floor 1
@@ -46,6 +66,15 @@ public class ElevatorThreadTest {
     }
 
 
+    /**
+     * Tests whether the elevator door closes and opens correctly.
+     *
+     * METHODS TESTED:
+     * closeDoor()
+     * openDoor()
+     * isDoorOpen()
+     *
+     */
     @Test
     public void testCloseOpenDoor() {
         Assert.assertTrue( elevator.isDoorOpen()); // door must be open initially
@@ -57,7 +86,13 @@ public class ElevatorThreadTest {
         Assert.assertTrue(elevator.isDoorOpen()); // door must open
     }
 
-
+    /**
+     * Tests whether datagram packets for messaging the scheduler are created correctly.
+     *
+     * METHODS TESTED:
+     * createMessagePacket()
+     *
+     */
     @Test
     public void testCreateMessagePacket() throws UnknownHostException {
         DatagramPacket testPacket = elevator.createMessagePacket((byte)0x01,6);
@@ -68,6 +103,16 @@ public class ElevatorThreadTest {
         Assert.assertEquals(6, testBytes[3]);
     }
 
+
+    /**
+     * Tests whether the elevator successfully finishes travelling to all destinations left in destinationList.
+     *
+     * METHODS TESTED:
+     * addDestination()
+     * finishLeftoverStops()
+     * getDestinationList()
+     *
+     */
     @Test
     public void testFinishLeftoverStops() {
         Assert.assertEquals(0, elevator.getDestinationList().size()); // there must be 0 destinations on the list initially
@@ -81,6 +126,13 @@ public class ElevatorThreadTest {
     }
 
 
+    /**
+     * Tests whether stop signals received from the scheduler are correctly interpreted by the elevator.
+     *
+     * METHODS TESTED:
+     * processStopSignalMessage()
+     *
+     */
     @Test
     public void testProcessStopSignalMessage() {
         byte[] stopFalse = {0x0};
@@ -94,6 +146,15 @@ public class ElevatorThreadTest {
     }
 
 
+    /**
+     * Tests whether destination requests from the scheduler are interpreted correctly by the elevator.
+     *
+     * METHODS TESTED:
+     * processDestinationFloorsMessage()
+     * getNextDestination()
+     * getSecondDestination()
+     *
+     */
     @Test
     public void testProcessDestinationFloorsMessage() {
     Assert.assertEquals(0, elevator.getNextDestination());

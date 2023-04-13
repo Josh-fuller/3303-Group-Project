@@ -21,8 +21,7 @@ public class ElevatorThread extends Thread {
     }
 
     private final int elevatorNum;      // Number that identifies this elevator
-
-    private int numTimesProcessed;
+    private int numTimesProcessed;      // Number of times an elevator thread has completed load/unload
     private int portNumber;             // Elevator's port number for receiving UDP communication
     private ElevatorState state;        // Elevator's current state
     private int currentFloor;           // Elevator's current floor
@@ -508,7 +507,6 @@ public class ElevatorThread extends Thread {
 
                         //Forced error sim for demo purposes, handled the same as a timeout error
                         if(elevatorNum == 4 && numTimesProcessed >= 3){
-                            //System.out.println("ENTERED CONDITION");
                             running = false;
                         }
 
